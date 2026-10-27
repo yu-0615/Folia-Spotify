@@ -12,7 +12,7 @@ import type { SongResult } from '@/types';
 // cannot store a clip either.
 
 vi.mock('@/services/onlineMusic/omni', () => ({
-    omni: { isPreviewAudioSource: (url: string) => url.includes('trial') },
+    omni: { isPreviewAudioSource: (url: string) => url.includes('trial'), isStandInAudioSource: (url: string) => url.includes('stand-in') },
 }));
 
 const { mayStoreSongAudio, whyNotTheSong, whyNotTheSongPlayed } = await import('@/services/wholeSongCheck');

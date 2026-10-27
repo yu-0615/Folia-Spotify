@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Spotify</title>
+<style>
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #111; color: #ddd; font: 15px/1.5 system-ui, sans-serif; }
+</style>
+</head>
+<body>
+<p id="note"></p>
+<script>
+  // public/spotify-callback.html
+  // Where Spotify's consent page comes back to for the web version's sign-in
+  // (src/services/onlineMusic/spotify/web/spotifyWebAuth.ts): hands the code or the error to the
+  // app's page over a BroadcastChannel, takes them out of the address, and closes. This page loads
+  // none of the app, so its one line is written here in the app's languages.
+  (function () {
+    var params = new URLSearchParams(window.location.search);
+    var answer = { state: params.get('state') || '', code: params.get('code') || '', error: params.get('error') || '' };
+    history.replaceState(null, '', window.location.pathname);
+    try {
+      var channel = new BroadcastChannel('folia-spotify-login');
+      channel.postMessage(answer);
+      channel.close();
+    } catch (error) { /* a browser without BroadcastChannel: the sign-in runs out in the app */ }
+    var language = (navigator.language || '').toLowerCase();
+    var note = language.indexOf('zh') === 0
+      ? (/tw|hk|mo|hant/.test(language) ? '已返回 Folia，可以關閉這個視窗。' : '已返回 Folia，可以关闭这个窗口。')
+      : language.indexOf('id') === 0 ? 'Kembali ke Folia. Jendela ini boleh ditutup.' : 'Back to Folia. You can close this window.';
+    document.getElementById('note').textContent = note;
+    window.close();
+  })();
+</script>
+</body>
+</html>

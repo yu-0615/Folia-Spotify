@@ -20,6 +20,7 @@ vi.mock('../../../src/services/onlineMusic/omni', () => ({
     omni: {
         levelOfAudioSource: (url: string) => levelOfAudioSource(url),
         isPreviewAudioSource: (url: string) => isPreviewAudioSource(url),
+        isStandInAudioSource: () => false,
     },
 }));
 vi.mock('../../../src/services/audioCache', () => ({

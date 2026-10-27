@@ -3,7 +3,7 @@ import type { PlaybackRepresentation } from '../../types/playbackRecovery';
 import { getPlaybackSourceRef } from '../../utils/appPlaybackGuards';
 import { getCachedSongAudioBlob } from '../onlineMusic/resourceCache';
 import { isCacheableAudioResponse } from '../playbackRecovery/mediaCacheGuard';
-import { whyNotTheSong } from '../wholeSongCheck';
+import { whyNotTheSong, whyPreviewClip } from '../wholeSongCheck';
 
 // src/services/analysis/trackAudio.ts
 // A track's audio for analysis: the bytes that are already on this machine, and the decode to the
@@ -89,6 +89,10 @@ export const readLocalTrackBytes = async (
         if (notTheSong) return { skipped: `the copy in the media cache is ${notTheSong}` };
         return { bytes: await cached.arrayBuffer() };
     }
+
+    // A blob: URL its provider handed out as a stand-in (or a clip) is not the song's audio.
+    const notTheSongUrl = whyPreviewClip(audioUrl);
+    if (notTheSongUrl) return { skipped: `its URL is ${notTheSongUrl}` };
 
     if (audioUrl && isLocalAudioUrl(song, audioUrl)) {
         try {

@@ -107,7 +107,7 @@ const audioQualityFor = (providerId: OmniProviderId, preference: AudioQualityPre
 // pass, or its own request). In memory and bounded; a URL that has dropped out is of an unknown
 // level and not known to be a clip.
 const AUDIO_SOURCE_LEVEL_LIMIT = 200;
-type HandedOutAudioSource = { level: AudioQualityPreference; preview: boolean; clipStartMs?: number };
+type HandedOutAudioSource = { level: AudioQualityPreference; preview: boolean; clipStartMs?: number; standIn?: boolean };
 const audioSourceLevels = new Map<string, HandedOutAudioSource>();
 let audioSourceMetadataVersion = 0;
 // One spelling per URL: the form playback holds (`toSafePlaybackUrl`), written as the URL parser
@@ -961,6 +961,7 @@ export const omni = {
                 preview: Boolean(source.preview),
                 ...(source.preview && Number.isFinite(source.clipStartMs) && source.clipStartMs! > 0
                     ? { clipStartMs: source.clipStartMs } : {}),
+                ...(source.standIn ? { standIn: true } : {}),
             });
         }
         // Extension layers (Folium omni hooks) may swap the URL; the ReplayGain above stays the provider's.
@@ -977,6 +978,12 @@ export const omni = {
     // said. False for any other URL, as for one handed out too long ago to be remembered.
     isPreviewAudioSource(url: string): boolean {
         return audioSourceLevels.get(audioSourceLevelKey(url))?.preview === true;
+    },
+
+    // Whether a URL handed out by `getAudioSource` plays silence standing in for its song, which
+    // the provider sounds itself (`ProviderAudioSource.standIn`). False for any other URL.
+    isStandInAudioSource(url: string): boolean {
+        return audioSourceLevels.get(audioSourceLevelKey(url))?.standIn === true;
     },
 
     // Cheap invalidation for playback's small per-URL cache: a provider may reuse a URL with

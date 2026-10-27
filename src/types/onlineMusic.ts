@@ -125,6 +125,14 @@ export interface ProviderAudioSource {
      * (`omni.previewClipStartMsOfAudioSource`) to line the lyrics up with the clip.
      */
     clipStartMs?: number;
+    /**
+     * The URL plays silence as long as the song, and the provider sounds the song itself, kept in
+     * step with the deck that plays this URL (a player that gives no URL of its own, such as one
+     * that plays protected audio in a frame of its own). The deck stays the clock of the song:
+     * progress, lyrics, the queue and the media keys follow it. Its bytes are never the song's: they
+     * are not stored, analysed or separated. Omni notes it with the URL (`omni.isStandInAudioSource`).
+     */
+    standIn?: boolean;
 }
 
 export type ProviderSongAvailabilityState = 'playable' | 'unavailable' | 'unknown';

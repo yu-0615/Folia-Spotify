@@ -31,6 +31,7 @@ const WHOLE_SONG_SHARE = 0.9;
 const STORE_CEILING_MS = 5000;
 
 const PREVIEW_CLIP = 'a preview clip, as its provider said';
+const STAND_IN = 'silence standing in for the song, which its provider sounds itself';
 
 /**
  * The play length of an audio file in seconds, read from its header by an element that never
@@ -96,12 +97,15 @@ export const describeSongAudioLength = ({ playLength, statedLength }: SongAudioL
 );
 
 /**
- * The half of the rule that needs no file: a URL its provider handed out as a preview clip. Asked
- * before a download, so that a clip is not fetched only to be refused.
+ * The half of the rule that needs no file: a URL its provider handed out as a preview clip, or as
+ * silence standing in for the song (`ProviderAudioSource.standIn`). Asked before a download, so
+ * that a clip is not fetched only to be refused.
  */
-export const whyPreviewClip = (src: string | null | undefined): string | null => (
-    src && omni.isPreviewAudioSource(src) ? PREVIEW_CLIP : null
-);
+export const whyPreviewClip = (src: string | null | undefined): string | null => {
+    if (!src) return null;
+    if (omni.isPreviewAudioSource(src)) return PREVIEW_CLIP;
+    return omni.isStandInAudioSource(src) ? STAND_IN : null;
+};
 
 /** Why a file of this length is not the song, for a log line. */
 export const notTheSongWhy = (length: SongAudioLength) => `shorter than half the song: ${describeSongAudioLength(length)}`;

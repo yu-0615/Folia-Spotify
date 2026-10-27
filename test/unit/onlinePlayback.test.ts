@@ -24,6 +24,7 @@ vi.mock('@/services/onlineMusic/omni', () => ({
         getAlternateArtistName: otherArtistNameMock,
         resolveAudioQuality: (_providerId: string, preference: string) => preference,
         isPreviewAudioSource: () => false,
+        isStandInAudioSource: () => false,
     },
 }));
 

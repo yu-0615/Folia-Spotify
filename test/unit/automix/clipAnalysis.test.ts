@@ -44,7 +44,7 @@ vi.mock('@/services/onlineMusic/resourceCache', () => ({
     saveSongAudioLevel: (...args: unknown[]) => saveSongAudioLevel(...args),
 }));
 vi.mock('@/services/onlineMusic/omni', () => ({
-    omni: { levelOfAudioSource: () => 'high', isPreviewAudioSource: (url: string) => previews.has(url) },
+    omni: { levelOfAudioSource: () => 'high', isPreviewAudioSource: (url: string) => previews.has(url), isStandInAudioSource: () => false },
 }));
 vi.mock('@/services/onlineMusic/providerRegistry', () => ({
     keepsOwnSongAudio: (song: SongResult) => ownCache.has(String(song.id)),
