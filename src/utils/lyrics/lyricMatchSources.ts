@@ -64,6 +64,8 @@ export interface LyricSourceAccess {
 // A source that needs an account is a source only while one is signed in.
 export const isLyricMatchSourceOffered = (source: LyricProviderSource): boolean => {
     const entry = getLyricSource(source);
+    // A platform whose provider reads no lyrics of its own (in some builds) has none to offer.
+    if (entry.platform && getOnlineMusicProvider(source)?.capabilities.lyrics === false) return false;
     if (entry.needsConfiguredProvider) {
         const provider = getOnlineMusicProvider(source);
         if (!provider || provider.getAvailability?.().configured === false) return false;

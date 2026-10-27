@@ -195,6 +195,9 @@ export async function loadOnlineSongLyrics(
     const lyricCacheKey = getSongResourceCacheKey('lyric', song);
     const onlineLyricsState = await loadOnlineLyricsState(song);
   const initialSettingsLyricSettings = useLyricSettingsStore.getState();
+    // A song whose provider reads no lyrics of its own (omni.hasOwnLyrics) has the other
+    // sources searched even where the best lyrics are not to be used on their own: they are its only ones.
+    const searchesOtherSources = (autoUseBestLyric: boolean) => autoUseBestLyric || !omni.hasOwnLyrics(song);
 
     if (!isCurrent()) return;
     onStateChange?.(onlineLyricsState);
@@ -225,7 +228,7 @@ export async function loadOnlineSongLyrics(
         const effectiveLyrics = preferredPrefetchedLyrics ?? prefetched.lyrics;
 
   const settingsLyricSettings = useLyricSettingsStore.getState();
-        const shouldAutoMatch = settingsLyricSettings.autoUseBestLyric && !onlineLyricsState?.hasOnlineOverride;
+        const shouldAutoMatch = searchesOtherSources(settingsLyricSettings.autoUseBestLyric) && !onlineLyricsState?.hasOnlineOverride;
 
         if (!shouldAutoMatch) {
             const effectiveText = effectiveLyrics?.lines.map(line => line.fullText).join('\n') ?? '';
@@ -270,7 +273,7 @@ export async function loadOnlineSongLyrics(
     let finalState = onlineLyricsState;
 
   const settingsLyricSettings = useLyricSettingsStore.getState();
-    const shouldAutoMatch = settingsLyricSettings.autoUseBestLyric && !onlineLyricsState?.hasOnlineOverride;
+    const shouldAutoMatch = searchesOtherSources(settingsLyricSettings.autoUseBestLyric) && !onlineLyricsState?.hasOnlineOverride;
 
     if (shouldAutoMatch) {
         // The lyrics in hand are already displayable, so hand them over and report done BEFORE the

@@ -1283,6 +1283,7 @@ export default {
     "loadFailed": "Gagal memuat: {{error}}",
     "loadFailedPlain": "Gagal memuat",
     "loadNotPublic": "Daftar putar ini tidak publik",
+    "spotifyWebNotOwned": "Spotify hanya mengizinkan aplikasi dalam pengembangan membaca daftar putar yang kamu buat atau ikut kelola. Untuk mendengarkannya di Folia, tambahkan lagunya ke daftar putarmu sendiri di Spotify",
     "reload": "Muat ulang",
     "syncProgress": "Dimuat {{loaded}} / {{total}}",
     "syncInterrupted": "Pemuatan terputus",

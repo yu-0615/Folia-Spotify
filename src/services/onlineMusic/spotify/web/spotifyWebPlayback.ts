@@ -10,7 +10,9 @@ import { callSpotifyWeb } from './spotifyWebApi';
 // (`ProviderAudioSource.standIn`): silence exactly as long as the song. The deck stays the clock of
 // the song, and the player here follows it: a deck that starts playing a stand-in has the player
 // start that track at the deck's time; pausing, seeking and ending the deck do the same to the
-// player; and every few seconds the player is put back where the deck is, if it has drifted.
+// player. Where the two drift apart (the player starts a moment late, and waits for its sound now
+// and then), the deck is put where the player is: moving silence is not heard, while moving the
+// player makes it stop to load again, and so drift further.
 // The decks are found by their media events, caught on the document (`data-playback-deck`, App.tsx).
 // What follows from it: the visualizer and automix see silence, and nothing of the song is stored.
 
@@ -20,9 +22,12 @@ const CONNECT_LIMIT_MS = 15_000;
 // The stand-in's sound: 8-bit mono at 8 kHz, 8 KB a second (2.4 MB for five minutes).
 const SAMPLE_RATE = 8000;
 const KEPT_STAND_INS = 4;
-// How far the player may be from the deck before it is moved, and how often that is looked at.
+// How far a resumed player may be from the deck before it is moved to it.
 const DRIFT_MS = 800;
-const DRIFT_CHECK_MS = 2000;
+// How far the deck may be from the player before it is moved to it (the lyrics follow the deck),
+// and how often that is looked at.
+const DECK_DRIFT_MS = 250;
+const DRIFT_CHECK_MS = 1000;
 // After a command, the player's state is not read as its own doing for this long.
 const SETTLE_MS = 4000;
 // Spotify may not know the player for a moment after it is ready: a start is asked again this often.
@@ -62,6 +67,8 @@ let deck: HTMLMediaElement | null = null;
 let playingTrack: string | null = null;
 let lastCommandAt = 0;
 let driftTimer: ReturnType<typeof setInterval> | null = null;
+// Where the deck was moved to follow the player: its seek is not handed back to the player.
+let deckMovedTo: number | null = null;
 // The deck's events are answered one after another.
 let turn: Promise<void> = Promise.resolve();
 // Stand-in URL → Spotify track id, oldest first.
@@ -263,9 +270,15 @@ const follow = async (element: HTMLMediaElement, trackId: string): Promise<void>
     const atMs = Math.round(element.currentTime * 1000);
     const state = await player.getCurrentState();
     if (playingTrack === trackId && isSameTrack(state, trackId)) {
+        // A player still playing is left alone (the drift check moves the deck); a paused one is
+        // resumed where the deck is, which may have been sought meanwhile.
+        if (!state.paused) {
+            startDriftCheck();
+            return;
+        }
         lastCommandAt = Date.now();
         if (Math.abs(state.position - atMs) > DRIFT_MS) await player.seek(atMs);
-        if (state.paused) await player.resume();
+        await player.resume();
     } else {
         playingTrack = trackId;
         await startTrack(deviceId, trackId, atMs);
@@ -292,10 +305,21 @@ const enqueue = (work: () => Promise<void>): void => {
 };
 
 const checkDrift = async (): Promise<void> => {
-    if (!connected || !deck || deck.paused || !playingTrack || Date.now() - lastCommandAt < SETTLE_MS) return;
+    if (!connected || !deck || deck.paused || !playingTrack) return;
     const element = deck;
     const state = await connected.player.getCurrentState();
     if (element !== deck || element.paused) return;
+    // The player plays the track: the deck is put where it is.
+    if (isSameTrack(state, playingTrack) && !state.paused) {
+        const atMs = element.currentTime * 1000;
+        if (Math.abs(state.position - atMs) > DECK_DRIFT_MS) {
+            deckMovedTo = state.position / 1000;
+            element.currentTime = deckMovedTo;
+        }
+        return;
+    }
+    // Shortly after a command, the player may not show it yet.
+    if (Date.now() - lastCommandAt < SETTLE_MS) return;
     // The track plays somewhere else now (moved to another device in a Spotify app).
     if (!isSameTrack(state, playingTrack)) {
         console.log('[Spotify] Web player no longer plays the song: the deck pauses');
@@ -306,15 +330,7 @@ const checkDrift = async (): Promise<void> => {
         return;
     }
     // Paused from a Spotify app that controls this player: the deck pauses with it.
-    if (state.paused) {
-        element.pause();
-        return;
-    }
-    const atMs = element.currentTime * 1000;
-    if (Math.abs(state.position - atMs) > DRIFT_MS) {
-        lastCommandAt = Date.now();
-        await connected.player.seek(Math.round(atMs));
-    }
+    element.pause();
 };
 
 function startDriftCheck(): void {
@@ -358,7 +374,11 @@ const onPause = (event: Event): void => {
 
 const onSeeked = (event: Event): void => {
     const element = deckOf(event);
-    if (!element || element !== deck || element.paused) return;
+    if (!element || element !== deck) return;
+    const moved = deckMovedTo;
+    deckMovedTo = null;
+    if (moved !== null && Math.abs(element.currentTime - moved) < 0.1) return;
+    if (element.paused) return;
     enqueue(() => command(player => player.seek(Math.round(element.currentTime * 1000))));
 };
 

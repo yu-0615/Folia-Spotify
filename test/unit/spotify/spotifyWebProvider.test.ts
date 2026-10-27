@@ -17,6 +17,8 @@ vi.mock('@/services/onlineMusic/spotify/web/spotifyWebPlayback', async importOri
 import { omni } from '@/services/onlineMusic/omni';
 import { getOnlineMusicProvider } from '@/services/onlineMusic/providerRegistry';
 import { whyPreviewClip } from '@/services/wholeSongCheck';
+import { useOnlineProviderAccountStore } from '@/stores/useOnlineProviderAccountStore';
+import { isLyricMatchSourceOffered } from '@/utils/lyrics/lyricMatchSources';
 import { OnlineProviderError } from '@/types/onlineMusic';
 import type { OnlineMusicProvider } from '@/types/onlineMusic';
 
@@ -265,5 +267,30 @@ describe('playing', () => {
     it('asks for a sign-in before connecting the player', async () => {
         await expect(spotify().playback!.getAudioSource(song as never, 'high')).rejects.toMatchObject({ code: 'auth-required' });
         expect(ensurePlayer).not.toHaveBeenCalled();
+    });
+});
+
+describe('lyrics', () => {
+    const song = {
+        id: id('a'), name: 'Song a', artists: [], album: { id: id('m'), name: 'Album' }, durationMs: 2000,
+        sourceRef: { kind: 'online' as const, providerId: 'spotify', mediaId: id('a') },
+    };
+
+    it('reads none of its own: a song has none from it, and is looked up in the other sources', async () => {
+        expect(omni.hasOwnLyrics(song as never)).toBe(false);
+        expect(await omni.getLyrics(song as never)).toEqual({ lyrics: null, isPureMusic: false });
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('is no lyric source for other songs, also while signed in', () => {
+        const accounts = useOnlineProviderAccountStore.getState().accounts;
+        useOnlineProviderAccountStore.setState({ accounts: { ...accounts, spotify: { ...accounts.spotify, user: { id: 'me', nickname: 'Me', avatarUrl: '' } } as never } });
+        try {
+            expect(isLyricMatchSourceOffered('spotify')).toBe(false);
+            vi.stubEnv('VITE_SPOTIFY_CLIENT_ID', '');
+            expect(isLyricMatchSourceOffered('spotify')).toBe(true);
+        } finally {
+            useOnlineProviderAccountStore.setState({ accounts });
+        }
     });
 });

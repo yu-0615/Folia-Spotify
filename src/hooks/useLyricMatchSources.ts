@@ -12,10 +12,15 @@ export const useLyricMatchSources = (): LyricProviderSource[] => {
         LYRIC_SOURCES.filter(source => source.needsAccount && state.accounts[source.id]?.user).map(source => source.id).join()
     ));
     const configured = omni.getProviderSummaries().filter(provider => provider.availability.configured).map(provider => provider.providerId).join();
+    // A platform whose provider reads no lyrics of its own (in some builds) is no source.
+    const withoutLyrics = omni.getProviderSummaries()
+        .filter(provider => !omni.getProviderCapabilities(provider.providerId).lyrics).map(provider => provider.providerId).join();
     return useMemo(() => {
         const ready = signedIn.split(',');
         const available = configured.split(',');
+        const silent = withoutLyrics.split(',');
         return LYRIC_SOURCES.filter(source => (!source.needsAccount || ready.includes(source.id))
-            && (!source.needsConfiguredProvider || available.includes(source.id))).map(source => source.id);
-    }, [signedIn, configured]);
+            && (!source.needsConfiguredProvider || available.includes(source.id))
+            && !(source.platform && silent.includes(source.id))).map(source => source.id);
+    }, [signedIn, configured, withoutLyrics]);
 };

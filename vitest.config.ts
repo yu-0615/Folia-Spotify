@@ -26,7 +26,8 @@ export default defineConfig({
     environment: 'node',
     // 第二消费者始终参与单测；test.env 与 vi.stubEnv 使用同一入口，可覆写验证关闭/生产边界。
     // 初始选择钉在 grid：现有用例都假设没选过 suite 的人看到网格（开发阶段的初始选择是 bravais）。
-    env: { VITE_LIBRARY_TUI: 'true', VITE_LIBRARY_INITIAL_SUITE: 'grid' },
+    // Spotify 的 Client ID 钉成空：本机 .env.local 里填了的人跑单测也走桌面版，网页版的用例自己 stubEnv。
+    env: { VITE_LIBRARY_TUI: 'true', VITE_LIBRARY_INITIAL_SUITE: 'grid', VITE_SPOTIFY_CLIENT_ID: '' },
     include: ['test/unit/**/*.test.ts']
   }
 });

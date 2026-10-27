@@ -1283,6 +1283,7 @@ export default {
     "loadFailed": "加载失败：{{error}}",
     "loadFailedPlain": "加载失败",
     "loadNotPublic": "歌单未公开",
+    "spotifyWebNotOwned": "Spotify 只让开发中的 App 读取你自己建立或协作的歌单。想在 Folia 听这张歌单，可以在 Spotify 里把它的歌加到你自己的歌单",
     "reload": "重新加载",
     "syncProgress": "已加载 {{loaded}} / {{total}}",
     "syncInterrupted": "加载中断",

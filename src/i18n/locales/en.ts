@@ -1283,6 +1283,7 @@ export default {
     "loadFailed": "Failed to load: {{error}}",
     "loadFailedPlain": "Failed to load",
     "loadNotPublic": "This playlist is not public",
+    "spotifyWebNotOwned": "Spotify lets an app in development read only the playlists you made or collaborate on. To hear this one in Folia, add its songs to a playlist of your own in Spotify",
     "reload": "Reload",
     "syncProgress": "Loaded {{loaded}} / {{total}}",
     "syncInterrupted": "Loading interrupted",

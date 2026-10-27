@@ -9,7 +9,7 @@ import {
     getSpotifyWebAvailability, hasSpotifyWebSession, openSpotifyWebLogin, startSpotifyWebLogin,
 } from './spotifyWebAuth';
 import { callSpotifyWeb, isSpotifyWebNotFound } from './spotifyWebApi';
-import { SPOTIFY_WEB_PLAYLIST_CLOSED, spotifyWebCatalog } from './spotifyWebCatalog';
+import { isSpotifyWebPlaylistClosed, spotifyWebCatalog } from './spotifyWebCatalog';
 import { forgetSpotifyWebMe, readSpotifyWebMe, spotifyWebLibrary } from './spotifyWebLibrary';
 import { spotifyWebMutations } from './spotifyWebMutations';
 import { normalizeSpotifyWebCollection, normalizeSpotifyWebSong, present, spotifyWebSongOf } from './spotifyWebNormalize';
@@ -29,8 +29,8 @@ const SEARCH_ROWS = 10;
 const SEARCH_MAX_OFFSET = 1000;
 
 const describeFailure = (operation: OnlineFailureOperation, error: unknown): OnlineFailureDetail | null => (
-    error instanceof OnlineProviderError && error.providerId === 'spotify' && error.message === SPOTIFY_WEB_PLAYLIST_CLOSED
-        ? { case: 'refused', httpStatus: 403, message: error.message }
+    isSpotifyWebPlaylistClosed(error)
+        ? { case: 'refused', httpStatus: 403, message: (error as Error).message }
         : describeSpotifyFailure(operation, error)
 );
 

@@ -1,3 +1,4 @@
+import i18n from '../../../../i18n/config';
 import type { UnifiedSong } from '../../../../types';
 import { OnlineProviderError } from '../../../../types/onlineMusic';
 import type { OnlineCatalogProvider, ProviderCollection, ProviderPage } from '../../../../types/onlineMusic';
@@ -23,8 +24,15 @@ const ARTIST_SEARCH_REQUESTS = 5;
 // the public catalogue, the same for every account.
 const KEPT_ITEMS = 24;
 
-// What a playlist the account does not own answers: the sentence spotifyWebProvider.ts names.
-export const SPOTIFY_WEB_PLAYLIST_CLOSED = 'Spotify lets this app read the songs of its own playlists only';
+// What a playlist the account does not own answers. The page shows its words as they are, so they
+// are the listener's language; spotifyWebProvider.ts names the error as refused.
+const closedPlaylists = new WeakSet<OnlineProviderError>();
+const playlistClosed = (cause: unknown): OnlineProviderError => {
+    const error = new OnlineProviderError('unavailable', i18n.t('playlist.spotifyWebNotOwned'), 'spotify', cause, 403);
+    closedPlaylists.add(error);
+    return error;
+};
+export const isSpotifyWebPlaylistClosed = (error: unknown): boolean => error instanceof OnlineProviderError && closedPlaylists.has(error);
 
 type PlaylistRow = { item?: SpotifyWebTrack | null; track?: SpotifyWebTrack | null };
 
@@ -72,7 +80,7 @@ export const spotifyWebCatalog: OnlineCatalogProvider = {
             });
         } catch (error) {
             if (error instanceof OnlineProviderError && error.httpStatus === 403) {
-                throw new OnlineProviderError('unavailable', SPOTIFY_WEB_PLAYLIST_CLOSED, 'spotify', error, 403);
+                throw playlistClosed(error);
             }
             throw error;
         }

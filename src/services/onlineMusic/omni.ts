@@ -1013,11 +1013,19 @@ export const omni = {
         await provider.playbackReports.reportPlayback(song, report);
     },
 
+    // Whether the song's provider reads lyrics of its own (not every one does). A song
+    // whose provider does not has its lyrics looked up in the other sources only (onlinePlayback.ts).
+    hasOwnLyrics(song: SongResult): boolean {
+        const provider = getOnlineMusicProviderForSong(song);
+        return providerSupports(provider, 'lyrics') && Boolean(provider?.lyrics);
+    },
+
     // `extensionHooks: false` answers the lyrics as the provider gave them, chorus marked, before any
     // extension layer rewrites them: a reader that is itself such a layer would otherwise call itself.
+    // A provider that reads no lyrics of its own answers none, as one that found none for the song.
     async getLyrics(song: SongResult, context?: { userId?: MediaId | null; extensionHooks?: boolean }): Promise<OmniLyricsResult> {
         const provider = providerForSong(song);
-        if (!provider.lyrics) return unsupported(provider.id, 'lyrics');
+        if (!provider.lyrics) return { lyrics: null, isPureMusic: false };
         const { extensionHooks = true, ...providerContext } = context ?? {};
         const providerUserId = useOnlineProviderAccountStore.getState().accounts[provider.id]?.user?.id ?? providerContext.userId;
         const providerResult = await provider.lyrics.getLyrics(song, { ...providerContext, userId: providerUserId });
