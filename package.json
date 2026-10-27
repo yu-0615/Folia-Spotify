@@ -17,6 +17,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:web": "concurrently -k -n web,netease,qq,kugou -c cyan,red,green,blue \"cross-env VITE_NETEASE_API_BASE=http://127.0.0.1:3300 VITE_QQ_API_BASE=http://127.0.0.1:3200 VITE_KUGOU_API_BASE=http://127.0.0.1:3400 vite\" \"cross-env PORT=3300 HOST=127.0.0.1 CORS_ALLOW_ORIGIN=http://127.0.0.1:3000,http://localhost:3000 node node_modules/@neteasecloudmusicapienhanced/api/app.js\" \"cross-env PORT=3200 node node_modules/@yakult-green-tea/qq-music-api/dist/src/app.js\" \"cross-env PORT=3400 HOST=127.0.0.1 CORS_ALLOW_ORIGIN=http://127.0.0.1:3000 node node_modules/kugoumusicapi/app.js\"",
     "dev:probe": "vite --open /dev-probe.html",
     "build": "npm run build:vercel-api && vite build",
     "build:vercel-api": "tsc -p api-ts/tsconfig.json",

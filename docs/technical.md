@@ -250,6 +250,7 @@ vercel dev
 | 命令 | 说明 |
 | --- | --- |
 | `npm run dev` | 启动 Vite 开发服务器 |
+| `npm run dev:web` | 启动 Vite，并用 `node_modules` 里的包同时启动网易云（`3300`）、QQ（`3200`）、酷狗（`3400`）API，三个 `VITE_*_API_BASE` 由脚本指好，不用 Docker、不用改 `.env.local`；网页版的搜索、登录和歌词匹配都能用。浏览器请开 `http://127.0.0.1:3000`（酷狗只放行这个来源，Spotify 网页版的回调也只认 `127.0.0.1`） |
 | `npm run build` | 构建 Web 版本 |
 | `npm run preview` | 预览构建结果 |
 | `npm run dev:electron` | 启动 Electron 开发模式 |
