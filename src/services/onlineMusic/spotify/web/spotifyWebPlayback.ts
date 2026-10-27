@@ -108,6 +108,7 @@ const connect = async (): Promise<Connected> => {
     const Sdk = await loadSdk();
     return new Promise<Connected>((resolve, reject) => {
         let settled = false;
+        let ended = false;
         const player = new Sdk.Player({
             name: PLAYER_NAME,
             volume: volumeNow(),
@@ -117,11 +118,15 @@ const connect = async (): Promise<Connected> => {
         });
         const timer = setTimeout(() => fail(new OnlineProviderError('network', 'The Spotify player did not start in time', 'spotify')), CONNECT_LIMIT_MS);
         // Before the player is ready, an error is the answer to the song that asked for it; after,
-        // it ends the player, and the song playing is stopped with a notice.
+        // it ends the player, and the song playing is stopped with a notice. The SDK can follow one
+        // error with others (a player that cannot start also fails its sign-in and its connect):
+        // the first ends the player, and the rest are not told.
         const fail = (error: OnlineProviderError) => {
+            if (ended) return;
+            ended = true;
+            clearTimeout(timer);
             if (!settled) {
                 settled = true;
-                clearTimeout(timer);
                 player.disconnect();
                 reject(error);
                 return;
