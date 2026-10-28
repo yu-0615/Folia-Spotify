@@ -2,6 +2,7 @@ import React, { useCallback, useState, useSyncExternalStore } from 'react';
 import { Check, Laptop, Loader2, LogIn, MonitorSpeaker, RefreshCw, Smartphone, Speaker, Tv } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { omni } from '../../../services/onlineMusic/omni';
+import { useOnlineProviderAccountStore } from '../../../stores/useOnlineProviderAccountStore';
 import { usePlaybackStore } from '../../../stores/usePlaybackStore';
 import type { OmniPlaybackDevice } from '../../../types/onlineMusic';
 import { getOnlineProviderIdForSong } from '../../../utils/appPlaybackGuards';
@@ -10,6 +11,7 @@ import { PanelIconButton } from '../shell/PanelIconButton';
 
 // src/components/panelTab/controls/PlaybackDeviceRow.tsx
 // 正在放的歌所属的平台能在别的设备上放时（provider 的 `devices`），音量下面多一行「播放设备」：现在在哪台设备上放；
+// 正在放的歌的平台没有设备可选时（没在放歌、这个播放器放不了、放的是本地歌），看书库现在的平台，好先选好设备再放。
 // 点开列出账号现在开着的设备（打开时才问平台），选一台，正在放的歌就移过去，之后的歌也在那里放。
 // 别的设备要单独登录一次时（桌面版要用的人自己注册的应用），点开先是它要的值和登录按钮，登录好了才列设备。
 
@@ -27,7 +29,9 @@ const IS_DESKTOP = typeof window !== 'undefined' && Boolean(window.electron);
 
 const PlaybackDeviceRow: React.FC = () => {
     const { t } = useTranslation();
-    const providerId = usePlaybackStore(state => getOnlineProviderIdForSong(state.currentSong));
+    const songProviderId = usePlaybackStore(state => getOnlineProviderIdForSong(state.currentSong));
+    const libraryProviderId = useOnlineProviderAccountStore(state => state.activeProviderId);
+    const providerId = songProviderId !== null && omni.hasPlaybackDevices(songProviderId) ? songProviderId : libraryProviderId;
     const hasDevices = providerId !== null && omni.hasPlaybackDevices(providerId);
     // (Changes with the device chosen and with the devices' own sign-in, both read below.)
     useSyncExternalStore(

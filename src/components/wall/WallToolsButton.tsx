@@ -6,6 +6,8 @@ import { useLatticeSettingsStore } from '../../stores/useLatticeSettingsStore';
 import { openCommandPalette } from '../../stores/useAppViewStore';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { usePlayerBottomBarBottomPx } from '../../hooks/usePlayerBottomBarBottomPx';
+import { settingsTokens } from '../modal/settings/kit/kitTheme';
+import PlaybackDeviceRow from '../panelTab/controls/PlaybackDeviceRow';
 import { SlideActionButton } from '../shared/SlideActionButton';
 import { WallToolsQuickRow, WallToolsRow, type WallToolsEntry, type WallToolsQuickAction } from './WallToolsRows';
 import { useWallToolsCommonActions } from './useWallToolsCommonActions';
@@ -179,6 +181,8 @@ export function WallToolsSurface({ idPrefix, label, isDaylight, destination, ent
                         >
                             {quick.length > 0 && <WallToolsQuickRow actions={quick} onDone={close} />}
                             <WallToolsRow entry={common.volume} onDone={close} />
+                            {/* 与播放页控制面板同一行「播放设备」：没有可选设备的平台时它自己不出现。颜色变量面板外没有，在这里给。 */}
+                            <div role="none" style={{ ...settingsTokens(isDaylight), display: 'contents' }}><PlaybackDeviceRow /></div>
                             {rows.map(entry => <WallToolsRow key={entry.id} entry={entry} onDone={close} />)}
                             <WallToolsRow entry={tintRow} onDone={close} />
                             <div className="lattice-tools-help-section" role="none">
