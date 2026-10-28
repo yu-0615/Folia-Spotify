@@ -361,7 +361,13 @@ export const resumeSpotifyWebRedirectLogin = async (): Promise<boolean> => {
     }
 };
 
-// A page loaded fresh may be the app coming back from Spotify's page.
+// A page loaded fresh may be the app coming back from Spotify's page. Who is signed in is asked
+// only once that is settled (spotifyWebProvider.ts, getLoginStatus): the app reads the account as
+// it starts, and asked before the code was exchanged it would find nobody and show the sign-in gone.
+let redirectResumed: Promise<boolean> = Promise.resolve(false);
 if (typeof window !== 'undefined' && typeof localStorage !== 'undefined' && !signsInThroughDesktop()) {
-    void resumeSpotifyWebRedirectLogin();
+    redirectResumed = resumeSpotifyWebRedirectLogin();
 }
+
+/** Settles once a sign-in that came back from Spotify's page (REDIRECT_KEY) is kept or dropped. */
+export const spotifyWebRedirectSettled = (): Promise<boolean> => redirectResumed;

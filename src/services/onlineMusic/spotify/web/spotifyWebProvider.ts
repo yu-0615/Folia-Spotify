@@ -5,7 +5,7 @@ import { createProviderSongMetadata } from '../../../../utils/songMetadata';
 import { normalizeSpotifyUser, requireSpotifySong } from '../spotifyNormalize';
 import { describeSpotifyFailure } from '../spotifyFailure';
 import {
-    SPOTIFY_WEB_LOGIN_TTL_MS, SPOTIFY_WEB_POPUP_BLOCKED, cancelSpotifyWebLogin, checkSpotifyWebLogin, clearSpotifyWebSession,
+    SPOTIFY_WEB_LOGIN_TTL_MS, SPOTIFY_WEB_POPUP_BLOCKED, cancelSpotifyWebLogin, checkSpotifyWebLogin, clearSpotifyWebSession, spotifyWebRedirectSettled,
     getSpotifyWebAvailability, hasSpotifyWebSession, openSpotifyWebLogin, spotifyClientIdSetting, startSpotifyWebLogin,
 } from './spotifyWebAuth';
 import { callSpotifyWeb, isSpotifyWebNotFound } from './spotifyWebApi';
@@ -116,6 +116,7 @@ export const spotifyWebProvider: OnlineMusicProvider = {
         }),
         // A sign-in Spotify no longer accepts is forgotten (spotifyWebAuth.ts) and reads as none.
         async getLoginStatus() {
+            await spotifyWebRedirectSettled();
             if (!hasSpotifyWebSession()) return null;
             try {
                 return await readSpotifyWebMe();
