@@ -347,12 +347,15 @@ describe('YouTube Music provider', () => {
     it('leaves out the shelves of the account\'s own listening, known by their headings in the app\'s languages', async () => {
         const log = vi.spyOn(console, 'log').mockImplementation(() => {});
         const shelf = (title: string) => ({ title, items: [{ kind: 'song', song: tileSong() }] });
-        request.mockResolvedValueOnce({ sections: ['最近播放的音乐', 'Recently played', 'Diputar baru-baru ini', '再听一遍', 'Listen again', 'For you', '', '老歌重温', 'Forgotten favorites', 'Mixed for you'].map(shelf), continuation: 'next' });
+        request.mockResolvedValueOnce({ sections: [
+            '最近播放的音乐', '最近播放的音樂', 'Recently played', 'Diputar baru-baru ini', '再听一遍', '再聽一次', 'Listen again', 'For you', '',
+            '老歌重温', '重溫舊愛', 'Forgotten favorites', '一起聽', 'Mixed for you',
+        ].map(shelf), continuation: 'next' });
         const page = await ytmProvider.explore!.getFeed();
         // What is left is what YouTube recommends, and the page goes on as it did.
-        expect(page.sections.map(section => section.title)).toEqual(['For you', '', 'Mixed for you']);
+        expect(page.sections.map(section => section.title)).toEqual(['For you', '', '一起聽', 'Mixed for you']);
         expect(page.nextCursor).toMatch(/^\d+:next$/);
-        expect(log).toHaveBeenLastCalledWith('[Ytm] Explore page: 3 shelves, 3 entries; 7 shelves of the account\'s own listening left out');
+        expect(log).toHaveBeenLastCalledWith('[Ytm] Explore page: 4 shelves, 4 entries; 10 shelves of the account\'s own listening left out');
         // A page of such shelves alone is an empty page that still names the next one.
         request.mockResolvedValueOnce({ sections: [shelf('Listen again')], continuation: 'after' }).mockResolvedValueOnce({ items: [] });
         expect(await ytmProvider.explore!.getFeed(page.nextCursor)).toEqual({ sections: [], nextCursor: expect.stringMatching(/^\d+:after$/) });

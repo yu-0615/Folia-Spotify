@@ -30,8 +30,11 @@ const ACCOUNT_ROUTE = 'member';
 const MOBILE_BROWSE_URL = 'https://music.youtube.com/youtubei/v1/browse?prettyPrint=false';
 const WATCH_URL = 'https://music.youtube.com/youtubei/v1/next?prettyPrint=false';
 const MOBILE_CLIENT = Object.freeze({ clientName: 'ANDROID_MUSIC', clientVersion: '7.21.50' });
-// The app's languages as YouTube names them (`in` is the app's key for Indonesian).
-const PAGE_LANGUAGES = Object.freeze({ 'zh-CN': 'zh-CN', en: 'en', in: 'id' });
+// The app's languages as YouTube names them (`in` is the app's key for Indonesian). zh-TW came to
+// the app later (2026-10-17); until 2026-10-28 its pages came in English. Vietnamese still does: the
+// explore page knows the account's own listening shelves by their headings, and those were not
+// measured in Vietnamese (ytmExplore.ts).
+const PAGE_LANGUAGES = Object.freeze({ 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', en: 'en', in: 'id' });
 const PLAYLISTS_TAB = 'FEmusic_liked_playlists';
 const ALBUMS_TAB = 'FEmusic_liked_albums';
 // One request changes a playlist by this many songs at most.
@@ -234,7 +237,7 @@ function createYtmApiBridge({
   // in a playlist, and in the language of the rest of the interface. Each language renames some
   // artists. English romanises Chinese names ("Eason Chan"). zh-CN keeps those, in Simplified
   // characters where YouTube has them so, and gives a few Western acts a Chinese name: 1 of 20
-  // tried ("绿洲合唱团" for Oasis), against 4 of 20 in zh-TW, which the app does not have. The
+  // tried ("绿洲合唱团" for Oasis), against 4 of 20 in zh-TW (measured before the app had zh-TW). The
   // lyric sources list an artist under one name; `song_detail_en` and `song_detail_zh` give a
   // lookup the other.
   const pageLanguage = () => PAGE_LANGUAGES[language()];

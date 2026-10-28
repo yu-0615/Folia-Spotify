@@ -664,6 +664,14 @@ describe('YouTube Music desktop bridge', () => {
         appLanguage = 'zh-CN';
         await ask();
         expect(built().slice(5)).toEqual(['guest zh-CN', 'web zh-CN']);
+        // Traditional Chinese came to the app later. Vietnamese pages are asked for in no language:
+        // the library's own, English.
+        appLanguage = 'zh-TW';
+        await ask();
+        expect(built().slice(7)).toEqual(['guest zh-TW', 'web zh-TW']);
+        appLanguage = 'vi';
+        await ask();
+        expect(built().slice(9)).toEqual(['guest undefined', 'web undefined']);
     });
 
     it('rebuilds a session that has aged past its player script', async () => {

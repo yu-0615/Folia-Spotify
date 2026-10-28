@@ -33,11 +33,13 @@ const toItem = (item: YtmWireExploreItem): ProviderExploreItem => ({
 // have the shape of every other shelf, and their page tokens differ from the others' only in
 // the shelf's place on the page. So they are known by the headings YouTube gives them in the
 // languages the app reads the page in (measured 2026-10-07: zh-CN and en; the page asked for in
-// id came in English). A heading YouTube changes leaves its shelf on the page.
+// id came in English; 2026-10-28, zh-TW: only "重溫舊愛" was on the account's page, holding songs
+// it had played, and the other two are YouTube's zh-TW wording, not seen there). A heading YouTube
+// changes leaves its shelf on the page.
 const LISTENING_RECORD_HEADINGS = new Set([
-    '最近播放的音乐', 'Recently played', 'Diputar baru-baru ini',
-    '再听一遍', 'Listen again',
-    '老歌重温', 'Forgotten favorites',
+    '最近播放的音乐', '最近播放的音樂', 'Recently played', 'Diputar baru-baru ini',
+    '再听一遍', '再聽一次', 'Listen again',
+    '老歌重温', '重溫舊愛', 'Forgotten favorites',
 ]);
 
 // YouTube names no shelf, and the same heading can come twice; a shelf is told apart by when it was read.
