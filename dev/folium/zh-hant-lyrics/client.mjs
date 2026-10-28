@@ -4,8 +4,9 @@
 //   - 一行的逐字、音节、用户分词和整行一起转：先拼成一串转，换完长度不变就按原来的长度切回去，
 //     这样跨词的词组（「头发」→「頭髮」）照词组转，逐字时间也对得上；长度变了（台湾用语会把「鼠标」换成「滑鼠」）
 //     就各段分开转，分词对不上整行时交给宿主丢掉。
-//   - 日文歌不转原文：歌词里出现假名，原文里的汉字是日文写法，转了会把「国」写成「國」。翻译照样看自己有没有假名。
-//   - 罗马音不碰。设置改了用 folium.lyrics.refresh() 重转正在显示的歌词。
+//   - 日文歌不转原文：有汉字或假名的行里，四分之一以上带假名，就当日文歌，原文里的汉字是日文写法，转了会把「国」写成「國」。
+//     中文歌里夹一两句日文（「あまてらす，やれやれ」）照样转，只是带假名的那几行不转。翻译照样看自己有没有假名。
+//   - 罗马音不碰。启动时和设置改了都用 folium.lyrics.refresh() 重转正在显示的歌词。
 
 import { Converter } from './vendor/opencc-cn2t.mjs';
 
@@ -13,6 +14,14 @@ const KANA = /[぀-ヿㇰ-ㇿｦ-ﾟ]/;
 const HAN = /\p{Script=Han}/u;
 
 const VARIANTS = ['tw', 'twp', 'hk'];
+// The share of the lines with Chinese characters or kana that hold kana from which the song is Japanese.
+const JAPANESE_SHARE = 0.25;
+
+/** Whether the lyrics are a Japanese song's: then a line of kanji alone is Japanese too. */
+const isJapaneseSong = lines => {
+  const written = lines.filter(line => HAN.test(line.fullText) || KANA.test(line.fullText));
+  return written.length > 0 && written.filter(line => KANA.test(line.fullText)).length >= written.length * JAPANESE_SHARE;
+};
 
 /** `converted` cut into pieces as long as `originals`, or null when the conversion changed its length. */
 const sliceLike = (converted, originals) => {
@@ -127,10 +136,18 @@ export default function activate(folium) {
     const { variant, main, translation } = section.settings.get();
     if (!event.lines.length || (!main && !translation)) return;
     const convert = converterFor(variant);
-    // Kana anywhere in the lyrics means Japanese: its kanji are not Simplified Chinese.
-    const japanese = event.lines.some(line => KANA.test(line.fullText));
-    event.lines = event.lines.map(line => convertLine(convert, line, { main: main && !japanese, translation }));
+    // A Japanese song's kanji are not Simplified Chinese, nor are those of a Japanese line in a Chinese song.
+    const japanese = isJapaneseSong(event.lines);
+    event.lines = event.lines.map(line => convertLine(convert, line, { main: main && !japanese && !KANA.test(line.fullText), translation }));
   });
 
   section.settings.onChange(() => folium.lyrics.refresh());
+
+  // The lyrics on screen already (the mod was turned on or reloaded while a song played) are
+  // converted now. At the app's start there are none yet, and the app cannot rebuild lyrics yet.
+  try {
+    folium.lyrics.refresh();
+  } catch {
+    // Nothing on screen to convert: the song's lyrics will come through the handler.
+  }
 }

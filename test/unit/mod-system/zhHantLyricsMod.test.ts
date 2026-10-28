@@ -41,6 +41,10 @@ beforeAll(() => {
 }, 30_000);
 
 describe('zh-hant-lyrics mod', () => {
+    it('converts the lyrics already on screen when it starts', () => {
+        expect(refreshes).toBe(1);
+    });
+
     it('converts a phrase split across words as a phrase, word timing kept', () => {
         const [converted] = run([line(['我的头', '发里', '有台风'], { translation: '后来' })]);
         expect(converted.fullText).toBe('我的頭髮裡有颱風');
@@ -61,6 +65,12 @@ describe('zh-hant-lyrics mod', () => {
         const lines = run([line(['国の', '歌']), line(['会いたい'], { translation: '想见你' })]);
         expect(lines.map((converted: any) => converted.fullText)).toEqual(['国の歌', '会いたい']);
         expect(lines[1].translation).toBe('想見你');
+    });
+
+    it('converts a Chinese song with a Japanese line, all but that line', () => {
+        const chinese = ['这你都不知道', '他们都问我', '嘉豪就是', '我感觉我像嘉豪'].map(text => line([text]));
+        const lines = run([...chinese, line(['あまてらす，国']), line(['♪'])]);
+        expect(lines.map((converted: any) => converted.fullText)).toEqual(['這你都不知道', '他們都問我', '嘉豪就是', '我感覺我像嘉豪', 'あまてらす，国', '♪']);
     });
 
     it('converts background vocals and Chinese translation alternates, not romanization', () => {
@@ -93,7 +103,8 @@ describe('zh-hant-lyrics mod', () => {
         settings.main = true;
         expect(converted.fullText).toBe('头发');
         expect(converted.translation).toBe('頭髮');
+        const before = refreshes;
         onSettingsChange();
-        expect(refreshes).toBe(1);
+        expect(refreshes).toBe(before + 1);
     });
 });
