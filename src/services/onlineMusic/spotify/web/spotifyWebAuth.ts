@@ -235,6 +235,13 @@ export const openSpotifyWebLogin = async (key: string): Promise<void> => {
         setStoredString(REDIRECT_KEY, JSON.stringify(pending));
         console.log('[Spotify] Web sign-in opens in place of the home-screen app');
         window.location.assign(url);
+        // Where the page stays (iOS shows Spotify's page in a browser view over it), the answer
+        // is looked for now and then too, in case no event says the app is looked at again.
+        const until = Date.now() + SPOTIFY_WEB_LOGIN_TTL_MS;
+        const timer = setInterval(() => {
+            if (Date.now() > until) clearInterval(timer);
+            else startAgainForAnswer();
+        }, 1000);
         return;
     }
     const opened = window.open(url, 'folia-spotify-login', 'popup,width=520,height=760');
@@ -371,3 +378,28 @@ if (typeof window !== 'undefined' && typeof localStorage !== 'undefined' && !sig
 
 /** Settles once a sign-in that came back from Spotify's page (REDIRECT_KEY) is kept or dropped. */
 export const spotifyWebRedirectSettled = (): Promise<boolean> => redirectResumed;
+
+// Where iOS opened Spotify's page in a browser view over the home-screen app, the answer is written
+// there (spotify-callback.html) while this page stays as it was. Once the app is looked at again with
+// an answer waiting, the page starts again, and the start above exchanges it.
+const answerWaits = (): boolean => {
+    try {
+        const pending = JSON.parse(getStoredString(REDIRECT_KEY, 'null')) as RedirectAttempt | null;
+        return Boolean(pending?.verifier && (pending.code || pending.error));
+    } catch {
+        return false;
+    }
+};
+const startAgainForAnswer = (): void => {
+    if (typeof document === 'undefined' || document.visibilityState !== 'visible' || !answerWaits()) return;
+    console.log('[Spotify] Web sign-in answer came back over the home-screen app; starting again to keep it');
+    window.location.reload();
+};
+if (typeof window !== 'undefined' && typeof document !== 'undefined' && typeof window.addEventListener === 'function' && !signsInThroughDesktop()) {
+    document.addEventListener('visibilitychange', startAgainForAnswer);
+    window.addEventListener('focus', startAgainForAnswer);
+    window.addEventListener('pageshow', startAgainForAnswer);
+    window.addEventListener('storage', (event) => {
+        if (event.key === REDIRECT_KEY) startAgainForAnswer();
+    });
+}

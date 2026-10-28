@@ -15,22 +15,40 @@
   // public/spotify-callback.html
   // Where Spotify's consent page comes back to for the web version's sign-in
   // (src/services/onlineMusic/spotify/web/spotifyWebAuth.ts): hands the code or the error to the
-  // app's page over a BroadcastChannel, takes them out of the address, and closes. This page loads
-  // none of the app, so its one line is written here in the app's languages.
+  // app's page over a BroadcastChannel (or, for an app on the home screen, through the attempt kept
+  // in storage), takes them out of the address, and closes. This page loads none of the app, so
+  // its lines are written here in the app's languages.
   (function () {
     var params = new URLSearchParams(window.location.search);
     var answer = { state: params.get('state') || '', code: params.get('code') || '', error: params.get('error') || '' };
     history.replaceState(null, '', window.location.pathname);
-    // A sign-in from an app on the home screen opened Spotify's page in place of the app
-    // (spotifyWebAuth.ts, REDIRECT_KEY): the answer goes with its attempt, and the page goes back.
+    var language = (navigator.language || '').toLowerCase();
+    var say = function (texts) {
+      var text = language.indexOf('zh') === 0 ? (/tw|hk|mo|hant/.test(language) ? texts.tw : texts.cn) : language.indexOf('id') === 0 ? texts.id : texts.en;
+      document.getElementById('note').textContent = text;
+    };
+    // A sign-in from an app on the home screen (spotifyWebAuth.ts, REDIRECT_KEY): the answer goes
+    // with its attempt. Where this page is the app's own window, it goes back to the app, which
+    // exchanges the code as it starts. Where iOS opened Spotify's page in a browser view over the
+    // app, this page is that view: the app under it takes the answer once it is looked at again.
     try {
       var pending = JSON.parse(window.localStorage.getItem('folia_spotify_web_redirect') || 'null');
       if (pending && pending.state && pending.state === answer.state) {
         pending.code = answer.code;
         pending.error = answer.error;
         window.localStorage.setItem('folia_spotify_web_redirect', JSON.stringify(pending));
-        var back = new URL(pending.returnTo || '/', window.location.origin);
-        window.location.replace(back.origin === window.location.origin ? back.href : window.location.origin + '/');
+        var standalone = window.navigator.standalone === true
+          || (typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches);
+        if (standalone) {
+          var back = new URL(pending.returnTo || '/', window.location.origin);
+          window.location.replace(back.origin === window.location.origin ? back.href : window.location.origin + '/');
+          return;
+        }
+        say({
+          tw: '登入完成。按左上角的「完成」回到 Folia。', cn: '登录完成。按左上角的“完成”回到 Folia。',
+          id: 'Masuk selesai. Ketuk "Selesai" untuk kembali ke Folia.', en: 'Signed in. Tap Done to go back to Folia.',
+        });
+        window.close();
         return;
       }
     } catch (error) { /* no storage: the answer goes over the channel below */ }
@@ -39,11 +57,18 @@
       channel.postMessage(answer);
       channel.close();
     } catch (error) { /* a browser without BroadcastChannel: the sign-in runs out in the app */ }
-    var language = (navigator.language || '').toLowerCase();
-    var note = language.indexOf('zh') === 0
-      ? (/tw|hk|mo|hant/.test(language) ? '已返回 Folia，可以關閉這個視窗。' : '已返回 Folia，可以关闭这个窗口。')
-      : language.indexOf('id') === 0 ? 'Kembali ke Folia. Jendela ini boleh ditutup.' : 'Back to Folia. You can close this window.';
-    document.getElementById('note').textContent = note;
+    // Not a window the app opened, and no attempt here: the app that asked keeps its data
+    // elsewhere, so this answer cannot reach it. Said rather than closed, so it can be told.
+    if (!window.opener) {
+      say({
+        tw: 'Folia 沒有收到這次登入：這個瀏覽器和 Folia 不共用資料。請回到 Folia 再試一次。',
+        cn: 'Folia 没有收到这次登录：这个浏览器和 Folia 不共用数据。请回到 Folia 再试一次。',
+        id: 'Folia tidak menerima masuk ini: peramban ini tidak berbagi data dengan Folia. Kembali ke Folia dan coba lagi.',
+        en: 'Folia did not get this sign-in: this browser does not share its data with Folia. Go back to Folia and try again.',
+      });
+      return;
+    }
+    say({ tw: '已返回 Folia，可以關閉這個視窗。', cn: '已返回 Folia，可以关闭这个窗口。', id: 'Kembali ke Folia. Jendela ini boleh ditutup.', en: 'Back to Folia. You can close this window.' });
     window.close();
   })();
 </script>
