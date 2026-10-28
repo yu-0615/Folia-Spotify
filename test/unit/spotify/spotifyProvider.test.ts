@@ -276,11 +276,12 @@ describe('Spotify explore page', () => {
     const home = (sections: unknown[]) => ({ home: { sectionContainer: { sections: { items: sections } } } });
     const feature = { content: { data: { __typename: 'BrowseClientFeature' } } };
 
-    it('goes on, after the home page, with the new releases and the lists Spotify makes for the account, each section once', async () => {
+    it('opens on the lists Spotify makes for the account, then the first shelves, then the home page with the new releases, each section once', async () => {
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
         const answers = {
-            home: () => home([section('s:1', [card('Playlist', 'p')])]),
+            home: () => home([section('s:1', [card('Playlist', 'p')]), section('s:7', [card('Playlist', 'r')])]),
             browsePage: (): unknown => ({ browse: { sections: { items: [
-                // On the home page already; a section with more than it gave; one with nothing the app shows.
+                // On the home page too; a section with more than it gave; one with nothing the app shows.
                 section('s:1', [card('Playlist', 'p')]),
                 section('s:5', [card('Playlist', 'q'), feature], { sectionItems: { totalCount: 40, items: [card('Playlist', 'q'), feature] } }),
                 section('s:6', [feature]),
@@ -289,23 +290,28 @@ describe('Spotify explore page', () => {
         };
         answerQueries(answers);
         const first = await spotifyProvider.explore!.getFeed();
-        const next = await spotifyProvider.explore!.getFeed(first.nextCursor);
-        expect(next.sections.map(shelf => [shelf.id, shelf.items.map(item => item.kind === 'collection' && item.collection.type), shelf.moreCursor])).toEqual([
-            ['spotify-new-releases', ['album'], undefined],
+        expect(first.sections.map(shelf => [shelf.id, shelf.items.map(item => item.kind === 'collection' && item.collection.type), shelf.moreCursor])).toEqual([
+            ['s:1', ['playlist'], undefined],
             ['s:5', ['playlist'], 'made s:5 2'],
         ]);
-        expect(next.nextCursor).toBeDefined();
         expect(sent('browsePage')[0]).toMatchObject({ uri: 'spotify:page:0JQ5DAt0tbjZptfcdMSKl3', sectionPagination: { offset: 0, limit: 20 } });
+        expect(sent('home')).toHaveLength(0);
+        // The liked songs cannot be read and nothing was played here: no shelves, and the home page comes next.
+        const shelves = await spotifyProvider.explore!.getFeed(first.nextCursor);
+        expect(shelves.sections).toEqual([]);
+        const next = await spotifyProvider.explore!.getFeed(shelves.nextCursor);
+        // (s:1 stands among the account's lists already.)
+        expect(next.sections.map(shelf => shelf.id)).toEqual(['spotify-new-releases', 's:7']);
 
-        // The new releases cannot be read: the page is the account's lists.
-        vi.spyOn(console, 'warn').mockImplementation(() => {});
+        // The new releases cannot be read: the home page alone.
         answers.queryWhatsNewFeed = () => { throw new Error('refused'); };
-        expect((await spotifyProvider.explore!.getFeed(first.nextCursor)).sections.map(shelf => shelf.id)).toEqual(['s:5']);
-        // A query for the lists that Spotify no longer answers does not end the list there; offline, the page fails and can be asked for again.
+        const again = await spotifyProvider.explore!.getFeed();
+        expect((await spotifyProvider.explore!.getFeed((await spotifyProvider.explore!.getFeed(again.nextCursor)).nextCursor)).sections.map(shelf => shelf.id)).toEqual(['s:7']);
+        // A query for the lists that Spotify no longer answers: the page opens on the home page; offline, the page fails and can be asked for again.
         answers.browsePage = () => { throw new OnlineProviderError('invalid-response', 'PersistedQueryNotFound', 'spotify'); };
-        expect(await spotifyProvider.explore!.getFeed(first.nextCursor)).toMatchObject({ sections: [], nextCursor: next.nextCursor });
+        expect(await spotifyProvider.explore!.getFeed()).toMatchObject({ sections: [{ id: 's:1' }, { id: 's:7' }], nextCursor: first.nextCursor });
         answers.browsePage = () => { throw new OnlineProviderError('network', 'offline', 'spotify'); };
-        await expect(spotifyProvider.explore!.getFeed(first.nextCursor)).rejects.toMatchObject({ code: 'network' });
+        await expect(spotifyProvider.explore!.getFeed()).rejects.toMatchObject({ code: 'network' });
     });
 
     it('pages a section of the account\'s lists by Spotify\'s own rows, to the section\'s end', async () => {
@@ -337,15 +343,15 @@ describe('Spotify explore page', () => {
         const rows = [seed, ...songs(seed)].map(n => ({ itemV2: { data: numbered(n) } }));
         return { playlistV2: { __typename: 'Playlist', content: { totalCount: rows.length, items: rows } } };
     });
+    // The first page of shelves comes right after the page opens.
     const radioPage = async (listened: number[] = []) => {
         const first = await spotifyProvider.explore!.getFeed(undefined, listened.map(n => normalizeSpotifySong(numbered(n))));
-        const made = await spotifyProvider.explore!.getFeed(first.nextCursor);
         request.mockClear();
-        return spotifyProvider.explore!.getFeed(made.nextCursor);
+        return spotifyProvider.explore!.getFeed(first.nextCursor);
     };
     const askedWith = () => request.mock.calls.filter(call => call[0] === 'radio').map(call => Number(call[1].id));
 
-    it('ends with shelves of the songs like one song: asked with what was played here, then with the liked songs, each song on one shelf', async () => {
+    it('follows the opening with shelves of the songs like one song: asked with what was played here, then with the liked songs, each song on one shelf', async () => {
         vi.spyOn(console, 'log').mockImplementation(() => {});
         // Every radio holds 30 songs of its own and one that all of them share; one lists a song of its own twice.
         answerRadios([2, 1, 3], seed => [9999, ...(seed === 2 ? [200] : []), ...range(seed * 100, 30)]);
@@ -353,8 +359,8 @@ describe('Spotify explore page', () => {
         expect(askedWith()).toEqual([1, 2, 3]);
         expect(page.sections.map(shelf => [shelf.items.length, shelf.changesWithRead, Boolean(shelf.moreCursor)])).toEqual([[12, true, true], [12, true, true], [12, true, true]]);
         expect(new Set(page.sections.map(shelf => shelf.id)).size).toBe(3);
-        // The three songs asked with are used up: the list ends here.
-        expect(page.nextCursor).toBeUndefined();
+        // The home page comes next.
+        expect(page.nextCursor).toBe('home page');
         // A shelf holds whole batches (24 of the 30 or 31 songs that are free), without the song it was asked with.
         const held = [];
         for (const shelf of page.sections) {
@@ -368,6 +374,8 @@ describe('Spotify explore page', () => {
         expect(held.flat().some(song => [1, 2, 3].includes(song))).toBe(false);
         // One request for the liked songs and two a shelf; a shelf's further songs ask Spotify nothing.
         expect(request).toHaveBeenCalledTimes(7);
+        // The three songs asked with are used up: the list ends after the home page.
+        expect((await spotifyProvider.explore!.getFeed(page.nextCursor)).nextCursor).toBeUndefined();
     });
 
     it('asks, in a later read, with the songs the reads before did not ask with, and lists first the songs no shelf has handed out', async () => {
