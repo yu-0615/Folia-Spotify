@@ -7,14 +7,27 @@ const { videoFieldsOf } = require('./songVersion.cjs');
 // The explore page of the account of the web sign-in: YouTube Music's own pages as its web
 // client is given them (raw browse JSON), read into the wire shapes of the `explore` operation's
 // answer. The home feed comes first, a part a request; after its last part the explore page and
-// the charts page, a page each. The layouts read here are those of the answers a guest was given
-// on 2026-10-08; of an account's answers only the counts were at hand (the same layouts, and a
+// the charts page, a page each; then the moods and genres, a few of them a page. The layouts read
+// here are those of the answers a guest was given on 2026-10-08 (the moods and genres on
+// 2026-10-28); of an account's answers only the counts were at hand (the same layouts, and a
 // shelf of podcast episodes, which is left out).
 
 const HOME = 'FEmusic_home';
 // The pages after the home feed, in this order. A page is asked for by its name here, which the
 // page before it hands out as its `continuation`: no token of YouTube's is such a name.
 const LATER_PAGES = ['FEmusic_explore', 'FEmusic_charts'];
+// After them, the moods and genres. Their page is a list of links, one a category, under two
+// headings (to a guest in zh-TW, 2026-10-28: 12 moods and 16 genres), and a category's page is
+// shelves: of playlists for a mood (12 shelves of 6 to 47), for a genre of songs, playlists and
+// videos (5 shelves of 14 to 80). A category comes here as one shelf, headed with its heading and
+// its name, of the playlists of its page taken from its shelves in turn (the first of each shelf,
+// then the second...), each once and MOOD_LISTS at most. The list of the categories is read once
+// in a read of the page from its start, and MOODS_A_PAGE categories make a page, which is asked
+// for as MOODS and the place of its first category ("FEmusic_moods_and_genres 4").
+const MOODS = 'FEmusic_moods_and_genres';
+const MOOD_CATEGORY = 'FEmusic_moods_and_genres_category';
+const MOODS_A_PAGE = 4;
+const MOOD_LISTS = 24;
 
 const LIST_ID = /^[\w-]{2,128}$/;
 const ARTIST_ID = /^UC[\w-]{10,62}$/;
@@ -116,6 +129,40 @@ function readWebShelves(data) {
   return { sections, ...(typeof continuation === 'string' && continuation ? { continuation } : {}) };
 }
 
+// The categories of the moods and genres page, in its order: each with its heading, its name and
+// what its page is asked for with. A link that leads anywhere else is left out.
+function readMoodLinks(data) {
+  const groups = data?.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents;
+  return (Array.isArray(groups) ? groups : []).flatMap(group => {
+    const grid = group?.gridRenderer;
+    const heading = textOf(grid?.header?.gridHeaderRenderer?.title);
+    return (Array.isArray(grid?.items) ? grid.items : []).flatMap(item => {
+      const link = item?.musicNavigationButtonRenderer;
+      const endpoint = link?.clickCommand?.browseEndpoint;
+      const name = textOf(link?.buttonText);
+      return name && endpoint?.browseId === MOOD_CATEGORY && typeof endpoint.params === 'string' && endpoint.params
+        ? [{ heading, name, params: endpoint.params }]
+        : [];
+    });
+  });
+}
+
+// The playlists of a category's shelves, taken from them in turn, each once and `most` at most.
+function playlistsInTurn(sections, most) {
+  const seen = new Set();
+  const lists = [];
+  const longest = Math.max(0, ...sections.map(section => section.items.length));
+  for (let place = 0; place < longest && lists.length < most; place += 1) {
+    for (const section of sections) {
+      const item = section.items[place];
+      if (item?.kind !== 'collection' || item.collection.type !== 'playlist' || seen.has(item.collection.id) || lists.length >= most) continue;
+      seen.add(item.collection.id);
+      lists.push(item);
+    }
+  }
+  return lists;
+}
+
 // A shelf by its heading and its entries, in whatever order they come.
 const shelfKey = section => JSON.stringify([
   section.title,
@@ -126,16 +173,58 @@ const shelfKey = section => JSON.stringify([
 function createWebExplore({ browse, log = (...args) => console.log(...args), warn = (...args) => console.warn(...args) }) {
   // The shelves answered since the page was last asked for from its start.
   let answered = new Set();
+  // The categories of the moods and genres, as read once since then (the read may be under way).
+  let moods = null;
+
+  // A page of the moods and genres: MOODS_A_PAGE categories from the place `continuation` names.
+  // A page of theirs that YouTube will not give is passed over as a page after the feed is: the
+  // list of them ends the explore page, a category leaves its shelf out.
+  async function moodPage(continuation, own) {
+    const from = Number(continuation.slice(MOODS.length).trim() || 0);
+    const passOver = (what, error) => {
+      const { code } = toErrorResult(error).error;
+      if (code === 'auth-required' || code === 'network') throw error;
+      warn(`[Ytm] Explore page as the web client (${what}) could not be read: ${describeError(error)}; it is passed over`);
+      return null;
+    };
+    if (!moods) {
+      const asked = browse({ browseId: MOODS }).then(readMoodLinks);
+      moods = asked;
+      // (A read that failed is not kept: the next page asks YouTube again.)
+      asked.catch(() => { if (moods === asked) moods = null; });
+    }
+    const links = await moods.catch(error => passOver(MOODS, error));
+    if (!links) return { sections: [] };
+    const asked = links.slice(from, from + MOODS_A_PAGE);
+    const pages = await Promise.all(asked.map(link => browse({ browseId: MOOD_CATEGORY, params: link.params })
+      .catch(error => passOver(`${MOOD_CATEGORY} ${link.name}`, error))));
+    const sections = asked.flatMap((link, index) => {
+      const items = pages[index] ? playlistsInTurn(readWebShelves(pages[index]).sections, MOOD_LISTS) : [];
+      const section = { title: link.heading ? `${link.heading} · ${link.name}` : link.name, items };
+      const key = shelfKey(section);
+      if (items.length === 0 || own.has(key)) return [];
+      own.add(key);
+      return [section];
+    });
+    const next = from + MOODS_A_PAGE < links.length ? `${MOODS} ${from + MOODS_A_PAGE}` : undefined;
+    log(`[Ytm] Explore page as the web client (${MOODS}, from category ${from}): ${sections.length} shelves of ${asked.length} categories, ${sections.reduce((sum, section) => sum + section.items.length, 0)} playlists; ${links.length} categories in all; ${next ? 'a page follows' : 'the last page'}`);
+    return { sections, ...(next ? { continuation: next } : {}) };
+  }
 
   // One page of the explore page's shelves, in the shape of the `explore` operation's answer.
   // Without `continuation` the page is asked for from its start (the first part of the home
   // feed); with the `continuation` of an answer, the page after that answer's. The home feed
-  // names its own further part; after its last part, and after each page of LATER_PAGES, the
-  // next page is named here. The answer of the last page has no `continuation`.
+  // names its own further part; after its last part, after each page of LATER_PAGES and after
+  // each page of the moods and genres, the next page is named here. The answer of the last page
+  // has no `continuation`.
   async function page(continuation) {
-    if (!continuation) answered = new Set();
+    if (!continuation) {
+      answered = new Set();
+      moods = null;
+    }
     // (An answer that arrives after the page was asked for from its start again is of the read before.)
     const own = answered;
+    if (continuation === MOODS || continuation?.startsWith(`${MOODS} `)) return moodPage(continuation, own);
     const later = LATER_PAGES.indexOf(continuation);
     const isFurtherPart = Boolean(continuation) && later < 0;
     const browseId = later >= 0 ? continuation : HOME;
@@ -159,7 +248,7 @@ function createWebExplore({ browse, log = (...args) => console.log(...args), war
       own.add(key);
       return true;
     });
-    const next = later >= 0 ? LATER_PAGES[later + 1] : read.continuation ?? LATER_PAGES[0];
+    const next = later >= 0 ? LATER_PAGES[later + 1] ?? MOODS : read.continuation ?? LATER_PAGES[0];
     log(`[Ytm] Explore page as the web client (${browseId}${isFurtherPart ? ', a further part' : ''}): ${sections.length} shelves, ${sections.reduce((sum, section) => sum + section.items.length, 0)} entries; ${read.sections.length - sections.length} shelves met before left out; ${next ? 'a page follows' : 'the last page'}`);
     return { sections, ...(next ? { continuation: next } : {}) };
   }
@@ -167,4 +256,4 @@ function createWebExplore({ browse, log = (...args) => console.log(...args), war
   return { page };
 }
 
-module.exports = { createWebExplore, exploreItemFromEntry, readWebShelves };
+module.exports = { createWebExplore, exploreItemFromEntry, readMoodLinks, readWebShelves };

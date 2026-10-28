@@ -7,6 +7,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // client gave a guest on 2026-10-08: a few entries a shelf, without menus, play overlays and
 // tracking parameters; the home feed's token is made up. A guest is shown no artist's card, no
 // mix and no podcast episode's row: those are a guest's card led somewhere else, with made-up ids.
+// The moods and genres (moods, moodCategories) are cut from a guest's answers in zh-TW of
+// 2026-10-28: two links under each of the two headings, and the first three shelves of three
+// entries of the first category of each heading.
 
 const request = vi.hoisted(() => vi.fn());
 vi.mock('@/services/onlineMusic/ytm/ytmTransport', () => ({
@@ -17,7 +20,7 @@ import { resetYtmRecommendations, ytmRecommendations } from '@/services/onlineMu
 import i18n from '@/i18n/config';
 
 const require = createRequire(import.meta.url);
-const { createWebExplore, exploreItemFromEntry, readWebShelves } = require('../../../electron/ytm/webExplore.cjs');
+const { createWebExplore, exploreItemFromEntry, readMoodLinks, readWebShelves } = require('../../../electron/ytm/webExplore.cjs');
 const { ytmError } = require('../../../electron/ytm/errors.cjs');
 const fixtures = require('./ytmWebExploreFixtures.json');
 
@@ -32,9 +35,15 @@ const cardTo = (navigationEndpoint: Record<string, unknown>) => {
     made.musicTwoRowItemRenderer.navigationEndpoint = navigationEndpoint;
     return made;
 };
-// YouTube as the fixtures: a page by its name, a further part of the home feed by its token.
-const guestPages = { FEmusic_home: fixtures.home, 'home-part-2': fixtures.homeFurther, FEmusic_explore: fixtures.explore, FEmusic_charts: fixtures.charts };
-const youtube = (answers: Record<string, unknown>) => vi.fn(async (body: { browseId?: string; continuation?: string }) => answers[body.browseId ?? body.continuation ?? '']);
+// The categories of the moods and genres fixture; only the first of each heading has a page among the fixtures.
+const moodLinks = readMoodLinks(fixtures.moods);
+// YouTube as the fixtures: a page by its name, a further part of the home feed by its token, a
+// category by what it is asked for with.
+const guestPages = {
+    FEmusic_home: fixtures.home, 'home-part-2': fixtures.homeFurther, FEmusic_explore: fixtures.explore, FEmusic_charts: fixtures.charts,
+    FEmusic_moods_and_genres: fixtures.moods, [moodLinks[0].params]: fixtures.moodCategories[0], [moodLinks[2].params]: fixtures.moodCategories[1],
+};
+const youtube = (answers: Record<string, unknown>) => vi.fn(async (body: { browseId?: string; continuation?: string; params?: string }) => answers[body.params ?? body.browseId ?? body.continuation ?? '']);
 const titlesOf = (page: { sections: Array<{ title: string }> }) => page.sections.map(section => section.title);
 
 const art = expect.stringMatching(/^https:\/\/(yt3|lh3)\.googleusercontent\.com\/.+=w544-h544(-p)?-l90-rj$/);
@@ -126,16 +135,22 @@ describe('YouTube Music web pages', () => {
         expect([readWebShelves({}), readWebShelves(null)]).toEqual([{ sections: [] }, { sections: [] }]);
     });
 
-    it('goes from the home feed, part by part, to the explore page and the charts page, and ends there', async () => {
+    it('goes from the home feed, part by part, to the explore page, the charts page and the moods and genres, and ends there', async () => {
         const browse = youtube(guestPages);
         const web = createWebExplore({ browse, log: () => {} });
         const pages = [await web.page()];
         while (pages.at(-1).continuation) pages.push(await web.page(pages.at(-1).continuation));
-        expect(browse.mock.calls.map(([body]) => body)).toEqual([{ browseId: 'FEmusic_home' }, { continuation: 'home-part-2' }, { browseId: 'FEmusic_explore' }, { browseId: 'FEmusic_charts' }]);
+        const category = (link: { params: string }) => ({ browseId: 'FEmusic_moods_and_genres_category', params: link.params });
+        expect(browse.mock.calls.map(([body]) => body)).toEqual([
+            { browseId: 'FEmusic_home' }, { continuation: 'home-part-2' }, { browseId: 'FEmusic_explore' }, { browseId: 'FEmusic_charts' },
+            { browseId: 'FEmusic_moods_and_genres' }, ...moodLinks.map(category),
+        ]);
         // The feed names its own further part; the pages after it are named by the reader.
-        expect(pages.map(page => page.continuation)).toEqual(['home-part-2', 'FEmusic_explore', 'FEmusic_charts', undefined]);
+        expect(pages.map(page => page.continuation)).toEqual(['home-part-2', 'FEmusic_explore', 'FEmusic_charts', 'FEmusic_moods_and_genres', undefined]);
         expect(pages.map(titlesOf)).toEqual([
             ['猜你喜欢', 'Your fav decades, on repeat!'], ['新曲上线', '为你推荐的精选播放列表'], ['新专辑与单曲', '时下流行', '新音乐视频'], ['视频排行榜', '最爱的音乐人'],
+            // A category whose page has no playlist (here: none among the fixtures) has no shelf.
+            ['情境和場景 · 放鬆心情', '類型 · 日本流行音樂'],
         ]);
         // An album of the feed under another heading on the explore page is that page's shelf.
         expect(pages[2].sections[0].items[0].collection.id).toBe(pages[1].sections[0].items[0].collection.id);
@@ -163,6 +178,56 @@ describe('YouTube Music web pages', () => {
             await expect(read).rejects.toBe(failure);
         }
         expect(warn).toHaveBeenCalledTimes(1);
+    });
+
+    it('makes a category one shelf of the playlists of its shelves in turn, without its songs and videos', async () => {
+        const web = createWebExplore({ browse: youtube(guestPages), log: () => {} });
+        const [moods, genres] = (await web.page('FEmusic_moods_and_genres')).sections;
+        const listsOf = (category: unknown) => readWebShelves(category).sections.map((shelf: any) => shelf.items.map((item: any) => item.collection?.id));
+        const [cafe, explore, meditation] = listsOf(fixtures.moodCategories[0]);
+        expect(moods.items.map((item: any) => item.collection.id)).toEqual([0, 1, 2].flatMap(place => [cafe[place], explore[place], meditation[place]]));
+        expect(moods.items[0]).toMatchObject({ kind: 'collection', collection: { type: 'playlist', name: expect.any(String) } });
+        // The genre's first shelf is of songs: its playlists are those of the shelves after it.
+        const [, picked, community] = listsOf(fixtures.moodCategories[1]);
+        expect(genres.items.map((item: any) => item.collection.id)).toEqual([0, 1, 2].flatMap(place => [picked[place], community[place]]));
+    });
+
+    it('pages the moods and genres four categories at a time, reading their list once in a read', async () => {
+        const many = structuredClone(fixtures.moods);
+        const [moodsGrid] = many.contents.singleColumnBrowseResultsRenderer.tabs[0].tabRenderer.content.sectionListRenderer.contents;
+        moodsGrid.gridRenderer.items.push(...structuredClone(moodsGrid.gridRenderer.items).map((item: any, index: number) => {
+            item.musicNavigationButtonRenderer.buttonText.runs[0].text += ` ${index}`;
+            return item;
+        }));
+        const browse = youtube({ ...guestPages, FEmusic_moods_and_genres: many });
+        const web = createWebExplore({ browse, log: () => {} });
+        const first = await web.page('FEmusic_moods_and_genres');
+        expect(first.continuation).toBe('FEmusic_moods_and_genres 4');
+        // The two links added lead to the categories of the first two: the one with a page among
+        // the fixtures is a shelf of the same playlists, under the name its link gives.
+        expect(titlesOf(first)).toEqual(['情境和場景 · 放鬆心情', '情境和場景 · 放鬆心情 0']);
+        const second = await web.page(first.continuation);
+        expect(second.continuation).toBeUndefined();
+        expect(titlesOf(second)).toEqual(['類型 · 日本流行音樂']);
+        expect(browse.mock.calls.filter(([body]) => body.browseId === 'FEmusic_moods_and_genres')).toHaveLength(1);
+        // A read from the start reads the list again.
+        await web.page();
+        await web.page('FEmusic_moods_and_genres');
+        expect(browse.mock.calls.filter(([body]) => body.browseId === 'FEmusic_moods_and_genres')).toHaveLength(2);
+    });
+
+    it('ends the page where the moods and genres are refused, and leaves out a category YouTube refuses', async () => {
+        const warn = vi.fn();
+        const refusing = (refused: string) => vi.fn(async (body: { browseId?: string; params?: string }) => {
+            if ((body.params ?? body.browseId) === refused) throw new Error('Request to https://music.youtube.com/x failed with status code 400');
+            return (guestPages as Record<string, unknown>)[body.params ?? body.browseId ?? ''];
+        });
+        expect(await createWebExplore({ browse: refusing('FEmusic_moods_and_genres'), log: () => {}, warn }).page('FEmusic_moods_and_genres')).toEqual({ sections: [] });
+        expect(titlesOf(await createWebExplore({ browse: refusing(moodLinks[0].params), log: () => {}, warn }).page('FEmusic_moods_and_genres'))).toEqual(['類型 · 日本流行音樂']);
+        expect(warn).toHaveBeenCalledTimes(2);
+        expect(JSON.stringify(warn.mock.calls)).not.toContain('music.youtube.com');
+        const offline = createWebExplore({ browse: vi.fn(async () => { throw new Error('fetch failed'); }), log: () => {}, warn });
+        await expect(offline.page('FEmusic_moods_and_genres')).rejects.toThrow('fetch failed');
     });
 
     it('answers a shelf once in a read: not a later page\'s with the same heading and the same entries', async () => {
@@ -246,14 +311,22 @@ describe('YouTube Music explore page over the web client\'s answers', () => {
         expect(third.sections[2].items.map(item => item.wideCoverUrl)).toEqual([still('0lXbg9H42jc', 'hq720'), still('wjWud5YXNT4', 'hq720'), still('_Jad5guA7jQ', 'hq720')]);
         expect(third.nextCursor).toMatch(/^\d+:FEmusic_charts$/);
 
-        const last = await ytmExplore.getFeed(third.nextCursor);
-        expect(titlesOf(last)).toEqual(['视频排行榜', '最爱的音乐人']);
-        expect(last.sections[1].items[0]).toMatchObject({ kind: 'collection', collection: { providerId: 'ytm', id: 'UCL2MDNdwEtV6aYUgNjFQGZA', type: 'artist' } });
-        expect(asked('explore')).toEqual([['explore', {}], ['explore', { continuation: 'home-part-2' }], ['explore', { continuation: 'FEmusic_explore' }], ['explore', { continuation: 'FEmusic_charts' }]]);
+        const charts = await ytmExplore.getFeed(third.nextCursor);
+        expect(titlesOf(charts)).toEqual(['视频排行榜', '最爱的音乐人']);
+        expect(charts.sections[1].items[0]).toMatchObject({ kind: 'collection', collection: { providerId: 'ytm', id: 'UCL2MDNdwEtV6aYUgNjFQGZA', type: 'artist' } });
+        expect(charts.nextCursor).toMatch(/^\d+:FEmusic_moods_and_genres$/);
+
+        const last = await ytmExplore.getFeed(charts.nextCursor);
+        expect(titlesOf(last)).toEqual(['情境和場景 · 放鬆心情', '類型 · 日本流行音樂']);
+        expect(last.sections[0].items[0]).toMatchObject({ kind: 'collection', collection: { providerId: 'ytm', type: 'playlist' } });
+        expect(asked('explore')).toEqual([
+            ['explore', {}], ['explore', { continuation: 'home-part-2' }], ['explore', { continuation: 'FEmusic_explore' }],
+            ['explore', { continuation: 'FEmusic_charts' }], ['explore', { continuation: 'FEmusic_moods_and_genres' }],
+        ]);
         // YouTube's pages have ended: what follows is the shelves made here.
-        expect(last.nextCursor).toMatch(/^\d+:radios after 3$/);
+        expect(last.nextCursor).toMatch(/^\d+:radios after 4$/);
         // No shelf of YouTube's has further entries of its own (nor has the one made here, of twelve songs).
-        expect([first, second, third, last].flatMap(page => page.sections).filter(section => section.moreCursor)).toEqual([]);
+        expect([first, second, third, charts, last].flatMap(page => page.sections).filter(section => section.moreCursor)).toEqual([]);
 
         // A cursor of a read before is answered with nothing, and YouTube is not asked with it.
         await ytmExplore.getFeed();
