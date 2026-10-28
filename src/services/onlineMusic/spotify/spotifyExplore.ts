@@ -3,7 +3,7 @@ import type { UnifiedSong } from '../../../types';
 import { OnlineProviderError } from '../../../types/onlineMusic';
 import type { OnlineExploreProvider, ProviderCollection, ProviderExploreItem, ProviderExplorePage, ProviderExploreSection } from '../../../types/onlineMusic';
 import { createHandedOut } from '../exploreReads';
-import { present, spotifyAlbumOf, spotifyArtistOf, spotifyPlaylistOf } from './spotifyNormalize';
+import { isSpotifyDailyMix, present, spotifyAlbumOf, spotifyArtistOf, spotifyPlaylistOf } from './spotifyNormalize';
 import type { SpotifyAlbum, SpotifyArtistRow, SpotifyPlaylist } from './spotifyNormalize';
 import { addSpotifySeeds, noteSpotifyListened, spotifyLikedSeeds, spotifyRadioSongs, spotifySeedOf } from './spotifyRadio';
 import type { SpotifySeed } from './spotifyRadio';
@@ -140,6 +140,8 @@ const itemOf = (card: Card): ProviderExploreItem | null => {
     const artist = data?.__typename === 'Artist' ? spotifyArtistOf(data as SpotifyArtistRow) : null;
     return artist ? { kind: 'collection', collection: artist } : null;
 };
+// The daily mixes are on the playlists tab (spotifyLibrary.ts), not on the explore page.
+const notDailyMix = (item: ProviderExploreItem): boolean => !(item.kind === 'collection' && item.collection.type === 'playlist' && isSpotifyDailyMix(item.collection.id));
 const keyOf = (item: ProviderExploreItem): string => (item.kind === 'collection' ? `${item.collection.type}:${item.collection.id}` : `song:${item.song.id}`);
 const rowsOf = (section: Section | undefined): Card[] => section?.sectionItems?.items ?? [];
 const countOf = (sections: ProviderExploreSection[]) => sections.reduce((count, section) => count + section.items.length, 0);
@@ -238,7 +240,9 @@ const firstPage = async (listened: UnifiedSong[]): Promise<ProviderExplorePage> 
         return null;
     });
     const rows = made?.browse?.sections?.items ?? [];
-    const lists = rows.map(row => sectionOf(row, given => `${MADE_SECTION}${row.uri} ${given}`)).filter(present);
+    const lists = rows.map(row => sectionOf(row, given => `${MADE_SECTION}${row.uri} ${given}`))
+        .map(section => section && { ...section, items: section.items.filter(notDailyMix) })
+        .filter(section => section !== null && section.items.length > 0) as ProviderExploreSection[];
     lists.forEach(section => read.made.add(section.id));
     console.log(`[Spotify] Explore page (made for the account): ${lists.length} sections of ${rows.length}, ${countOf(lists)} entries`);
     const sections = lists.length > 0 ? lists : await homeSections(read);
@@ -334,7 +338,7 @@ export const spotifyExplore: OnlineExploreProvider = {
             const next = offset + rowsOf(section).length;
             const hasMore = rowsOf(section).length > 0 && next < (section?.sectionItems?.totalCount ?? 0);
             console.log(`[Spotify] Explore section (made for the account): ${rowsOf(section).length} further entries from place ${offset}${hasMore ? '' : ', the last ones'}`);
-            return { items: rowsOf(section).map(itemOf).filter(present), ...(hasMore ? { moreCursor: `${MADE_SECTION}${uri} ${next}` } : {}) };
+            return { items: rowsOf(section).map(itemOf).filter(present).filter(notDailyMix), ...(hasMore ? { moreCursor: `${MADE_SECTION}${uri} ${next}` } : {}) };
         }
         // A shelf made here hands out what it holds: Spotify is not asked.
         if (cursor.startsWith(RADIO)) {

@@ -46,6 +46,12 @@ export type SpotifyEntity = SpotifyTrack | SpotifyAlbum | SpotifyPlaylist | Spot
 // The list of the account's liked songs has no uri of its own; this stands for it as a playlist id.
 export const SPOTIFY_LIKED_ID = 'liked';
 
+// The id of a daily mix's playlist begins so (checked on two accounts, 2026-10-08 and 2026-10-28:
+// Daily Mix 1 to 6 all did; the other mixes Spotify makes begin otherwise).
+const DAILY_MIX_ID = /^37i9dQZF1E3/;
+/** Whether the playlist is one of the daily mixes Spotify makes for the account. */
+export const isSpotifyDailyMix = (id: string | number): boolean => DAILY_MIX_ID.test(String(id));
+
 type SpotifyKind = 'track' | 'album' | 'artist' | 'playlist';
 // The id of a uri of the kind expected, '' for anything else: an older playlist uri names its
 // owner first (`spotify:user:<name>:playlist:<id>`), a file of the owner's own computer has no id.

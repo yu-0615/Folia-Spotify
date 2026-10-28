@@ -29,8 +29,8 @@ const DAILY_ONE = '37i9dQZF1E3'.padEnd(22, 'a');
 const DAILY_TWO = '37i9dQZF1E3'.padEnd(22, 'b');
 
 // Spotify as the account has it: the liked songs, the playlists by id (the radio of the song
-// `x` is the playlist `radio-x`), and the lists made for the account.
-const serve = ({ liked = [], lists = {}, made = [] }: { liked?: string[]; lists?: Record<string, string[]>; made?: string[] }) => {
+// `x` is the playlist `radio-x`), the lists made for the account, and the playlists it keeps.
+const serve = ({ liked = [], lists = {}, made = [], kept = [] }: { liked?: string[]; lists?: Record<string, string[]>; made?: string[]; kept?: string[] }) => {
     request.mockImplementation(async (operation: string, params: any) => {
         if (operation === 'radio') {
             const seed = Object.keys(lists).find(name => name.startsWith('radio-') && id(name.slice(6)) === params.id);
@@ -48,6 +48,9 @@ const serve = ({ liked = [], lists = {}, made = [] }: { liked?: string[]; lists?
         }
         if (params.name === 'browsePage') {
             return { browse: { sections: { items: [{ uri: 'spotify:section:made', data: { title: { transformedLabel: 'Made' } }, sectionItems: { totalCount: made.length, items: made.map(card) } }] } } };
+        }
+        if (params.name === 'libraryV3') {
+            return { me: { libraryV3: { totalCount: kept.length, items: kept.map(list => ({ item: { data: card(list).content.data } })) } } };
         }
         if (params.name === 'home') return { home: { sectionContainer: { sections: { items: [] } } } };
         throw new Error(`unexpected query ${params.name}`);
@@ -123,12 +126,31 @@ describe('Spotify personal FM without the liked songs', () => {
 });
 
 describe('Spotify daily songs and recommended playlists', () => {
-    it('takes the first daily mix as the daily songs and lists the other lists made for the account', async () => {
+    it('takes the first daily mix as the daily songs and lists the other lists made for the account, not the daily mixes', async () => {
         serve({ made: [id('weekly'), DAILY_ONE, DAILY_TWO], lists: { [DAILY_ONE]: ['d1', 'd2'] } });
         const [songs, lists] = await Promise.all([spotifyProvider.recommendations!.getDailySongs!(), spotifyProvider.recommendations!.getRecommendedCollections!(35)]);
         expect(songs.map(song => song.name)).toEqual(['d1', 'd2']);
-        expect(lists.map(list => list.id)).toEqual([id('weekly'), DAILY_TWO]);
+        expect(lists.map(list => list.id)).toEqual([id('weekly')]);
         expect(asked('browsePage')).toHaveLength(1);
+    });
+
+    it('puts the daily mixes on the playlists tab, after the liked songs and before the account\'s own, once', async () => {
+        serve({ liked: ['a'], made: [id('weekly'), DAILY_ONE, DAILY_TWO], kept: [id('mine'), DAILY_TWO] });
+        const first = await spotifyProvider.library!.getUserPlaylists('me', 50, 0);
+        expect(first.items.map(list => list.id)).toEqual(['liked', DAILY_ONE, id('mine'), DAILY_TWO]);
+        expect(first.total).toBe(4);
+        // A further page is the account's own only.
+        expect((await spotifyProvider.library!.getUserPlaylists('me', 50, 2)).items.map(list => list.id)).toEqual([id('mine'), DAILY_TWO]);
+    });
+
+    it('lists the account\'s playlists without the daily mixes where they cannot be read', async () => {
+        serve({ liked: ['a'], kept: [id('mine')] });
+        const answer = request.getMockImplementation()!;
+        request.mockImplementation(async (operation: string, params: any) => {
+            if (params?.name === 'browsePage') throw new Error('PersistedQueryNotFound');
+            return answer(operation, params);
+        });
+        expect((await spotifyProvider.library!.getUserPlaylists('me', 50, 0)).items.map(list => list.id)).toEqual(['liked', id('mine')]);
     });
 
     it('has no daily songs where none of the lists is a daily mix', async () => {

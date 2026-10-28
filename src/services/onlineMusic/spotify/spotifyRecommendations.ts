@@ -3,6 +3,7 @@ import { OnlineProviderError } from '../../../types/onlineMusic';
 import type { OnlineRecommendationProvider, ProviderCollection } from '../../../types/onlineMusic';
 import { spotifyPlaylistTracks } from './spotifyCatalog';
 import { spotifyMadeForAccount, wordsOf } from './spotifyExplore';
+import { isSpotifyDailyMix } from './spotifyNormalize';
 import { addSpotifySeeds, noteSpotifyListened, spotifyLikedSeeds, spotifyListenedSeeds, spotifyRadioSongs } from './spotifyRadio';
 import type { SpotifySeed } from './spotifyRadio';
 
@@ -17,7 +18,8 @@ import type { SpotifySeed } from './spotifyRadio';
 //    made up.
 //  - Daily songs: the first of Spotify's daily mixes, the lists it makes for the account anew
 //    every day out of what the account listens to. (Its weekly discovery list changes once a week,
-//    and the card says "daily".) The account's other daily mixes stand among the playlists.
+//    and the card says "daily".) The daily mixes themselves are on the playlists tab, after the
+//    account's own (`spotifyDailyMixes`, spotifyLibrary.ts).
 //  - Recommended playlists: the other lists Spotify makes for the account, in the order of its
 //    own page of them (the same lists the explore page shows by section).
 // Nothing here outlasts a run of the app, and all of it is forgotten when the account changes.
@@ -29,10 +31,6 @@ import type { SpotifySeed } from './spotifyRadio';
 const FM_BATCH = 2;
 // A call asks for this many radios at most (two requests each) before it hands out what it has.
 const FM_RADIOS_A_CALL = 3;
-// The id of a daily mix's playlist begins so (checked on one account, 2026-10-08: the daily mix
-// was found among its 57 lists). A daily mix whose id begins otherwise is not found, and the log
-// says so (the daily card is then empty).
-const DAILY_MIX_ID = /^37i9dQZF1E3/;
 const DAILY_ROWS = 100;
 // One read of the lists made for the account serves the daily songs and the playlists, which the
 // radio tab asks for together, and whatever asks within this time.
@@ -137,7 +135,13 @@ const madeLists = (): Promise<ProviderCollection[]> => {
     lists.catch(() => { if (made?.lists === lists) made = null; });
     return lists;
 };
-const isDailyMix = (list: ProviderCollection) => DAILY_MIX_ID.test(String(list.id));
+const isDailyMix = (list: ProviderCollection) => isSpotifyDailyMix(list.id);
+
+/** The daily mixes Spotify made for the account today, in its order; none where they cannot be read. */
+export const spotifyDailyMixes = (): Promise<ProviderCollection[]> => madeLists().then(lists => lists.filter(isDailyMix), (error: unknown) => {
+    console.warn(`[Spotify] Playlists: the daily mixes could not be read (${wordsOf(error)}); the playlists go on without them`);
+    return [];
+});
 
 export const spotifyRecommendations: OnlineRecommendationProvider = {
     getPersonalFm() {
@@ -173,8 +177,8 @@ export const spotifyRecommendations: OnlineRecommendationProvider = {
     },
     async getRecommendedCollections(limit) {
         const lists = await madeLists();
-        const daily = lists.find(isDailyMix);
-        const others = lists.filter(list => list !== daily).slice(0, limit);
+        // (The daily mixes are on the playlists tab.)
+        const others = lists.filter(list => !isDailyMix(list)).slice(0, limit);
         console.log(`[Spotify] Recommended playlists: ${others.length} of the ${lists.length} lists made for the account`);
         return others;
     },

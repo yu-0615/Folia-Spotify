@@ -3,11 +3,13 @@ import { OnlineProviderError } from '../../../types/onlineMusic';
 import type { OnlineLibraryProvider, ProviderCollection } from '../../../types/onlineMusic';
 import { SPOTIFY_LIKED_ID, present, spotifyAlbumOf, spotifyId, spotifyPage, spotifyPlaylistOf, spotifySongOf, spotifyUri } from './spotifyNormalize';
 import type { SpotifyAlbum, SpotifyPlaylist, SpotifyTrack } from './spotifyNormalize';
+import { spotifyDailyMixes } from './spotifyRecommendations';
 import { querySpotify } from './spotifyTransport';
 
 // src/services/onlineMusic/spotify/spotifyLibrary.ts
 // What the account keeps: its playlists (its own and the ones it follows), its albums, and the
 // songs it liked, which Spotify keeps as a list of their own and the app shows as one more playlist.
+// The playlists tab shows the daily mixes Spotify made for the account today with them.
 
 interface LibraryAnswer {
     me?: { libraryV3?: { totalCount?: number; items?: Array<{ item?: { data?: SpotifyPlaylist | SpotifyAlbum } }> } };
@@ -56,16 +58,20 @@ const likedCollection = async (): Promise<ProviderCollection> => {
 };
 
 export const spotifyLibrary: OnlineLibraryProvider = {
-    // The liked songs come first, on the first page only; `total` counts them in.
+    // The liked songs and then the daily mixes come first, on the first page only (a daily mix the
+    // account saved is where its library has it); `total` counts them in.
     async getUserPlaylists(_userId, limit, offset) {
-        const [page, liked] = await Promise.all([
+        const [page, liked, daily] = await Promise.all([
             querySpotify<LibraryAnswer>('libraryV3', libraryVariables('Playlists', limit, offset)),
             offset === 0 ? likedCollection() : null,
+            offset === 0 ? spotifyDailyMixes() : [],
         ]);
         const rows = page.me?.libraryV3?.items ?? [];
         const playlists = rows.map(row => spotifyPlaylistOf(row.item?.data as SpotifyPlaylist)).filter(present);
-        const listed = spotifyPage(liked ? [liked, ...playlists] : playlists, offset, rows.length, page.me?.libraryV3?.totalCount);
-        return { ...listed, ...(listed.total === undefined ? {} : { total: listed.total + 1 }) };
+        const kept = new Set(playlists.map(playlist => String(playlist.id)));
+        const first = [...(liked ? [liked] : []), ...daily.filter(mix => !kept.has(String(mix.id)))];
+        const listed = spotifyPage([...first, ...playlists], offset, rows.length, page.me?.libraryV3?.totalCount);
+        return { ...listed, ...(listed.total === undefined ? {} : { total: listed.total + first.length }) };
     },
     // The id of every liked song, which is what shows a song's heart as full.
     async getLikedSongIds() {
