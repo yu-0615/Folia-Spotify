@@ -39,7 +39,8 @@ const send = async (path: string, request: SpotifyWebRequest, token: string): Pr
 };
 
 /**
- * One request; the answer's JSON, or undefined for an answer without a body. A token Spotify
+ * One request; the answer's JSON, or undefined for an answer without a body, and for a command's
+ * answer that is not JSON (the player's commands answer 200 with a bare id, seen 2026-10-28). A token Spotify
  * refuses is renewed once. Errors: 429 is the sentence spotifyFailure.ts names as `retry-later`;
  * 403 and 404 come as `unavailable` with their status (a 404 is no such item, for the caller to
  * read as null); 5xx as `network`.
@@ -55,6 +56,7 @@ export async function callSpotifyWeb<T = unknown>(path: string, request: Spotify
         try {
             return JSON.parse(text) as T;
         } catch (error) {
+            if (method !== 'GET') return undefined as T;
             throw new OnlineProviderError('invalid-response', 'Spotify Web API answered something that is not JSON', 'spotify', error);
         }
     }

@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('@/services/onlineMusic/providerAccountCache', () => ({ saveProviderAccountSnapshot: vi.fn() }));
 
 import { omni } from '@/services/onlineMusic/omni';
+import { callSpotifyWeb } from '@/services/onlineMusic/spotify/web/spotifyWebApi';
 import { findSpotifyWebDevice } from '@/services/onlineMusic/spotify/web/spotifyWebDevices';
 import { getOnlineMusicProvider } from '@/services/onlineMusic/providerRegistry';
 import { whyPreviewClip } from '@/services/wholeSongCheck';
@@ -217,6 +218,16 @@ describe('tokens', () => {
 });
 
 describe('reading', () => {
+    it('takes a command answered with a bare id for done, and a read answered so for no answer', async () => {
+        signedIn();
+        answer({
+            'PUT /me/player/seek': () => new Response('1MurHXLzzH4_sngBKDG9yu2jOLc', { status: 200 }),
+            'GET /me/player': () => new Response('1MurHXLzzH4_sngBKDG9yu2jOLc', { status: 200 }),
+        });
+        await expect(callSpotifyWeb('/me/player/seek', { method: 'PUT', query: { position_ms: 1000 } })).resolves.toBeUndefined();
+        await expect(callSpotifyWeb('/me/player')).rejects.toMatchObject({ code: 'invalid-response' });
+    });
+
     it('reads a search 10 rows a request until the page is full', async () => {
         signedIn();
         answer({
