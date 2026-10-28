@@ -105,7 +105,7 @@ const playlistsTab = [
 // whether a browser an earlier run left on the folder could be ended. A window ends when the
 // test ends it.
 const fakeBrowser = (found: string | null = BROWSER) => {
-    const state = { folder: false, holds: false, ends: true, cookies: [] as unknown, windows: [] as Array<{ end: (outcome: string) => void; stop: ReturnType<typeof vi.fn> }> };
+    const state = { folder: false, holds: false, ends: true, cookies: [] as unknown, windows: [] as Array<{ end: (outcome: string) => void; stop: ReturnType<typeof vi.fn>; again: ReturnType<typeof vi.fn> }> };
     return Object.assign(state, {
         endLeftBrowsers: vi.fn(async (_dir: string) => state.ends),
         findBrowser: vi.fn(() => found),
@@ -114,8 +114,10 @@ const fakeBrowser = (found: string | null = BROWSER) => {
             let end!: (outcome: string) => void;
             const closed = new Promise<string>(resolve => { end = resolve; });
             const stop = vi.fn();
-            state.windows.push({ end, stop });
-            return { closed, stop };
+            let ended = false;
+            const again = vi.fn(() => !ended);
+            state.windows.push({ end: outcome => { ended = true; end(outcome); }, stop, again });
+            return { closed, stop, again };
         }),
         readCookies: vi.fn(async (_browser: string, _dir: string) => {
             if (state.cookies instanceof Error) throw state.cookies;
@@ -663,8 +665,9 @@ describe('YouTube Music desktop bridge with a web sign-in', () => {
         expect(started).toEqual({ ok: true, data: {} });
         expect(browser.openSignIn).toHaveBeenCalledWith(BROWSER, FOLDER);
         expect(await bridge.request('web_login_check')).toEqual({ ok: true, data: { state: 'waiting' } });
-        // Its window is open as far as the bridge can tell: nothing is opened a second time.
+        // The window again, in the browser that still runs: no second sign-in is started.
         expect(await bridge.request('web_login_open')).toEqual({ ok: true, data: {} });
+        expect(browser.windows[0].again).toHaveBeenCalledTimes(1);
         expect(browser.openSignIn).toHaveBeenCalledTimes(1);
         expect(yt.created).toHaveLength(0);
 
@@ -675,6 +678,9 @@ describe('YouTube Music desktop bridge with a web sign-in', () => {
         expect(confirmed).toEqual({ ok: true, data: { state: 'confirmed', account } });
         const status = await bridge.request('login_status');
         expect(status.data).toEqual(account);
+        // Its browser has ended: there is no window to open again, and nothing is started.
+        expect(await bridge.request('web_login_open')).toEqual({ ok: true, data: {} });
+        expect(browser.openSignIn).toHaveBeenCalledTimes(1);
 
         // Who signed in was asked as YouTube Music's web client, on a session made for the cookies.
         const [asked] = yt.created;

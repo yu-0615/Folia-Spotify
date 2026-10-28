@@ -624,7 +624,7 @@ export const omni = {
         return Boolean(auth?.openLoginPage && !auth.createQr);
     },
 
-    // 这一次登录的页面由 provider 自己打开、不能再打开一次（`opensLoginPageItself`）。
+    // 这一次登录的页面由 provider 自己打开，UI 不在开始时打开它（`opensLoginPageItself`）。
     opensLoginPageItself(providerId: OmniProviderId, key: string): boolean {
         return requireOnlineMusicProvider(providerId).auth?.opensLoginPageItself?.(key) === true;
     },

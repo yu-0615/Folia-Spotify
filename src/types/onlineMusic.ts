@@ -601,8 +601,9 @@ export interface OnlineAuthProvider {
     // 过期仍走同一套 key 流程。它在系统浏览器里打开登录的页面，地址由 provider 自己决定，调用方
     // 不传 URL。没有图片可看，UI 开始登录时就打开这个页面（Spotify）。
     openLoginPage?(key: string): Promise<void>;
-    // 这一次登录的页面是不是 provider 在开始登录时自己打开的、之后也不能再打开一次（YouTube Music
-    // 的浏览器登录：那个窗口关掉就是登录结束）。是的话 UI 不在开始时打开它，也不留“重新打开”的按钮。
+    // 这一次登录的页面是不是 provider 在开始登录时自己打开的（YouTube Music 的浏览器登录：那个浏览器
+    // 结束就是登录结束）。是的话 UI 不在开始时打开它；“重新打开”的按钮照样留着，按下去走 openLoginPage，
+    // 由 provider 在那个还开着的浏览器里再开一个窗口。
     opensLoginPageItself?(key: string): boolean;
     checkLogin?(key: string): Promise<LoginState>;
     // 只释放这一把 key 的会话，实现必须是幂等的：调用方在关窗时 fire-and-forget，

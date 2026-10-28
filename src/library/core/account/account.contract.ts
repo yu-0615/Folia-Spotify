@@ -113,7 +113,7 @@ export type LibraryLoginSessionSnapshot = {
     inBrowser: boolean;
     /** 二维码图片地址；还没拿到、或者是在浏览器里确认的登录时为空串。 */
     codeImage: string;
-    /** 这一次登录的页面能不能由窗口再打开一次（provider 自己打开、关掉即结束的不能）。 */
+    /** 这一次登录的页面能不能由窗口再打开一次（provider 自己打开的也能：再打开一次由 provider 自己做）。 */
     canReopenLoginPage: boolean;
     /**
      * 这一次为什么没有成功：是哪一种情况、它的事实、发生的时刻（services/onlineMusic/login/loginFailureCase）。

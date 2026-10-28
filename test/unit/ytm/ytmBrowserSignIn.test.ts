@@ -320,6 +320,25 @@ describe('openSignIn', () => {
         await expect(refused.closed).resolves.toBe('at-once');
     });
 
+    it('opens the page again by starting the browser the same way, while the first one runs, and not after it ended', async () => {
+        const { browser, spawn } = fakeBrowser();
+        const handing = fakeBrowser().browser;
+        const run = open({ ms: 0 }, spawn);
+        spawn.mockReturnValueOnce(handing);
+        expect(run.again()).toBe(true);
+        expect(spawn).toHaveBeenCalledTimes(2);
+        expect(spawn.mock.calls[1]).toEqual(spawn.mock.calls[0]);
+        // Its quick end is the hand-over to the running browser, not the end of the sign-in.
+        handing.emit('exit', 0, null);
+        browser.emit('exit', 0, null);
+        await expect(run.closed).resolves.toBe('at-once');
+        expect(run.again()).toBe(false);
+        expect(spawn).toHaveBeenCalledTimes(2);
+
+        const unstarted = open({ ms: 0 }, fakeBrowser().spawn, () => { throw new Error('EPERM'); });
+        expect(unstarted.again()).toBe(false);
+    });
+
     it('reads an end after stop() as stopped, also within two seconds', async () => {
         const { browser, spawn } = fakeBrowser();
         const run = open({ ms: 0 }, spawn);

@@ -404,14 +404,16 @@ describe('providerLoginSession · a sign-in confirmed in the browser', () => {
         expect(auth.openLoginPage).toHaveBeenCalledTimes(2);
     });
 
-    it('[hook] opens nothing for a sign-in whose page the provider opened itself, and says that it cannot be opened again', async () => {
+    it('[hook] opens nothing for a sign-in whose page the provider opened itself, and leaves the person\'s button to open it again', async () => {
         inBrowser();
         auth.opensLoginPageItself.mockReturnValue(true);
         const session = createSession();
         await session.start('ytm').settled;
         await manual.flush();
         expect(auth.openLoginPage).not.toHaveBeenCalled();
-        expect(session.getSnapshot().canReopenLoginPage).toBe(false);
+        expect(session.getSnapshot().canReopenLoginPage).toBe(true);
+        await expect(session.openLoginPage()).resolves.toBe(true);
+        expect(auth.openLoginPage).toHaveBeenCalledExactlyOnceWith('ytm', 'web-key-1');
     });
 
     it('kind E: a browser that did not open is told as a case while the sign-in goes on waiting (browser-not-opened)', async () => {

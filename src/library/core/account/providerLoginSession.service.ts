@@ -65,7 +65,7 @@ export type ProviderLoginSessionSnapshot = Readonly<{
     inBrowser: boolean;
     /** 二维码图片地址；还没拿到、或者在浏览器里确认时为空串。 */
     codeImage: string;
-    /** 这一次登录的页面能不能再打开一次（provider 自己打开的不能）。 */
+    /** 这一次登录的页面能不能再打开一次（在浏览器里确认的都能，provider 自己打开的也能）。 */
     canReopenLoginPage: boolean;
     /** 诊断报告 `failure:` 那一行的形态；没扫就过期、auth 能力缺失都不算，为 null。 */
     failureKind: LoginFailureKind | null;
@@ -515,7 +515,7 @@ export const createProviderLoginSession = (deps: ProviderLoginSessionDeps): Prov
         activeSession = { providerId: round.providerId, key: started.key };
         round.awaiting = true;
         const opensItself = askSafely(() => auth.opensLoginPageItself(round.providerId, started.key));
-        update({ codeImage: started.imageUrl, phase: 'waiting', canReopenLoginPage: !opensItself });
+        update({ codeImage: started.imageUrl, phase: 'waiting' });
         lastLoggedPhase = 'waiting';
         note('ready');
         // 没有东西要先看：登录一开始就把浏览器打开（provider 自己已经打开的除外）。

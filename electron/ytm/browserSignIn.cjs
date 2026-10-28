@@ -305,7 +305,7 @@ function createBrowserSignIn({
   //   'stopped' - `stop()` was called.
   // The browser is started detached: an ordinary child is ended together with this process on
   // Windows, at once and before it has written its cookies. So it is not ended when the app
-  // quits; the caller calls `stop()` for that.
+  // quits; the caller calls `stop()` for that. `again()` opens the page once more.
   // The folder gets the app's mark before a browser puts anything into it (see removeProfile);
   // where it cannot be marked, no browser is started.
   const openSignIn = (browserPath, profileDir) => {
@@ -323,16 +323,17 @@ function createBrowserSignIn({
         resolve(outcome);
       };
     });
+    const args = [`--user-data-dir=${profileDir}`, '--no-first-run', '--no-default-browser-check', SIGN_IN_URL];
     let child = null;
     try {
       mark(profileDir);
-      child = start(browserPath, [`--user-data-dir=${profileDir}`, '--no-first-run', '--no-default-browser-check', SIGN_IN_URL], { stdio: 'ignore', detached: true });
+      child = start(browserPath, args, { stdio: 'ignore', detached: true });
     } catch (error) {
       warn(`[Ytm] The sign-in folder could not be marked as the app's own (${error?.code ?? 'unknown'}); no browser was started`);
     }
     if (!child) {
       finish('at-once');
-      return { closed, stop() {} };
+      return { closed, stop() {}, again: () => false };
     }
     log(`[Ytm] The sign-in window was opened with ${fileName(browserPath)}`);
     child.on('error', error => {
@@ -350,6 +351,20 @@ function createBrowserSignIn({
         child.kill();
         force = setTimeout(() => child.kill('SIGKILL'), STOP_GRACE_MS);
         force.unref?.();
+      },
+      // Opens the sign-in page once more, while the browser still runs: a window closed on macOS
+      // (the browser goes on), or one lost behind others. The browser is started again the same
+      // way; one started on a folder a running browser holds hands its start over to that one,
+      // which opens the page in a new window, and ends at once. Nothing waits for it, and its end
+      // is not `closed`. false when the browser has ended, or was not started again.
+      again() {
+        if (ended || stopping) return false;
+        const handing = start(browserPath, args, { stdio: 'ignore', detached: true });
+        if (!handing) return false;
+        handing.on('error', error => warn(`[Ytm] The sign-in window could not be opened again (${error?.code ?? 'unknown'})`));
+        handing.unref?.();
+        log('[Ytm] The sign-in window was opened again');
+        return true;
       },
     };
   };

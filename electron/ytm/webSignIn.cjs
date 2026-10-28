@@ -313,6 +313,12 @@ function createYtmWebSignIn({
       const { state, user, failure } = current;
       return { state, ...(user ? { user } : {}), ...failure };
     },
+    // Opens the window of a sign-in that still waits once more (browserSignIn.cjs `again`).
+    // false when no sign-in waits, or its browser has ended.
+    reopen() {
+      if (current?.state !== 'waiting' || !current.opened) return false;
+      return current.opened.again();
+    },
     cancel(words = 'cancelled') {
       end(current, words);
       current = null;

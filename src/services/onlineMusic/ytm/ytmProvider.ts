@@ -186,8 +186,9 @@ export const ytmProvider: OnlineMusicProvider = {
             return key;
         },
         describeLoginFailure: describeYtmLoginFailure,
+        // The window again, in the browser of the sign-in while it runs (a window closed on macOS).
         async openLoginPage() { await requestYtm('web_login_open'); },
-        // The window of the sign-in is opened by its start, and closing it ends the sign-in.
+        // The window of the sign-in is opened by its start, and the end of its browser ends the sign-in.
         opensLoginPageItself: () => true,
         // A sign-in that went through may be another account's. Until it did, the account before
         // was still signed in, and its liked list and music page may have been read again since

@@ -840,11 +840,11 @@ function createYtmApiBridge({
       return { state, ...(user ? { account: accountAnswer(webRepo.get()?.user ?? user) } : {}), ...failure };
     },
 
-    // The sign-in window is seen from here only as a running browser, and that browser's end
-    // settles the sign-in. So no sign-in is under way whose window is known to be closed, and
-    // nothing is opened. (macOS keeps a browser running after its last window was closed, which
-    // cannot be seen from here.)
+    // The sign-in window again, while its browser still runs (macOS keeps a browser running after
+    // its last window was closed). A sign-in whose browser has just ended is settled by that end,
+    // which the next `web_login_check` tells: nothing is opened for it.
     async web_login_open() {
+      if (!webSignIn.reopen()) log('[Ytm] No sign-in has a browser to open its window in again');
       return {};
     },
 
