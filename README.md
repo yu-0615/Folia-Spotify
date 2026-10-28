@@ -205,7 +205,7 @@ Vercel 與 Cloudflare 上的 QQ 音樂不再需要額外部署一個常駐 API �
 
 - **Windows / macOS / Linux**: Folia-Spotify 的安裝包請前往 [Releases 頁面](https://github.com/yu-0615/Folia-Spotify/releases/latest) 下載。macOS 版沒有簽名，第一次開啟若提示「已損壞」，見[這份說明](docs/desktop/macos-app-damaged.md)。
 - **原版 Folia**：AUR 的 [folia-major-bin](https://aur.archlinux.org/packages/folia-major-bin)、社群的 [Flatpak](https://flatpark.org/apps/top.izuna.foliamajor/) 都是原版，不含本 fork 的修改。
-- **Android**: 社群第三方移植版見下方 [行動裝置](#行動裝置)。
+- **Android / iPhone**: 社群第三方移植版與 iPhone 部署見下方 [行動裝置](#行動裝置)。
 
 Linux 包、Wayland / Hyprland 遙控窗和桌面端細節見 [技術與開發說明](docs/technical.md)。
 
@@ -214,6 +214,7 @@ Linux 包、Wayland / Hyprland 遙控窗和桌面端細節見 [技術與開發�
 | 方式 | 說明 |
 | --- | --- |
 | **PWA（推薦）** | 部署 Web 版本或自託管版本後，在 Chrome for Android / iOS Safari 中將網頁新增到主螢幕，即可作為 PWA 應用使用。 |
+| **iPhone 部署** | [yu-0615/Folia-on-iPhone](https://github.com/yu-0615/Folia-on-iPhone)：部署到 Vercel、在 iPhone 的 Safari 加入主畫面使用的 Folia 網頁版，部署方式見該儲存庫。 |
 | **社群移植版（Android）** | [maimai993/folia-sonnet](https://github.com/maimai993/folia-sonnet) · [whycfawa/folia-android](https://github.com/whycfawa/folia-android) |
 | **自行打包（Android）** | 有一定技術基礎的使用者可以用 Capacitor 將 Web 版本打包為可安裝的 APK，參考示範儲存庫 [chthollyphile/folia-sonnet](https://github.com/chthollyphile/folia-sonnet)。 |
 

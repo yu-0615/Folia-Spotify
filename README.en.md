@@ -203,7 +203,7 @@ Self-hosters can use the [Docker Compose full-stack deployment](deploy/docker/RE
 
 - **Windows / macOS / Linux**: Download Folia-Spotify from the [Releases page](https://github.com/yu-0615/Folia-Spotify/releases/latest). The macOS build is unsigned; if macOS says it is damaged on first launch, see [this note](docs/desktop/macos-app-damaged.md) (Chinese).
 - **The original Folia**: [folia-major-bin](https://aur.archlinux.org/packages/folia-major-bin) on the AUR and the community [Flatpak](https://flatpark.org/apps/top.izuna.foliamajor/) are the original, without this fork's changes.
-- **Android**: Third-party community ports are listed under [Mobile](#mobile) below.
+- **Android / iPhone**: Third-party community ports and the iPhone deployment are listed under [Mobile](#mobile) below.
 
 For Linux packages, the Wayland / Hyprland remote control window, and other desktop details, see [Technical Notes](docs/technical.md) (Chinese).
 
@@ -212,6 +212,7 @@ For Linux packages, the Wayland / Hyprland remote control window, and other desk
 | Option | Details |
 | --- | --- |
 | **PWA (recommended)** | Deploy the web or self-hosted version, then add it to your home screen from Chrome for Android or iOS Safari to use it as a PWA. |
+| **iPhone deployment** | [yu-0615/Folia-on-iPhone](https://github.com/yu-0615/Folia-on-iPhone): the Folia web version deployed to Vercel and added to the home screen from Safari on iPhone. See that repository for how to deploy it. |
 | **Community ports (Android)** | [maimai993/folia-sonnet](https://github.com/maimai993/folia-sonnet) · [whycfawa/folia-android](https://github.com/whycfawa/folia-android) |
 | **Build it yourself (Android)** | If you are comfortable with the tooling, package the web version as an installable APK with Capacitor. See the example repository [chthollyphile/folia-sonnet](https://github.com/chthollyphile/folia-sonnet). |
 

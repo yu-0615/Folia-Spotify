@@ -53,7 +53,7 @@ const TRANSFER_WAIT_MS = 700;
 // follows (the app's queue becomes that one and those).
 const CONFIRM_TRIES = 3;
 const CONFIRM_MS = 800;
-const ELSEWHERE_UPCOMING = 20;
+const ELSEWHERE_UPCOMING = 50;
 // While the deck does not play, the chosen device is asked this often what it plays.
 const ELSEWHERE_CHECK_MS = 4000;
 // A track told is not told again for this long (the app is loading it).
