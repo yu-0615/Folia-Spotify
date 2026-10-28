@@ -1,4 +1,4 @@
-import { Bot, Flame, Keyboard, Radio, Shuffle, Sparkles } from 'lucide-react';
+import { AudioLines, Droplets, Languages, ListFilter, Sparkles, Volume2 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 // src/components/modal/newFeaturesRelease.ts
@@ -17,14 +17,13 @@ type NewFeaturesRelease = {
 
 // Defines the current release's cards; their localized text lives under i18nKey in every locale.
 export const NEW_FEATURES_RELEASE: NewFeaturesRelease = {
-    i18nKey: 'releaseNotes.v0_7_22',
-    majorUpdate: { codename: 'Sparkle' },
+    i18nKey: 'releaseNotes.v0_7_23',
     features: [
-        { id: 'qishui', icon: Radio },
-        { id: 'hanabi', icon: Flame },
-        { id: 'randomStyles', icon: Shuffle },
-        { id: 'globalShortcuts', icon: Keyboard },
-        { id: 'aiProviders', icon: Bot },
+        { id: 'hifi', icon: AudioLines },
+        { id: 'smartBalance', icon: Volume2 },
+        { id: 'lyricFilter', icon: ListFilter },
+        { id: 'temperaInk', icon: Droplets },
+        { id: 'vietnamese', icon: Languages },
         { id: 'moreDetails', icon: Sparkles },
     ],
 };

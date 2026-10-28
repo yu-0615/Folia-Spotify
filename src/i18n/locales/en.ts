@@ -314,6 +314,8 @@ export default {
     "playerBackButtonAutoHidden": "Player back button will reveal on hover",
     "mainWindowTitlebarAlwaysShown": "Main window control buttons will remain visible",
     "mainWindowTitlebarAutoHidden": "Main window control buttons will reveal on hover",
+    "playerHeaderBlurOn": "Player header now has a blurred background",
+    "playerHeaderBlurOff": "Player header blurred background turned off",
     "cursorAutoHideOn": "The cursor will hide together with the player controls",
     "cursorAutoHideOff": "The cursor will stay visible when the player controls hide",
     "cursorIdleHideOn": "The cursor will hide on its own when idle",
@@ -713,6 +715,7 @@ export default {
       "grid-organize-song-info": { "title": "Organize song info", "description": "Clean up the titles, artists and albums of this folder" },
       "grid-export-playlist": { "title": "Export this playlist", "description": "Save this local playlist as an m3u8 file" },
       "grid-edit-entity": { "title": "Edit this album or artist", "description": "Open the local library entity editor for this collection" },
+      "grid-set-cover": { "title": "Set collection cover", "description": "Choose a fixed cover for this local folder, album or playlist" },
       "grid-toggle-edit-mode": { "title": "Toggle edit mode", "description": "Enter or leave the mode that lets you remove songs from this collection" },
       "grid-reload-online-collection": { "title": "Reload this collection", "description": "Skip the cache and load every song of this online collection again" },
       "grid-toggle-subscribe": { "title": "Subscribe or unsubscribe", "description": "Save this online playlist or album to your library, or remove it if it is already there" },
@@ -851,6 +854,7 @@ export default {
       "settings-toggle-follow-system-reduced-motion": { "title": "Follow system reduced motion", "description": "Toggle whether the system animation setting is allowed to reduce motion in the app" },
       "settings-toggle-track-switch-buttons": { "title": "Always show track switch arrows", "description": "Toggle whether the progress bar track switch arrows stay visible beside the title" },
       "settings-toggle-main-window-titlebar": { "title": "Always show window control buttons", "description": "Toggle whether the main window control buttons stay visible" },
+      "settings-toggle-player-header-blur": { "title": "Blurred player header", "description": "Toggle a frosted bar behind the window titlebar on the player page so its buttons stay readable" },
       "settings-toggle-fullscreen-titlebar-button": { "title": "Toggle fullscreen button visibility", "description": "Show or hide the fullscreen button in the desktop window controls" },
       "settings-toggle-native-mac-fullscreen-button": { "title": "Native macOS fullscreen button", "description": "Toggle whether the macOS window control enters native fullscreen instead of maximizing" },
       "settings-toggle-cursor-auto-hide": { "title": "Hide cursor with player controls", "description": "Toggle whether the mouse pointer disappears together with the auto-hidden player controls" },
@@ -866,7 +870,8 @@ export default {
       "settings-language-zh-CN": { "title": "Switch language to Simplified Chinese", "description": "Use Simplified Chinese in the interface" },
       "settings-language-zh-TW": { "title": "Switch language to Traditional Chinese", "description": "Use Traditional Chinese in the interface" },
       "settings-language-en": { "title": "Switch language to English", "description": "Use English in the interface" },
-      "settings-language-in": { "title": "Switch language to Indonesian", "description": "Use Bahasa Indonesia in the interface" }
+      "settings-language-in": { "title": "Switch language to Indonesian", "description": "Use Bahasa Indonesia in the interface" },
+      "settings-language-vi": { "title": "Switch language to Vietnamese", "description": "Use Vietnamese in the interface" }
     }
   },
   "ui": {
@@ -2059,6 +2064,7 @@ export default {
     "appLanguageZhTW": "Traditional Chinese",
     "appLanguageEnUS": "English",
     "appLanguageInID": "Indonesian",
+    "appLanguageViVN": "Vietnamese",
     "appLanguageSystemHint": "Current: {{language}}",
     "playbackEntryView": "View opened by Play",
     "playbackEntryViewDesc": "Which view opens by default after you press play.",
@@ -2281,6 +2287,8 @@ export default {
     "alwaysShowTrackSwitchButtonsDesc": "Keep the previous/next arrows on both sides of the progress bar title visible instead of revealing them on hover.",
     "alwaysShowMainWindowTitlebar": "Always Show Window Control Buttons",
     "alwaysShowMainWindowTitlebarDesc": "Keeps the minimize, maximize and close buttons in view.",
+    "playerHeaderBlur": "Blurred Player Header",
+    "playerHeaderBlurDesc": "Puts the home page's frosted bar behind the window buttons on the player page, so they stay readable over a dark picture in the light theme.",
     "hideFullscreenButton": "Hide fullscreen button",
     "hideFullscreenButtonDesc": "Hides the fullscreen toggle in the window controls",
     "useNativeMacFullscreenButton": "Use native macOS fullscreen button",
@@ -2331,7 +2339,7 @@ export default {
     "stageTrackPillMode_always": "Always show",
     "stageTrackPillMode_never": "Never show",
     "stageTrackPillOnHome": "Show on the home page too",
-    "stageTrackPillOnHomeDesc": "Off keeps the card on the player and play queue. On also shows it on home, including after launch or a track change there. With the Bravais library it is always on the wall.",
+    "stageTrackPillOnHomeDesc": "Off keeps the card on the player and play queue. On also shows it on home, including after launch or a track change there.",
     "stageTrackPillTimeout": "Visible duration",
     "disableVisualizerVignette": "Disable vignette",
     "visualizerVignette": "Vignette",
@@ -3434,6 +3442,33 @@ export default {
         "description": "When signed in, your own private playlists now load their songs, with real paging. Self-hosted backends must run qq-music-api 3.1.2 or later; older backends fall back automatically, and a playlist that cannot be read now says it is not public instead of silently showing as empty."
       }
     },
+    "v0_7_23": {
+      "intro": "Welcome to 0.7.23. The desktop app adds an mpv playback engine that sends local and Navidrome songs to your output device as they are; ReplayGain gains Smart balance, which adjusts by measured loudness; lyric filtering becomes a list of rules; Tempera gets a new drum effect, Sumizome Depth; and the interface is now available in Vietnamese.",
+      "hifi": {
+        "title": "HiFi Bit-Perfect Playback",
+        "description": "Desktop gains a Playback engine choice at the top of Settings → Playback: local files and Navidrome can switch to mpv, which sends audio to the output device in the source file's own format, with exclusive mode on Windows and macOS and gapless transitions when the next song also plays through mpv. On Windows and macOS mpv downloads in one click (falling back to a mirror when GitHub is unreachable, with cloud-drive links for manual download); Linux uses the mpv installed on the system. A badge beside the progress bar and the signal path panel show whether a song is bit-perfect and which conversions happen on the way. With mpv, these songs skip the equalizer, audio effects, ReplayGain, fades, smart transitions, the spectrum and lyric video export; online songs always use Web Audio."
+      },
+      "smartBalance": {
+        "title": "Smart Volume Balance",
+        "description": "ReplayGain gains a Smart mode: it measures each song's loudness, turns loud songs down and lifts quiet ones as far as they can go without clipping, with no gain tags needed in the files. It learns as songs play and adjusts at most once per play; what it measures is stored separately and can be cleared under Smart Balance Data on the Storage page."
+      },
+      "lyricFilter": {
+        "title": "Lyric Filtering Rules",
+        "description": "Lyric filtering is now a list of rules: starts with, contains, whole line, ends with, word list and expression. While editing you can see which lines each rule removes from this song and from songs you've played; hand-written expressions are tried in the background first, and one that runs too long won't take effect. Old filter settings convert automatically, and closing the window with unsaved changes asks first."
+      },
+      "temperaInk": {
+        "title": "Tempera: Sumizome Depth",
+        "description": "Tempera's Smart beat mode adds Sumizome Depth: on every kick and snare, a blot of ink in the theme color blooms across the scene, leaving a faint stain on the paper between hits. The scene also gains depth: the watermark and back images sit behind with a light blur, echo lyrics and front images float in front, near and far layers move at different speeds as the camera pans, and lyrics take their depth from their size. Depth of field, camera pan and lyric depth each have a strength slider in the style settings."
+      },
+      "vietnamese": {
+        "title": "Vietnamese Interface",
+        "description": "The interface is now available in Vietnamese (Tiếng Việt), translated by a community contributor; switch to it in the language setting or the command palette. Follow system now picks the current system language on every launch, so a change of system language applies the next time you start Folia, and the macOS app no longer shows English on a Chinese system."
+      },
+      "moreDetails": {
+        "title": "More Improvements",
+        "description": "When signed in to YouTube Music, official music videos in lists show and play as the official audio versions, and videos without a match are marked MV. The song card on the player page can be dragged to a new position. Local folders, albums and playlists can have a fixed custom cover: a poster.png in the folder, an uploaded image, or the cover of one of their songs. Lyric style and theme park previews can switch to Live to show the song that's playing. Desktop adds a Blurred Player Header setting (off by default); the remote control window remembers where you left it, and the text shade on its transparent background is now optional. QQ Music playlists no longer resync every time you open them, and the Linux RPM package no longer conflicts with other Electron apps."
+      }
+    },
     "v0_7_22": {
       "intro": "Welcome to 0.7.22, the Sparkle Update—a major release. It adds Qishui Music; brings Hanabi, a Japanese fireworks lyric style; lets you choose which styles the per-song random style picks from; gives the desktop app global playback shortcuts; and lets AI settings pick a provider and model directly.",
       "qishui": {
@@ -3959,6 +3994,34 @@ export default {
     "useLocalInfoForSelected": "Use local info ({{count}})",
     "coverCacheFailed": "Metadata was saved, but the cover could not be cached. The online URL will still be used when available.",
     "lyricsNotAppliedOtherSaved": "Lyrics were not applied; the other selections were saved.",
+  },
+  "localCollectionCover": {
+    "menuLabel": "Set cover",
+    "title": "Cover of “{{name}}”",
+    "description": "This picture is only this {{kind}}'s cover in the library. It is not written into any song file, and the songs inside will not change it. It stays fixed until you set another or restore the default.",
+    "kindFolder": "folder",
+    "kindAlbum": "album",
+    "kindPlaylist": "playlist",
+    "currentCustom": "Custom cover",
+    "currentAutomatic": "Automatic cover, taken from the songs inside",
+    "noCover": "No cover",
+    "usePoster": "Use poster.png",
+    "posterChecking": "Looking for poster.png in the folder…",
+    "posterFound": "Found {{name}} in the folder",
+    "posterMissing": "No poster.png in this folder",
+    "posterNoAccess": "Allow Folia to read this folder to use its poster.png",
+    "posterUnavailable": "This folder cannot be read",
+    "upload": "Upload image",
+    "restore": "Restore default",
+    "pickSong": "Or use a song's cover",
+    "songCount_one": "{{count}} song uses this cover",
+    "songCount_other": "{{count}} songs use this cover",
+    "noSongCovers": "None of the songs here has a cover",
+    "saving": "Saving the cover…",
+    "saved": "Cover set",
+    "restored": "Restored the automatic cover",
+    "failed": "The cover was not set: {{error}}",
+    "notImage": "That file is not an image Folia can read"
   },
   "navidrome": {
     "title": "Navi",

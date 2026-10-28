@@ -18,8 +18,8 @@ const { verifyBundledLocales } = require('../../../build/afterPack.cjs') as {
     verifyBundledLocales: (context: Context) => Promise<void>;
 };
 const directories: string[] = [];
-const macLocales = ['en', 'zh_CN', 'zh_TW', 'id'];
-const pakLocales = ['en-US', 'zh-CN', 'zh-TW', 'id'];
+const macLocales = ['en', 'zh_CN', 'zh_TW', 'id', 'vi'];
+const pakLocales = ['en-US', 'zh-CN', 'zh-TW', 'id', 'vi'];
 
 afterEach(async () => {
     await Promise.all(directories.splice(0).map(directory => rm(directory, { recursive: true, force: true })));

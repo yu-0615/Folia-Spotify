@@ -44,9 +44,9 @@ async function pathExists(candidate) {
  * 真正的翻译，两边都要在。
  */
 const BUNDLED_LOCALES = {
-  darwin: ['en', 'zh_CN', 'zh_TW', 'id'],
-  win32: ['en-US', 'zh-CN', 'zh-TW', 'id'],
-  linux: ['en-US', 'zh-CN', 'zh-TW', 'id'],
+  darwin: ['en', 'zh_CN', 'zh_TW', 'id', 'vi'],
+  win32: ['en-US', 'zh-CN', 'zh-TW', 'id', 'vi'],
+  linux: ['en-US', 'zh-CN', 'zh-TW', 'id', 'vi'],
 };
 
 async function verifyBundledLocales(context) {

@@ -314,6 +314,8 @@ export default {
     "playerBackButtonAutoHidden": "播放页左上角返回按钮将悬停显示",
     "mainWindowTitlebarAlwaysShown": "主窗口标题栏控制按钮将始终显示",
     "mainWindowTitlebarAutoHidden": "主窗口标题栏控制按钮将悬停显示",
+    "playerHeaderBlurOn": "播放页顶栏已加上模糊背景",
+    "playerHeaderBlurOff": "播放页顶栏模糊背景已关闭",
     "cursorAutoHideOn": "鼠标指针将随控制栏一起隐藏",
     "cursorAutoHideOff": "控制栏隐藏时鼠标指针将保持显示",
     "cursorIdleHideOn": "鼠标指针将在空闲时自动隐藏",
@@ -713,6 +715,7 @@ export default {
       "grid-organize-song-info": { "title": "整理歌曲信息", "description": "整理这个文件夹里歌曲的标题、艺人和专辑" },
       "grid-export-playlist": { "title": "导出此歌单", "description": "把这个本地歌单保存为 m3u8 文件" },
       "grid-edit-entity": { "title": "编辑此专辑或艺人", "description": "为这个合集打开本地曲库的实体编辑面板" },
+      "grid-set-cover": { "title": "设置合集封面", "description": "为这个本地文件夹、专辑或歌单选一张固定的封面" },
       "grid-toggle-edit-mode": { "title": "切换编辑模式", "description": "进入或退出可以从这个合集里移除歌曲的模式" },
       "grid-reload-online-collection": { "title": "重新加载此合集", "description": "跳过缓存，重新拉取这个在线合集的全部歌曲" },
       "grid-toggle-subscribe": { "title": "收藏或取消收藏", "description": "把这个在线歌单或专辑加入收藏，已经收藏的就取消" },
@@ -851,6 +854,7 @@ export default {
       "settings-toggle-follow-system-reduced-motion": { "title": "跟随系统动画设置", "description": "切换是否允许系统的动画设置降低应用内的动态效果" },
       "settings-toggle-track-switch-buttons": { "title": "始终显示切歌箭头", "description": "切换进度条标题两侧上一首/下一首箭头的常驻显示" },
       "settings-toggle-main-window-titlebar": { "title": "始终显示标题栏控制按钮", "description": "切换主窗口标题栏控制按钮的常驻显示" },
+      "settings-toggle-player-header-blur": { "title": "播放页顶栏模糊背景", "description": "切换播放页标题栏后面的磨砂底，让按钮在任何画面上都看得清" },
       "settings-toggle-fullscreen-titlebar-button": { "title": "切换全屏按钮显示状态", "description": "显示或隐藏桌面窗口控制按钮中的全屏按钮" },
       "settings-toggle-native-mac-fullscreen-button": { "title": "macOS 原生全屏按钮", "description": "切换 macOS 窗口控制按钮进入原生全屏而非最大化" },
       "settings-toggle-cursor-auto-hide": { "title": "隐藏控制栏时一并隐藏鼠标", "description": "切换控制栏自动隐藏时鼠标指针是否一起消失" },
@@ -866,7 +870,8 @@ export default {
       "settings-language-zh-CN": { "title": "切换为简体中文", "description": "界面使用简体中文" },
       "settings-language-zh-TW": { "title": "切換為繁體中文", "description": "介面使用繁體中文" },
       "settings-language-en": { "title": "切换为英文", "description": "界面使用 English" },
-      "settings-language-in": { "title": "切换为印尼语", "description": "界面使用 Bahasa Indonesia" }
+      "settings-language-in": { "title": "切换为印尼语", "description": "界面使用 Bahasa Indonesia" },
+      "settings-language-vi": { "title": "切换为越南语", "description": "界面使用 Tiếng Việt" }
     }
   },
   "ui": {
@@ -2059,6 +2064,7 @@ export default {
     "appLanguageZhTW": "繁体中文",
     "appLanguageEnUS": "English",
     "appLanguageInID": "Indonesian",
+    "appLanguageViVN": "Tiếng Việt",
     "appLanguageSystemHint": "当前生效：{{language}}",
     "playbackEntryView": "播放后进入的视图",
     "playbackEntryViewDesc": "点击播放后默认打开哪个视图。",
@@ -2281,6 +2287,8 @@ export default {
     "alwaysShowTrackSwitchButtonsDesc": "让进度条标题两侧的上一首/下一首箭头保持显示，不再需要悬停才浮出。",
     "alwaysShowMainWindowTitlebar": "始终显示标题栏控制按钮",
     "alwaysShowMainWindowTitlebarDesc": "保持显示最小化、最大化和关闭按钮。",
+    "playerHeaderBlur": "播放页顶栏模糊背景",
+    "playerHeaderBlurDesc": "在播放页的窗口按钮后面垫上和主页一样的磨砂底，浅色主题遇上深色画面时按钮也看得清。",
     "hideFullscreenButton": "隐藏全屏按钮",
     "hideFullscreenButtonDesc": "隐藏窗口控制按钮中的全屏切换按钮",
     "useNativeMacFullscreenButton": "使用 macOS 原生全屏按钮",
@@ -2331,7 +2339,7 @@ export default {
     "stageTrackPillMode_always": "常驻显示",
     "stageTrackPillMode_never": "不显示",
     "stageTrackPillOnHome": "在首页显示",
-    "stageTrackPillOnHomeDesc": "关闭时仍在播放器和播放队列显示；开启后也会在首页显示。资料库界面是 Bravais 时，墙上始终显示。",
+    "stageTrackPillOnHomeDesc": "关闭时仍在播放器和播放队列显示；开启后也会在首页显示。",
     "stageTrackPillTimeout": "显示时长",
     "disableVisualizerVignette": "禁用暗角",
     "visualizerVignette": "暗角",
@@ -3434,6 +3442,33 @@ export default {
         "description": "登录后，自己创建的不公开歌单也能读取歌曲，并支持真正的分页加载。自建后端需要升级到 qq-music-api 3.1.2 或更新版本；旧后端会自动回退，读不到时会明确提示「不是公开歌单」，不再静默显示为空。"
       }
     },
+    "v0_7_23": {
+      "intro": "欢迎来到 0.7.23。桌面版新增 mpv 播放引擎，本地和 Navidrome 的歌可以按原样送到输出设备；ReplayGain 有了按实测响度调整的「智能平衡」，歌词过滤改成一条条规则；凝彩新增鼓点效果「墨染奥行」，界面也能切换成越南语。",
+      "hifi": {
+        "title": "HiFi 原生直通",
+        "description": "桌面版「设置 → 播放控制」最上面新增「播放引擎」：本地文件和 Navidrome 可以改用 mpv，按源文件的格式直接送到输出设备，Windows 和 macOS 可开独占模式，下一首也走 mpv 时无缝衔接。Windows 和 macOS 可以一键下载 mpv（连不上 GitHub 时自动换镜像，也提供网盘手动下载），Linux 使用系统安装的 mpv。进度条旁的徽标和信号链路面板会说明这首是不是原生直通、途中经过了哪些转换。选 mpv 后这些歌不经过均衡器、音效、ReplayGain、淡入淡出、智能过渡、频谱和歌词视频导出；在线歌曲始终用 Web Audio。"
+      },
+      "smartBalance": {
+        "title": "智能平衡音量",
+        "description": "ReplayGain 新增「智能平衡」：测量每首歌的响度，偏响的歌调小，安静的歌在不削波的范围内调大，歌曲不用自带增益数据。边放边学，一次播放中最多调整一次；测得的数据单独存放，可以在存储页的「智能平衡数据」里清除。"
+      },
+      "lyricFilter": {
+        "title": "歌词过滤规则",
+        "description": "歌词过滤改成规则列表：开头是、包含、整行是、结尾是、词表和表达式。编辑时能看到每条规则在这首歌和听过的歌里删掉了哪些行；手写的表达式会先在后台试跑，运行超时的不会生效。旧的过滤设置会自动转换，有未保存的修改时关闭窗口会提示。"
+      },
+      "temperaInk": {
+        "title": "凝彩 · 墨染奥行",
+        "description": "凝彩的智能动感新增「墨染奥行」：底鼓和军鼓每响一下，一团主题色的墨渍在画面上晕开，鼓点之间纸面上留着淡淡的墨痕。画面也有了前后层次：水印和背景图片退到后面、带一点模糊，回声歌词和前景图片浮在前面，镜头平移时远近的视差不同，歌词也按大小分出远近。景深、镜头平移和歌词远近在样式设置里各有强度。"
+      },
+      "vietnamese": {
+        "title": "越南语界面",
+        "description": "界面新增越南语（Tiếng Việt），由社区贡献者翻译，在语言设置或命令面板里切换。另外，「跟随系统」现在每次启动都按当前的系统语言选择，系统语言改了下次启动就跟着变；macOS 版在中文系统上不再显示成英文。"
+      },
+      "moreDetails": {
+        "title": "更多改进",
+        "description": "YouTube Music 登录后，列表里的官方 MV 显示和播放成正式版本，没配上正式版的视频标为 MV。播放页的歌曲卡片可以拖动调整位置。本地文件夹、专辑和歌单可以设置固定的自定义封面：文件夹里的 poster.png、上传一张图，或选一首歌的封面。歌词样式和主题乐园的预览可以切换为「实时」，显示正在播放的歌。桌面版新增默认关闭的「播放页顶栏模糊背景」；遥控窗口会记住上次的位置，透明背景下的文字黑底改为可选。QQ 音乐歌单不再每次打开都重新同步；Linux 的 RPM 包不再和其他 Electron 应用冲突。"
+      }
+    },
     "v0_7_22": {
       "intro": "欢迎来到 0.7.22「Sparkle Update」：这是一次重大更新。这一版接入了汽水音乐；新增日系烟花歌词样式「花火」，每首歌随机换样式时可以自己挑范围；桌面版有了全局播放快捷键，AI 设置可以直接选服务商和模型。",
       "qishui": {
@@ -3959,6 +3994,34 @@ export default {
     "useLocalInfoForSelected": "使用本地信息（{{count}}）",
     "coverCacheFailed": "元数据已保存，但封面缓存失败；在线地址可用时仍会继续显示封面。",
     "lyricsNotAppliedOtherSaved": "歌词未应用，其他选择已保存。"
+  },
+  "localCollectionCover": {
+    "menuLabel": "设置封面",
+    "title": "“{{name}}”的封面",
+    "description": "这张图只用作曲库里这个{{kind}}的封面：不会写进任何歌曲文件，里面的歌变了它也不变。设好之后一直固定，直到换一张或恢复默认。",
+    "kindFolder": "文件夹",
+    "kindAlbum": "专辑",
+    "kindPlaylist": "歌单",
+    "currentCustom": "自定义封面",
+    "currentAutomatic": "自动封面，取自集合里的歌曲",
+    "noCover": "没有封面",
+    "usePoster": "使用 poster.png",
+    "posterChecking": "正在文件夹里找 poster.png…",
+    "posterFound": "在文件夹里找到了 {{name}}",
+    "posterMissing": "这个文件夹里没有 poster.png",
+    "posterNoAccess": "允许 Folia 读取这个文件夹，才能用里面的 poster.png",
+    "posterUnavailable": "读不到这个文件夹",
+    "upload": "上传图片",
+    "restore": "恢复默认",
+    "pickSong": "或者用一首歌的封面",
+    "songCount_one": "{{count}} 首歌用这张封面",
+    "songCount_other": "{{count}} 首歌用这张封面",
+    "noSongCovers": "这里的歌都没有封面",
+    "saving": "正在保存封面…",
+    "saved": "封面已设置",
+    "restored": "已恢复自动封面",
+    "failed": "封面没有设置成功：{{error}}",
+    "notImage": "这个文件不是 Folia 能读取的图片"
   },
   "navidrome": {
     "title": "Navi",

@@ -277,6 +277,7 @@ suite 自己的外观操作（bravais 的缝等级、打开面板、定位正在
 | `resync-folder` / `resync-all-folders` | 重新扫描文件夹 | 可选 | `mutations.resyncFolder` / `resyncAllFolders` |
 | `export-playlist` | 导出本地歌单 | 可选 | `mutations.exportPlaylist` |
 | `edit-entity` / `organize-song-info` / `match-song` | 打开宿主的编辑 / 整理 / 匹配对话框 | 可选，几乎零成本（对话框由宿主提供） | `mutations.editEntity` / `organizeSongInfo` / `matchSong` |
+| `set-cover` | 打开宿主的集合封面对话框（本地文件夹 / 专辑 / 歌单的自定义封面：poster.png、上传、选一首歌的封面，或恢复默认） | 可选，几乎零成本（对话框由宿主提供） | `mutations.setCover`；能力 `capabilities.setCover`。封面本身由 core 解析好（首页分组、集合描述的 `coverUrl`、本地歌手页的专辑），suite 不必自己查；画曲目本身时用描述的 `automaticCoverUrl` |
 | `daily-date` | 切换每日推荐的历史日期 | 可选 | `mutations.setDailyDate` |
 | `add-to-playlist` / `create-playlist` | 加入 / 新建 Navidrome 歌单 | 可选，需要歌单选择器 | `mutations.addToPlaylist` / `createPlaylist` |
 | `open-album` / `open-artist` | 打开曲目上的专辑 / 歌手（嵌套压栈） | 推荐 | `resolveTrackAlbumLink` / `resolveTrackArtistLinks`（`core/shared/trackLinks`，在线曲目注入 `canResolveSongCatalogRef`）→ `onOpenAlbum` / `onOpenArtist` |

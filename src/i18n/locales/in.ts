@@ -314,6 +314,8 @@ export default {
     "playerBackButtonAutoHidden": "Tombol kembali pemutar akan muncul saat diarahkan",
     "mainWindowTitlebarAlwaysShown": "Tombol kontrol jendela utama akan selalu terlihat",
     "mainWindowTitlebarAutoHidden": "Tombol kontrol jendela utama akan muncul saat diarahkan",
+    "playerHeaderBlurOn": "Header pemutar kini memakai latar buram",
+    "playerHeaderBlurOff": "Latar buram header pemutar dimatikan",
     "cursorAutoHideOn": "Kursor akan ikut tersembunyi bersama kontrol pemutar",
     "cursorAutoHideOff": "Kursor tetap terlihat saat kontrol pemutar tersembunyi",
     "cursorIdleHideOn": "Kursor akan menghilang sendiri saat diam",
@@ -713,6 +715,7 @@ export default {
       "grid-organize-song-info": { "title": "Rapikan info lagu", "description": "Rapikan judul, artis, dan album pada folder ini" },
       "grid-export-playlist": { "title": "Ekspor daftar putar ini", "description": "Simpan daftar putar lokal ini sebagai berkas m3u8" },
       "grid-edit-entity": { "title": "Sunting album atau artis ini", "description": "Buka penyunting entitas pustaka lokal untuk koleksi ini" },
+      "grid-set-cover": { "title": "Atur sampul koleksi", "description": "Pilih sampul tetap untuk folder, album, atau daftar putar lokal ini" },
       "grid-toggle-edit-mode": { "title": "Alihkan mode sunting", "description": "Masuk atau keluar dari mode yang memungkinkan menghapus lagu dari koleksi ini" },
       "grid-reload-online-collection": { "title": "Muat ulang koleksi ini", "description": "Lewati cache dan muat ulang semua lagu dari koleksi online ini" },
       "grid-toggle-subscribe": { "title": "Berlangganan atau berhenti berlangganan", "description": "Simpan playlist atau album online ini ke koleksimu, atau hapus jika sudah tersimpan" },
@@ -851,6 +854,7 @@ export default {
       "settings-toggle-follow-system-reduced-motion": { "title": "Ikuti pengurangan gerakan sistem", "description": "Alihkan apakah pengaturan animasi sistem boleh mengurangi gerakan di aplikasi" },
       "settings-toggle-track-switch-buttons": { "title": "Selalu tampilkan panah pengganti trek", "description": "Alihkan apakah panah pengganti trek tetap terlihat di samping judul" },
       "settings-toggle-main-window-titlebar": { "title": "Selalu tampilkan tombol kontrol jendela", "description": "Alihkan apakah tombol kontrol jendela tetap terlihat" },
+      "settings-toggle-player-header-blur": { "title": "Header pemutar buram", "description": "Alihkan bilah buram di belakang bilah judul jendela di halaman pemutar agar tombolnya tetap terbaca" },
       "settings-toggle-fullscreen-titlebar-button": { "title": "Alihkan visibilitas tombol layar penuh", "description": "Tampilkan atau sembunyikan tombol layar penuh di kontrol jendela desktop" },
       "settings-toggle-native-mac-fullscreen-button": { "title": "Tombol layar penuh asli macOS", "description": "Alihkan kontrol jendela macOS ke layar penuh asli alih-alih memaksimalkan" },
       "settings-toggle-cursor-auto-hide": { "title": "Sembunyikan kursor bersama kontrol pemutar", "description": "Alihkan apakah penunjuk tetikus ikut menghilang bersama kontrol pemutar yang tersembunyi otomatis" },
@@ -866,7 +870,8 @@ export default {
       "settings-language-zh-CN": { "title": "Ganti bahasa ke Tionghoa Sederhana", "description": "Gunakan Bahasa Tionghoa Sederhana di antarmuka" },
       "settings-language-zh-TW": { "title": "Ganti bahasa ke Tionghoa Tradisional", "description": "Gunakan Bahasa Tionghoa Tradisional di antarmuka" },
       "settings-language-en": { "title": "Ganti bahasa ke Inggris", "description": "Gunakan Bahasa Inggris di antarmuka" },
-      "settings-language-in": { "title": "Ganti bahasa ke Indonesia", "description": "Gunakan Bahasa Indonesia di antarmuka" }
+      "settings-language-in": { "title": "Ganti bahasa ke Indonesia", "description": "Gunakan Bahasa Indonesia di antarmuka" },
+      "settings-language-vi": { "title": "Ganti bahasa ke Bahasa Vietnam", "description": "Gunakan Bahasa Vietnam di antarmuka" }
     }
   },
   "ui": {
@@ -2059,6 +2064,7 @@ export default {
     "appLanguageZhTW": "Tionghoa Tradisional",
     "appLanguageEnUS": "Inggris",
     "appLanguageInID": "Indonesia",
+    "appLanguageViVN": "Bahasa Vietnam",
     "appLanguageSystemHint": "Saat ini: {{language}}",
     "playbackEntryView": "Tampilan yang dibuka Putar",
     "playbackEntryViewDesc": "Tampilan mana yang dibuka secara default setelah Anda menekan putar.",
@@ -2281,6 +2287,8 @@ export default {
     "alwaysShowTrackSwitchButtonsDesc": "Pertahankan panah sebelumnya/berikutnya di kedua sisi judul bilah progres tetap terlihat alih-alih muncul saat diarahkan.",
     "alwaysShowMainWindowTitlebar": "Selalu Tampilkan Tombol Kontrol Jendela",
     "alwaysShowMainWindowTitlebarDesc": "Tombol minimalkan, maksimalkan, dan tutup selalu terlihat.",
+    "playerHeaderBlur": "Header Pemutar Buram",
+    "playerHeaderBlurDesc": "Memasang bilah buram seperti di beranda di belakang tombol jendela pada halaman pemutar, agar tetap terbaca di atas gambar gelap saat tema terang.",
     "hideFullscreenButton": "Sembunyikan tombol layar penuh",
     "hideFullscreenButtonDesc": "Menyembunyikan tombol layar penuh pada kontrol jendela",
     "useNativeMacFullscreenButton": "Gunakan tombol layar penuh asli macOS",
@@ -2331,7 +2339,7 @@ export default {
     "stageTrackPillMode_always": "Selalu tampil",
     "stageTrackPillMode_never": "Jangan tampilkan",
     "stageTrackPillOnHome": "Tampilkan juga di halaman utama",
-    "stageTrackPillOnHomeDesc": "Saat nonaktif, kartu tetap tampil di pemutar dan antrean putar. Aktifkan untuk menampilkannya juga di halaman utama. Dengan pustaka Bravais, kartu selalu tampil di dinding.",
+    "stageTrackPillOnHomeDesc": "Saat nonaktif, kartu tetap tampil di pemutar dan antrean putar. Aktifkan untuk menampilkannya juga di halaman utama.",
     "stageTrackPillTimeout": "Durasi tampil",
     "disableVisualizerVignette": "Nonaktifkan vignette",
     "visualizerVignette": "Vignette",
@@ -3434,6 +3442,33 @@ export default {
         "description": "Setelah masuk, playlist pribadi buatan Anda kini dapat memuat lagu dengan paging sungguhan. Backend yang di-host sendiri harus memakai qq-music-api 3.1.2 atau lebih baru; backend lama beralih otomatis, dan playlist yang tidak dapat dibaca kini menjelaskan bahwa playlist itu tidak publik, alih-alih tampil kosong tanpa keterangan."
       }
     },
+    "v0_7_23": {
+      "intro": "Selamat datang di 0.7.23. Aplikasi desktop menambahkan mesin pemutaran mpv yang mengirim lagu lokal dan Navidrome ke perangkat output apa adanya; ReplayGain mendapat mode Pintar yang menyesuaikan berdasarkan kenyaringan terukur; filter lirik kini berupa daftar aturan; Tempera mendapat efek drum baru, Kedalaman Tinta; dan antarmuka kini tersedia dalam bahasa Vietnam.",
+      "hifi": {
+        "title": "Pemutaran HiFi Bit-Perfect",
+        "description": "Desktop mendapat pilihan Mesin pemutaran di bagian atas Pengaturan → Pemutaran: file lokal dan Navidrome bisa beralih ke mpv, yang mengirim audio ke perangkat output dalam format asli file sumber, dengan mode eksklusif di Windows dan macOS serta transisi tanpa jeda saat lagu berikutnya juga diputar lewat mpv. Di Windows dan macOS, mpv bisa diunduh dengan sekali klik (beralih ke mirror saat GitHub tidak bisa dijangkau, dengan tautan penyimpanan awan untuk unduhan manual); Linux memakai mpv yang terpasang di sistem. Lencana di samping bilah progres dan panel jalur sinyal menunjukkan apakah lagu diputar bit-perfect dan konversi apa yang terjadi di jalan. Dengan mpv, lagu-lagu ini melewati equalizer, efek audio, ReplayGain, fade, transisi pintar, spektrum, dan ekspor video lirik; lagu online selalu memakai Web Audio."
+      },
+      "smartBalance": {
+        "title": "Penyeimbang Volume Pintar",
+        "description": "ReplayGain mendapat mode Pintar: mengukur kenyaringan setiap lagu, mengecilkan lagu yang terlalu keras dan menaikkan lagu yang pelan sejauh tidak sampai clipping, tanpa perlu tag gain di file. Mode ini belajar sambil lagu diputar dan menyesuaikan paling banyak sekali per pemutaran; hasil pengukurannya disimpan terpisah dan bisa dihapus di Data Pintar pada halaman Penyimpanan."
+      },
+      "lyricFilter": {
+        "title": "Aturan Filter Lirik",
+        "description": "Filter lirik kini berupa daftar aturan: diawali, mengandung, seluruh baris, diakhiri, daftar kata, dan ekspresi. Saat mengedit, Anda bisa melihat baris mana yang dihapus setiap aturan dari lagu ini dan dari lagu yang pernah diputar; ekspresi tulisan tangan dicoba dulu di latar belakang, dan yang berjalan terlalu lama tidak akan berlaku. Pengaturan filter lama dikonversi otomatis, dan menutup jendela dengan perubahan yang belum disimpan akan meminta konfirmasi."
+      },
+      "temperaInk": {
+        "title": "Tempera: Kedalaman Tinta",
+        "description": "Mode ketukan pintar Tempera menambahkan Kedalaman Tinta: setiap kick dan snare, noda tinta berwarna tema mekar di layar, meninggalkan bekas samar di kertas di antara ketukan. Pemandangan juga mendapat kedalaman: watermark dan gambar belakang berada di belakang dengan sedikit blur, lirik gema dan gambar depan melayang di depan, lapisan dekat dan jauh bergerak dengan kecepatan berbeda saat kamera bergeser, dan kedalaman lirik mengikuti ukurannya. Kedalaman bidang, geser kamera, dan kedalaman lirik masing-masing punya penggeser kekuatan di pengaturan gaya."
+      },
+      "vietnamese": {
+        "title": "Antarmuka Bahasa Vietnam",
+        "description": "Antarmuka kini tersedia dalam bahasa Vietnam (Tiếng Việt), diterjemahkan oleh kontributor komunitas; beralih lewat pengaturan bahasa atau palet perintah. Ikuti sistem kini memilih bahasa sistem saat ini setiap kali aplikasi dibuka, jadi perubahan bahasa sistem berlaku saat Folia dibuka berikutnya, dan aplikasi macOS tidak lagi tampil dalam bahasa Inggris di sistem berbahasa Tionghoa."
+      },
+      "moreDetails": {
+        "title": "Peningkatan Lainnya",
+        "description": "Saat masuk ke YouTube Music, video musik resmi di daftar tampil dan diputar sebagai versi audio resmi, dan video yang tidak punya pasangan ditandai MV. Kartu lagu di halaman pemutar bisa diseret ke posisi baru. Folder, album, dan playlist lokal bisa diberi sampul khusus yang tetap: poster.png di folder, gambar yang diunggah, atau sampul salah satu lagunya. Pratinjau gaya lirik dan taman tema bisa beralih ke Langsung untuk menampilkan lagu yang sedang diputar. Desktop menambahkan pengaturan Header Pemutar Buram (nonaktif secara bawaan); jendela kendali jarak jauh mengingat posisi terakhirnya, dan latar teks gelap di latar transparannya kini opsional. Playlist QQ Music tidak lagi disinkronkan ulang setiap kali dibuka, dan paket RPM Linux tidak lagi bentrok dengan aplikasi Electron lain."
+      }
+    },
     "v0_7_22": {
       "intro": "Selamat datang di 0.7.22, Sparkle Update—sebuah rilis besar. Rilis ini menambahkan Qishui Music; menghadirkan Hanabi, gaya lirik kembang api ala Jepang; membiarkan Anda memilih gaya mana yang diacak per lagu; memberi aplikasi desktop pintasan pemutaran global; dan membuat pengaturan AI bisa langsung memilih penyedia dan model.",
       "qishui": {
@@ -3959,6 +3994,34 @@ export default {
     "useLocalInfoForSelected": "Gunakan info lokal ({{count}})",
     "coverCacheFailed": "Metadata disimpan, tetapi sampul tidak dapat di-cache. URL online tetap akan digunakan bila tersedia.",
     "lyricsNotAppliedOtherSaved": "Lirik tidak diterapkan; pilihan lain disimpan."
+  },
+  "localCollectionCover": {
+    "menuLabel": "Atur sampul",
+    "title": "Sampul “{{name}}”",
+    "description": "Gambar ini hanya menjadi sampul {{kind}} ini di pustaka. Tidak ditulis ke berkas lagu mana pun, dan lagu di dalamnya tidak akan mengubahnya. Sampul tetap sampai Anda memilih yang lain atau mengembalikan bawaan.",
+    "kindFolder": "folder",
+    "kindAlbum": "album",
+    "kindPlaylist": "daftar putar",
+    "currentCustom": "Sampul khusus",
+    "currentAutomatic": "Sampul otomatis, diambil dari lagu di dalamnya",
+    "noCover": "Tanpa sampul",
+    "usePoster": "Gunakan poster.png",
+    "posterChecking": "Mencari poster.png di folder…",
+    "posterFound": "{{name}} ditemukan di folder",
+    "posterMissing": "Tidak ada poster.png di folder ini",
+    "posterNoAccess": "Izinkan Folia membaca folder ini untuk memakai poster.png-nya",
+    "posterUnavailable": "Folder ini tidak dapat dibaca",
+    "upload": "Unggah gambar",
+    "restore": "Kembalikan bawaan",
+    "pickSong": "Atau gunakan sampul sebuah lagu",
+    "songCount_one": "{{count}} lagu memakai sampul ini",
+    "songCount_other": "{{count}} lagu memakai sampul ini",
+    "noSongCovers": "Tidak ada lagu di sini yang punya sampul",
+    "saving": "Menyimpan sampul…",
+    "saved": "Sampul diatur",
+    "restored": "Sampul otomatis dikembalikan",
+    "failed": "Sampul tidak diatur: {{error}}",
+    "notImage": "Berkas itu bukan gambar yang dapat dibaca Folia"
   },
   "navidrome": {
     "title": "Navi",

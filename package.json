@@ -8,7 +8,7 @@
     "email": "chthollyphile@users.noreply.github.com"
   },
   "private": true,
-  "version": "0.7.22",
+  "version": "0.7.23",
   "license": "AGPL-3.0",
   "type": "module",
   "main": "electron/main.cjs",
@@ -72,7 +72,8 @@
       "en-US",
       "zh-CN",
       "zh-TW",
-      "id"
+      "id",
+      "vi"
     ],
     "generateUpdatesFilesForAllChannels": true,
     "directories": {
@@ -156,7 +157,8 @@
         "en",
         "zh_CN",
         "zh_TW",
-        "id"
+        "id",
+        "vi"
       ],
       "extraResources": [
         {
@@ -209,7 +211,8 @@
       "installerLanguages": [
         "en_US",
         "zh_CN",
-        "id"
+        "id",
+        "vi_VN"
       ],
       "include": "build/installer.nsh"
     },
