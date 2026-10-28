@@ -5,7 +5,7 @@
 > [!NOTE]
 > **Folia-Spotify** 是 [Folia](https://github.com/chthollyphile/folia-major)（作者 [chthollyphile](https://github.com/chthollyphile)）的 fork，按原專案的 [AGPL-3.0](LICENSE) 授權條款釋出。Folia 的設計與絕大部分程式碼都出自原作者和[貢獻者們](CONTRIBUTORS.md)，請到原專案回報原有功能的問題、幫原專案按星星。
 >
-> 本 fork 自 2026-10 起所做的修改：網頁版接入 Spotify（官方 Web API + PKCE 登入 + Web Playback SDK 播放，見 `src/services/onlineMusic/spotify/web/`），也能在播放頁控制面板選帳號裡的其他 Spotify 裝置（手機、電腦、音箱）來放；Spotify 網頁版的歌詞改從其他來源匹配；網易雲、QQ 音樂、酷狗、波點、汽水音樂預設只作為歌詞來源（設定「連線與整合」裡可以開啟）；沒選過平臺時從 Spotify 開始；新增 `npm run dev:web` 一次啟動網頁版和本地的網易雲、QQ、酷狗 API。逐項修改見本儲存庫的提交紀錄。
+> 本 fork 自 2026-10 起所做的修改：接入 Spotify（官方 Web API + PKCE 登入，見 `src/services/onlineMusic/spotify/web/`），歌在你自己的 Spotify App 裡播放（iPhone、Mac……），Folia 跟著顯示歌詞、控制播放；Spotify 網頁版的歌詞改從其他來源匹配；網易雲、QQ 音樂、酷狗、波點、汽水音樂預設只作為歌詞來源（設定「連線與整合」裡可以開啟）；沒選過平臺時從 Spotify 開始；新增 `npm run dev:web` 一次啟動網頁版和本地的網易雲、QQ、酷狗 API。逐項修改見本儲存庫的提交紀錄。
 
 <div align="center">
 <a href="https://trendshift.io/repositories/71740?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-71740" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/71740" alt="chthollyphile%2Ffolia-major | Trendshift" width="250" height="55"/></a>
@@ -64,16 +64,19 @@ Folia-Spotify 的桌面版和網頁版都能用 Spotify，但兩邊接法不同�
 
 在「連線線上平臺」選 Spotify，瀏覽器會打開 Spotify 的授權頁，按「同意」就登入了，不用自己設定任何東西。桌面版沿用原作者的實作，走 Spotify 自家用戶端的服務：可以搜尋、播放、讀取你的歌單和收藏，有 Spotify 自己的逐行歌詞，也有電台頁和探索頁。播放需要 Spotify Premium。
 
-播放時如果出現「此 Spotify 帳號無法播放」：這是 Spotify 不發解密金鑰給這個帳號（2024 年底後註冊的大多如此，較早的帳號也可能遇到），桌面版內建的播放器因此放不了。改成**由 Folia 控制、Spotify App 發聲**：
+Spotify 不發解密金鑰給很多帳號（2024 年底後註冊的大多如此，較早的帳號也可能遇到），內建的播放器放不了，所以 Folia-Spotify 讓**歌在你自己的 Spotify App 裡播放**，Folia 負責選歌、控制播放、顯示同步歌詞。設定一次就好：
 
 1. 照下面網頁版的第 1、2、4 步建立你自己的 Spotify 應用，Redirect URI 加上 `http://127.0.0.1:5590/spotify-callback.html`。
-2. 打開 Spotify App（或手機、音箱上的 Spotify）。
-3. 在 Folia 播放頁的控制面板點「播放裝置」，填入你的 Client ID，按「登入以選擇其他裝置」，在瀏覽器按「同意」。
-4. 選 Spotify App 或其他裝置。之後 Folia 照樣選歌、控制播放、顯示同步歌詞，聲音從那台裝置發出。要改回內建播放，選「Folia 內建播放」。
+2. 打開 Spotify App（電腦、手機、音箱上的都可以）。
+3. 在 Folia 播放頁的控制面板點「播放裝置」，填入你的 Client ID，按「登入 Spotify」，在瀏覽器按「同意」。
+
+之後不用選裝置：Folia 跟著 Spotify 現在在播放的那台（iPhone、Mac……），控制面板的「播放裝置」寫著是哪台。沒在播放時用上次那台，沒有的話用開著 Spotify 的電腦，再沒有就用任一台開著的；都沒開時會提醒你先打開 Spotify。在 Spotify App 裡把播放移到別台，Folia 也跟過去。
+
+在 Spotify App 裡換歌、跳到下一首，或 Spotify 開了淡入淡出提早換歌，Folia 都會跟上。歌單頁會放上 Spotify 的 Daily Mix 1–6。沒有登入這一步時，Folia 用原作者的內建播放器（帳號拿得到金鑰才放得了）。
 
 ### 網頁版
 
-網頁版用的是 Spotify 官方的 Web API 和 Web Playback SDK，要用你自己註冊的 Spotify 應用登入：
+網頁版用的是 Spotify 官方的 Web API，要用你自己註冊的 Spotify 應用登入；歌和桌面版一樣在你自己的 Spotify App 裡播放：
 
 1. 到 [Spotify for Developers](https://developer.spotify.com/dashboard) 建立應用，API 勾選 **Web API** 和 **Web Playback SDK**。
 2. 在 **Redirect URIs** 加上 `https://<你的網域>/spotify-callback.html`。本機開發用 `http://127.0.0.1:3000/spotify-callback.html`（Spotify 不接受 `localhost`，正式網站必須是 https）。
@@ -91,15 +94,14 @@ npm run dev:web
 網頁版能做的事：
 
 - 搜尋、播放、讀取你的歌單和收藏、按讚、把歌加入或移出你的歌單、建立歌單。
-- **播放裝置**：播放頁控制面板的「播放裝置」可以改在帳號裡其他 Spotify 裝置播放（手機、電腦上的 Spotify App、音箱），Folia 照樣控制播放並顯示同步歌詞。其他裝置要先打開 Spotify 才會出現在清單上。
+- **播放裝置**：和桌面版一樣跟著 Spotify 現在在播放的那台，播放頁控制面板的「播放裝置」寫著是哪台。要先在某台裝置上打開 Spotify。
 - 歌詞自動從網易雲、QQ 音樂、酷狗、AMLL 匹配。
 
 Spotify 對第三方應用的限制（不是 Folia 能改的）：
 
 - 只讀得到你自己建立或參與協作的歌單裡的歌。別人的歌單，以及 Daily Mix、Discover Weekly、Release Radar 這類 Spotify 自己做的歌單都讀不到。桌面版走的是另一套服務，沒有這兩條限制。
 - 沒有 Spotify 自己的歌詞，也沒有電台頁和探索頁。
-- 聲音由 Spotify 自己的播放器（加密音訊）或你選的裝置發出，所以等化器、音效、視覺化和自動混音都碰不到 Spotify 的歌。
-- 在這個瀏覽器裡播放需要 Widevine（Chrome、Edge、Firefox 都有）；只拿來遙控其他裝置的話不需要。
+- 聲音由 Spotify App 發出，所以等化器、音效、視覺化和自動混音都碰不到 Spotify 的歌（桌面版也一樣）。
 
 ### 中國大陸的音樂平臺
 

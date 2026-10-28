@@ -5,7 +5,7 @@
 > [!NOTE]
 > **Folia-Spotify** is a fork of [Folia](https://github.com/chthollyphile/folia-major) by [chthollyphile](https://github.com/chthollyphile), released under the original project's [AGPL-3.0](LICENSE) license. Folia's design and nearly all of its code are the work of the original author and [its contributors](CONTRIBUTORS.md); please report issues with the original features to, and star, the original project.
 >
-> Changes made in this fork since 2026-10: Spotify in the web version (official Web API, PKCE sign-in and Web Playback SDK playback, see `src/services/onlineMusic/spotify/web/`), which can also play on the account's other Spotify devices (a phone, a computer, a speaker) chosen in the player's controls; lyrics for Spotify songs on the web matched from other sources; NetEase Cloud Music, QQ Music, Kugou, Bodian and Qishui serve as lyric sources only by default (they can be turned back on under Settings → Connections); listeners who have not chosen a platform start on Spotify; `npm run dev:web` starts the web version together with local NetEase, QQ and Kugou APIs. See this repository's commit history for each change.
+> Changes made in this fork since 2026-10: Spotify (official Web API and PKCE sign-in, see `src/services/onlineMusic/spotify/web/`), with the songs playing in your own Spotify app (an iPhone, a Mac…) while Folia shows the lyrics and controls playback; lyrics for Spotify songs on the web matched from other sources; NetEase Cloud Music, QQ Music, Kugou, Bodian and Qishui serve as lyric sources only by default (they can be turned back on under Settings → Connections); listeners who have not chosen a platform start on Spotify; `npm run dev:web` starts the web version together with local NetEase, QQ and Kugou APIs. See this repository's commit history for each change.
 
 <div align="center">
 <a href="https://trendshift.io/repositories/71740?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-71740" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/71740" alt="chthollyphile%2Ffolia-major | Trendshift" width="250" height="55"/></a>
@@ -62,16 +62,19 @@ Folia-Spotify plays Spotify in both the desktop app and the web version, each in
 
 Choose Spotify under "Connect a streaming service"; your browser opens Spotify's consent page, and agreeing signs you in. Nothing to set up. The desktop app keeps the original author's implementation through the services of Spotify's own client: search, playback, your playlists and library, Spotify's own line-timed lyrics, and the radio and explore pages. Playback needs Spotify Premium.
 
-If playback says this Spotify account cannot play here, Spotify gives the account no audio key (most accounts created since late 2024, and some older ones), so the app's own player cannot play them. Have **Folia control and the Spotify app sound** instead:
+Spotify gives many accounts no audio key (most created since late 2024, and some older ones), so the built-in player cannot play them. Folia-Spotify therefore **plays the songs in your own Spotify app**, while Folia chooses songs, controls playback and shows synced lyrics. Set it up once:
 
 1. Create your own Spotify app as in steps 1, 2 and 4 of the web version below, with the Redirect URI `http://127.0.0.1:5590/spotify-callback.html`.
-2. Open the Spotify app (or Spotify on a phone or a speaker).
-3. In the player's controls, open "Playing on", enter your Client ID, choose "Sign in to choose another device", and agree in your browser.
-4. Choose the Spotify app or another device. Folia keeps choosing songs, controlling playback and showing synced lyrics, and the sound comes from that device. "Folia's own player" switches back.
+2. Open the Spotify app (on a computer, a phone or a speaker).
+3. In the player's controls, open "Playing on", enter your Client ID, choose "Sign in to Spotify", and agree in your browser.
+
+There is no device to choose after that: Folia follows the device Spotify is playing on now (an iPhone, a Mac…), and "Playing on" in the controls names it. With nothing playing it uses the device last used, else a computer with Spotify open, else any device that is on; with none on, it asks you to open Spotify first. Moving the playback to another device in the Spotify app moves Folia along.
+
+Changing songs or skipping in the Spotify app, or Spotify's crossfade starting the next song early, is followed by Folia. The playlists page shows Spotify's Daily Mix 1–6. Without this sign-in, Folia uses the original author's built-in player (which plays only for accounts that get an audio key).
 
 ### Web version
 
-The web version uses Spotify's official Web API and Web Playback SDK, signed in through a Spotify app you register:
+The web version uses Spotify's official Web API, signed in through a Spotify app you register; as on the desktop, the songs play in your own Spotify app:
 
 1. Create an app on [Spotify for Developers](https://developer.spotify.com/dashboard) with **Web API** and **Web Playback SDK** checked.
 2. Under **Redirect URIs**, add `https://<your domain>/spotify-callback.html`. For local development, `http://127.0.0.1:3000/spotify-callback.html` (Spotify does not accept `localhost`; a public site must use https).
@@ -89,15 +92,14 @@ Then open `http://127.0.0.1:3000` (not `localhost`, or the Spotify sign-in redir
 What the web version does:
 
 - Search, playback, your playlists and library, likes, adding songs to and removing them from your playlists, creating playlists.
-- **Playing on another device**: "Playing on" in the player's controls moves playback to another Spotify device of your account (a phone, the Spotify app on a computer, a speaker), which Folia keeps controlling, with synced lyrics. A device shows up once Spotify is open on it.
+- **Playing on**: as on the desktop, Folia follows the device Spotify is playing on now, and "Playing on" in the player's controls names it. Spotify needs to be open on some device first.
 - Lyrics are matched from NetEase, QQ Music, Kugou and AMLL.
 
 Limits Spotify sets for third-party apps (not something Folia can change):
 
 - Only the songs of playlists you made or collaborate on can be read. Other people's playlists, and Spotify's own ones such as Daily Mix, Discover Weekly and Release Radar, cannot. The desktop app goes through other services without these limits.
 - No Spotify lyrics, radio or explore page.
-- The sound comes from Spotify's own player (protected audio) or the device you chose, so the equalizer, effects, visualizer and automix cannot reach Spotify songs.
-- Playing in this browser needs Widevine (Chrome, Edge and Firefox have it); only controlling another device does not.
+- The sound comes from the Spotify app, so the equalizer, effects, visualizer and automix cannot reach Spotify songs (the same holds on the desktop).
 
 ### Platforms in mainland China
 
