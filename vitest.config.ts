@@ -28,6 +28,10 @@ export default defineConfig({
     // 初始选择钉在 grid：现有用例都假设没选过 suite 的人看到网格（开发阶段的初始选择是 bravais）。
     // Spotify 的 Client ID 钉成空：本机 .env.local 里填了的人跑单测也走桌面版，网页版的用例自己 stubEnv。
     env: { VITE_LIBRARY_TUI: 'true', VITE_LIBRARY_INITIAL_SUITE: 'grid', VITE_SPOTIFY_CLIENT_ID: '' },
-    include: ['test/unit/**/*.test.ts']
+    include: ['test/unit/**/*.test.ts'],
+    // Node 25 起全局对象上有自己的 localStorage / sessionStorage，没给 --localstorage-file 时读出来是
+    // undefined，可它们“在”：jsdom 环境因此不放自己的那份上去，有的模块把“在”当成浏览器。
+    // 关掉之后和 .nvmrc 的 Node 24 一样不在（这个开关 Node 22 起就认得）。
+    execArgv: ['--no-experimental-webstorage']
   }
 });

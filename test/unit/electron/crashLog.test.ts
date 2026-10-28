@@ -59,13 +59,28 @@ const build = (overrides: Record<string, unknown> = {}) => {
     return { crashLog, dialog, shell, exeDir, userData };
 };
 
+// Run as on Linux (Windows goes the same way): macOS never writes beside the executable (the test after these).
+const onLinux = () => {
+    const platform = Object.getOwnPropertyDescriptor(process, 'platform')!;
+    Object.defineProperty(process, 'platform', { value: 'linux' });
+    return () => Object.defineProperty(process, 'platform', platform);
+};
+
 describe('where crash reports are written', () => {
+    let restorePlatform = () => {};
+    afterEach(() => {
+        restorePlatform();
+        restorePlatform = () => {};
+    });
+
     it('puts them beside the executable when that directory takes a write', () => {
+        restorePlatform = onLinux();
         const { crashLog, exeDir } = build();
         expect(crashLog.dir).toBe(path.join(exeDir, 'logs'));
     });
 
     it('falls back to userData when the install directory refuses one', () => {
+        restorePlatform = onLinux();
         const exeDir = path.join(workspace, 'readonly');
         fs.mkdirSync(exeDir, { recursive: true });
         const userData = path.join(workspace, 'userData');
