@@ -525,4 +525,79 @@ describe('the device it plays on', () => {
             vi.useRealTimers();
         }
     });
+
+    // A deck near the end of its song, playing the stand-in of `letter`, and Spotify answering `now()`.
+    const nearTheEnd = async (letter: string, now: () => 'playing' | 'paused' | 'nothing') => {
+        const url = (await omni.getAudioSource({ ...song, id: id(letter), sourceRef: { ...song.sourceRef, mediaId: id(letter) } } as never, 'high'))!.url;
+        const deck = Object.assign(new FakeMedia(), {
+            currentSrc: url, paused: false, currentTime: 170, duration: 180,
+            hasAttribute: (name: string) => name === 'data-playback-deck',
+            getAttribute: () => url,
+            pause() { this.paused = true; },
+        });
+        const asked: string[] = [];
+        answer({
+            'GET /me/player/queue': () => reply({ queue: [] }),
+            'GET /me/player': () => (now() === 'nothing'
+                ? reply(undefined, 204)
+                : reply({ is_playing: now() === 'playing', progress_ms: 170_000, device: { id: 'phone-1', name: 'iPhone', type: 'Smartphone' }, item: { id: id(letter) } })),
+            'PUT /me/player/pause': () => { asked.push('pause'); return reply(undefined, 204); },
+            'PUT /me/player/play': () => { asked.push('play'); return reply(undefined, 204); },
+        });
+        handlers.playing({ target: deck } as unknown as Event);
+        // Past the settling after the start.
+        await vi.advanceTimersByTimeAsync(6000);
+        // The deck's pause, as the document tells it, which also stops its checks.
+        const stop = async () => {
+            deck.paused = true;
+            handlers.pause({ type: 'pause', target: deck } as unknown as Event);
+            await vi.advanceTimersByTimeAsync(100);
+        };
+        return { deck, asked, stop };
+    };
+    const onADocument = () => {
+        vi.stubGlobal('HTMLMediaElement', FakeMedia);
+        vi.stubGlobal('document', {
+            addEventListener: (type: string, handler: (event: Event) => void) => { handlers[type] = handler; },
+            querySelectorAll: () => [],
+        });
+    };
+
+    it('plays the deck on to its end where Spotify ends the track early and plays nothing (fading out, no next)', async () => {
+        vi.useFakeTimers();
+        onADocument();
+        try {
+            signedIn();
+            let now: 'playing' | 'paused' | 'nothing' = 'playing';
+            const { deck, asked, stop } = await nearTheEnd('g', () => now);
+            now = 'paused';
+            await vi.advanceTimersByTimeAsync(3000);
+            expect(deck.paused).toBe(false);
+            now = 'nothing';
+            await vi.advanceTimersByTimeAsync(6000);
+            expect(deck.paused).toBe(false);
+            expect(asked).not.toContain('pause');
+            await stop();
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it('pauses the deck near the end once Spotify says paused twice', async () => {
+        vi.useFakeTimers();
+        onADocument();
+        try {
+            signedIn();
+            let now: 'playing' | 'paused' | 'nothing' = 'playing';
+            const { deck, stop } = await nearTheEnd('h', () => now);
+            now = 'paused';
+            await vi.advanceTimersByTimeAsync(3000);
+            expect(deck.paused).toBe(false);
+            await vi.advanceTimersByTimeAsync(3000);
+            expect(deck.paused).toBe(true);
+            await stop();
+        } finally {
+            vi.useRealTimers();
+        }
+    });
 });

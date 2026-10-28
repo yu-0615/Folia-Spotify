@@ -1,6 +1,6 @@
 import type { UnifiedSong } from '../../../types';
 import { OnlineProviderError } from '../../../types/onlineMusic';
-import type { OnlineMusicProvider, ProviderUser, LoginState } from '../../../types/onlineMusic';
+import type { LoginState, MediaId, OnlineMusicProvider, ProviderUser } from '../../../types/onlineMusic';
 import { createProviderSongMetadata } from '../../../utils/songMetadata';
 import { parseLyricsByFormat } from '../../../utils/lyrics/parserCore';
 import { formatLrcTimestamp } from '../../../utils/lyrics/lrcTimestamp';
@@ -77,6 +77,14 @@ i18n.on('languageChanged', clearSpotifyCatalogCache);
 // without it, this app plays them itself.
 const playsInSpotify = hasSpotifyWebSession;
 
+// How many tracks are asked for at once.
+const SONG_DETAILS_AT_ONCE = 5;
+
+const spotifySongDetail = async (id: MediaId) => {
+    const track = (await querySpotify<TrackAnswer>('getTrack', { uri: spotifyUri('track', String(id)) })).trackUnion;
+    return spotifySongOf(track && { ...track, artists: { items: [...(track.firstArtist?.items ?? []), ...(track.otherArtists?.items ?? [])] } });
+};
+
 export const spotifyProvider: OnlineMusicProvider = {
     id: 'spotify', displayName: 'Spotify', shortName: 'Spotify',
     mark: { letter: 'S', color: '#22c55e' },
@@ -147,10 +155,11 @@ export const spotifyProvider: OnlineMusicProvider = {
         },
     },
     playback: {
-        async getSongDetail(id) {
-            const track = (await querySpotify<TrackAnswer>('getTrack', { uri: spotifyUri('track', String(id)) })).trackUnion;
-            return spotifySongOf(track && { ...track, artists: { items: [...(track.firstArtist?.items ?? []), ...(track.otherArtists?.items ?? [])] } });
-        },
+        getSongDetail: spotifySongDetail,
+        // Spotify's query is for one track: a few are asked at once (the 20 songs next in the Spotify
+        // app, read when the app follows it, came one by one in some 10 seconds).
+        getSongDetails: ids => Promise.all(ids.map(spotifySongDetail)),
+        songDetailsPerRequest: SONG_DETAILS_AT_ONCE,
         // Spotify's files are Ogg Vorbis at 160 and at 320 kbit/s and nothing above (`BITRATES` on
         // the desktop side): two levels, and a preference above `high` is asked for as `high`.
         audioQualityLevels: ['standard', 'high'],
