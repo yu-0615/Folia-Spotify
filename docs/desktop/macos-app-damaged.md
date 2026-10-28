@@ -6,7 +6,7 @@
 
 ## 使用前先確認
 
-- 只從本儲存庫的 Releases 頁面下載對應版本的 macOS 安裝檔，例如 `Folia-Spotify-0.7.23-arm64.dmg`
+- 只從本儲存庫的 Releases 頁面下載對應版本的 macOS 安裝檔，例如 `Folia-Spotify-0.1.0-arm64.dmg`
 - 先把 `Folia-Spotify.app` 從 dmg 視窗拖到 `Applications`，不要直接在 dmg 掛載盤裡執行
 - 如果下載過程中中斷過，先重新下載一次再試
 
