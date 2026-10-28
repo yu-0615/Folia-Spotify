@@ -71,6 +71,8 @@ export const spotifyProvider: OnlineMusicProvider = {
     id: 'spotify', displayName: 'Spotify', shortName: 'Spotify',
     mark: { letter: 'S', color: '#22c55e' },
     getAvailability: getSpotifyTransportAvailability,
+    // Where a listener who has not chosen a platform starts.
+    startsHere: true,
     describeFailure: describeSpotifyFailure,
     // `recommendations` is the radio tab: a personal FM, daily songs and playlists, each made of
     // what Spotify has for the account (spotifyRecommendations.ts). `personalFmModes` stays off:

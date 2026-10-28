@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlaybackReportReady } from '../../../../services/onlineMusic/playbackReportGate';
 import { useAudioSettingsStore } from '../../../../stores/useAudioSettingsStore';
+import { useOnlinePlatformListStore } from '../../../../stores/useOnlinePlatformListStore';
 import { usePlayerChromeSettingsStore } from '../../../../stores/usePlayerChromeSettingsStore';
 import { useStageSettingsStore } from '../../../../stores/useStageSettingsStore';
 import { Button, CopyValue, Group, Reveal, Row, Status, Toggle, Value, type SettingsOptionDef } from '../kit';
@@ -13,7 +14,8 @@ import { useSettingsPage } from './settingsPageContext';
 
 // src/components/modal/settings/pages/IntegrationPage.tsx
 // The 连接与集成 page: what Folia connects to and what it shows to other programs. Services first
-// (Navidrome, the sync server, Discord, the NetEase listening report), then streaming and stage
+// (which platforms the platform list shows, Navidrome, the sync server, Discord, the NetEase
+// listening report), then streaming and stage
 // (the transparent player background, the OBS browser source, the lyric interface, stage mode).
 // Discord, OBS and the lyric interface exist in the desktop app only. The rows of Navidrome, the
 // sync server and stage mode are in pages/integration.
@@ -35,10 +37,15 @@ const IntegrationPage: React.FC = () => {
     const setScrobbleEnabled = useAudioSettingsStore(state => state.handleToggleNeteaseScrobble);
     // Subscribed to, so the row follows the reporting account signing in or out while the page is open.
     const canScrobble = usePlaybackReportReady();
+    const showAllPlatforms = useOnlinePlatformListStore(state => state.showAllPlatforms);
+    const setShowAllPlatforms = useOnlinePlatformListStore(state => state.setShowAllPlatforms);
 
     return (
         <>
             <Group def={SERVICES}>
+                <Row option={O.allPlatforms} hint={t('options.showAllOnlinePlatformsDesc')}>
+                    <Toggle checked={showAllPlatforms} onChange={setShowAllPlatforms} />
+                </Row>
                 <NavidromeRows />
                 <SyncServerRows />
                 {isElectron && (

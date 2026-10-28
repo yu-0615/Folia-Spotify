@@ -51,6 +51,8 @@ export const bodianProvider: OnlineMusicProvider = {
     id: 'bodian', displayName: '波点音乐', shortName: '波点',
     mark: { letter: '波', color: '#0d9488' },
     getAvailability: getBodianTransportAvailability,
+    // A platform in mainland China: a lyric source only, unless the settings show every platform.
+    offByDefault: true,
     describeFailure: describeBodianFailure,
     capabilities: {
         search: true, playback: true, lyrics: true, wordByWordLyrics: true, auth: true,

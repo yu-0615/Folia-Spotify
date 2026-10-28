@@ -3218,6 +3218,8 @@ export default {
     "scanningFolder": "Scanning {{folderName}}",
     "lyricFilterUpdated": "Lyric filter rule updated",
     "neteaseScrobble": "Report plays (NetEase only)",
+    "showAllOnlinePlatforms": "Show every platform in the platform list",
+    "showAllOnlinePlatformsDesc": "Off, NetEase Cloud Music, QQ Music, Kugou, Bodian and Qishui stay out of the platform list: they cannot be switched to or signed in to, and serve only to match lyrics.",
     "neteaseScrobbleDesc": "Reports a play to NetEase after 30 seconds of listening. Carries some risk.",
     "neteaseScrobbleSignInHint": "Sign in to NetEase Cloud Music to use this.",
     "queueDefaultBehavior": "Default position when adding to queue",

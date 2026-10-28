@@ -91,6 +91,10 @@ export interface ProviderAccountSummary {
     availability: ProviderAvailability;
     /** False for a provider with no account at all (a Folium mod source): it is used without signing in. Absent means true. */
     requiresAccount?: boolean;
+    /** False for a provider left out of the platform list (`OnlineMusicProvider.offByDefault`). Absent means true. */
+    listed?: boolean;
+    /** The platform a listener who has not chosen one starts on (`OnlineMusicProvider.startsHere`). */
+    startsHere?: boolean;
     status: 'unknown' | 'authenticated' | 'anonymous' | 'error';
     user: ProviderUser | null;
     collections: ProviderCollection[];
@@ -845,6 +849,14 @@ export interface OnlineMusicProvider {
     shortName?: string;
     mark?: ProviderMark;
     getAvailability?(): ProviderAvailability;
+    /**
+     * Left out of the platform list (switching to it, signing in to it) unless the listener asks for
+     * every platform in the settings (useOnlinePlatformListStore). It is still a lyric source, and a
+     * song of it already kept still plays.
+     */
+    offByDefault?: boolean;
+    /** The platform a listener who has not chosen one starts on, where it is configured. */
+    startsHere?: boolean;
     /**
      * What the provider watches for as long as the app is open (a local service of its own that
      * may fail to start), telling the listener through `tell`. Started once the app is up;

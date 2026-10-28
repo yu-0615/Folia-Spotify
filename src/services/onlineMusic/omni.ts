@@ -44,6 +44,7 @@ import type {
 import { resolveProviderLyricsChorus } from '../../utils/lyrics/chorusResolver';
 import { DEFAULT_ONLINE_PROVIDER_ID, OnlineProviderError } from '../../types/onlineMusic';
 import { useOnlineProviderAccountStore } from '../../stores/useOnlineProviderAccountStore';
+import { useOnlinePlatformListStore } from '../../stores/useOnlinePlatformListStore';
 import { getPlaybackSourceRef } from '../../utils/appPlaybackGuards';
 import { toSafePlaybackUrl } from '../../utils/appPlaybackHelpers';
 import { saveSongReplayGain } from './resourceCache';
@@ -471,6 +472,7 @@ export const omni = {
 
     getProviderSummaries(): OmniProviderSummary[] {
         const accounts = useOnlineProviderAccountStore.getState().accounts;
+        const showAll = useOnlinePlatformListStore.getState().showAllPlatforms;
         return listOnlineMusicProviders().map(provider => {
             const account = accounts[provider.id];
             return {
@@ -479,6 +481,8 @@ export const omni = {
                 shortName: provider.shortName || provider.displayName,
                 availability: provider.getAvailability?.() ?? { configured: true },
                 requiresAccount: provider.capabilities.auth,
+                listed: showAll || !provider.offByDefault,
+                startsHere: Boolean(provider.startsHere),
                 status: account?.status || 'unknown',
                 user: account?.user || null,
                 collections: account?.collections || [],

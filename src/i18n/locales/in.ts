@@ -3218,6 +3218,8 @@ export default {
     "scanningFolder": "Memindai {{folderName}}",
     "lyricFilterUpdated": "Aturan filter lirik diperbarui",
     "neteaseScrobble": "Laporkan pemutaran (khusus NetEase)",
+    "showAllOnlinePlatforms": "Tampilkan semua platform di daftar platform",
+    "showAllOnlinePlatformsDesc": "Jika mati, NetEase Cloud Music, QQ Music, Kugou, Bodian, dan Qishui tidak muncul di daftar platform: tidak bisa dipilih atau dimasuki, dan hanya dipakai untuk mencocokkan lirik.",
     "neteaseScrobbleDesc": "Melaporkan pemutaran ke NetEase setelah 30 detik. Ada risikonya.",
     "neteaseScrobbleSignInHint": "Masuk ke NetEase Cloud Music untuk memakai ini.",
     "queueDefaultBehavior": "Posisi default saat menambahkan ke antrean",

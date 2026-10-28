@@ -10,6 +10,7 @@ export const STREAMING: SettingsGroupDef = { id: 'streaming', titleKey: 'options
 
 
 export const O = {
+    allPlatforms: option(SERVICES, 'showAllOnlinePlatforms', 'options.showAllOnlinePlatforms'),
     navidrome: option(SERVICES, 'navidrome', 'navidrome.enable'),
     navidromeUrl: option(SERVICES, 'navidromeServerUrl', 'navidrome.serverUrl'),
     navidromeUsername: option(SERVICES, 'navidromeUsername', 'navidrome.username'),

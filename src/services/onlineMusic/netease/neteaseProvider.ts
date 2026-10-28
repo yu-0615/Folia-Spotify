@@ -299,6 +299,8 @@ export const neteaseProvider: OnlineMusicProvider = {
     watch: watchNeteaseLocalService,
     describeFailure: describeNeteaseFailure,
     getAvailability: () => ({ configured: true }),
+    // A platform in mainland China: a lyric source only, unless the settings show every platform.
+    offByDefault: true,
     capabilities: {
         search: true,
         playback: true,

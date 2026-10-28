@@ -1023,6 +1023,8 @@ export const kugouProvider: OnlineMusicProvider = {
     shortName: '酷狗',
     mark: { letter: 'K', color: '#2563eb' },
     getAvailability: getKugouTransportAvailability,
+    // A platform in mainland China: a lyric source only, unless the settings show every platform.
+    offByDefault: true,
     describeFailure: describeKugouFailure,
     capabilities: {
         search: true, playback: true, lyrics: true, auth: true, userLibrary: true,

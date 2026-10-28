@@ -1039,6 +1039,8 @@ export const qqProvider: OnlineMusicProvider = {
     shortName: 'QQ音乐',
     mark: { letter: 'Q', color: '#16a34a' },
     getAvailability,
+    // A platform in mainland China: a lyric source only, unless the settings show every platform.
+    offByDefault: true,
     describeFailure: describeQqFailure,
     capabilities: {
         search: true,

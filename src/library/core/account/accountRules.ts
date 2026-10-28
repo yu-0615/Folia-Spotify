@@ -43,13 +43,21 @@ export const resolveProviderSelectLabel = (provider: ProviderAccountSummary): Li
 
 // ─── 当前平台 ───────────────────────────────────────────────────────────
 
-/** 存的当前平台不在 provider 列表里（例如 mod 源被关掉）时回落到默认平台；账户缓存不动。 */
+/**
+ * 存的当前平台不在 provider 列表里（例如 mod 源被关掉、平台没列出）时回落：先是配置好的起始平台（`startsHere`），
+ * 再是列表里的默认平台，再是第一个配置好的，最后才是默认平台本身；账户缓存不动。
+ */
 export const resolveActiveProviderId = (
     providers: readonly ProviderAccountSummary[],
     storedProviderId: OnlineProviderId,
-): OnlineProviderId => (
-    providers.some(provider => provider.providerId === storedProviderId) ? storedProviderId : DEFAULT_ONLINE_PROVIDER_ID
-);
+): OnlineProviderId => {
+    if (providers.some(provider => provider.providerId === storedProviderId)) return storedProviderId;
+    const configured = providers.filter(provider => provider.availability.configured);
+    return configured.find(provider => provider.startsHere)?.providerId
+        ?? providers.find(provider => provider.providerId === DEFAULT_ONLINE_PROVIDER_ID)?.providerId
+        ?? configured[0]?.providerId
+        ?? DEFAULT_ONLINE_PROVIDER_ID;
+};
 
 /** 当前平台的摘要；回落后的 id 也找不到（列表里没有默认平台）时取第一个。 */
 export const resolveActiveProviderSummary = (

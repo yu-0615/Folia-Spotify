@@ -87,6 +87,7 @@ UI / hooks / stores / app services
 
 - 探索页：见同目录 `EXPLORE_ADAPTER.md`。
 - 电台页签和音质档位：见 `EXPLORE_ADAPTER.md` 最后一节。
+- 平台列表里默认不列出（只当歌词来源，不能切过去、不能登录）：provider 设 `offByDefault: true`，设置「连接与集成」里打开「在平台列表中显示所有平台」（`src/stores/useOnlinePlatformListStore.ts`）才列出；中国大陆的五个平台这样设。没选过平台的人从哪个平台开始：provider 设 `startsHere: true`（Spotify），没配置好时取列表里第一个配置好的（`library/core/account/accountRules.ts` 的 `resolveActiveProviderId`）。
 - 应用开着时要盯着的东西（比如本地服务起不来）：provider 的 `watch` 成员。提示由 `src/components/app/useProviderNotices.ts` 统一显示，不用改它。
 - 登录要靠的本地服务：`auth.localService`，登录窗口会显示它的错误和重启按钮。
 - 多种登录方式和图标：`auth.getLoginMethods` 回 `iconKey`，图标放 `src/assets/providers/<iconKey>.svg`。

@@ -33,6 +33,7 @@ import { useLibraryAccountProviders } from '@/library/core/account/useLibraryAcc
 import type { LibraryAccountController } from '@/library/core/account/account.contract';
 import { registerOnlineMusicProvider, unregisterOnlineMusicProvider } from '@/services/onlineMusic/providerRegistry';
 import { useOnlineProviderAccountStore } from '@/stores/useOnlineProviderAccountStore';
+import { useOnlinePlatformListStore } from '@/stores/useOnlinePlatformListStore';
 import { useSearchNavigationStore } from '@/stores/useSearchNavigationStore';
 import type { OnlineMusicProvider, OnlineProviderId, ProviderAccountSummary } from '@/types/onlineMusic';
 
@@ -104,6 +105,8 @@ const switchAndConfirm = async (providerId: OnlineProviderId) => {
 
 beforeEach(() => {
     cleanup.resetForProviderSwitch.mockClear();
+    // These cases switch between NetEase and a mod source: every platform is listed.
+    useOnlinePlatformListStore.setState({ showAllPlatforms: true });
     useOnlineProviderAccountStore.getState().setActiveProviderId('netease');
     useSearchNavigationStore.setState({ searchSourceTab: 'netease' });
 });

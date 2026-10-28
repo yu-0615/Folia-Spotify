@@ -1,6 +1,7 @@
 import { omni } from '../../../services/onlineMusic/omni';
 import { dropLoginRequestLimits } from '../../../services/onlineMusic/login/loginRequestLimit';
 import { useOnlineProviderAccountStore } from '../../../stores/useOnlineProviderAccountStore';
+import { useOnlinePlatformListStore } from '../../../stores/useOnlinePlatformListStore';
 import { formatBuildProvenance } from '../../../utils/buildProvenance';
 import type {
     LibraryAccountAuthPort,
@@ -39,9 +40,12 @@ export const omniAccountAuthPort: LibraryAccountAuthPort = {
     dropRequestLimits: dropLoginRequestLimits,
 };
 
-/** provider 列表 × 账户 store；订阅同时听账户 store 与 provider 注册表。 */
+/**
+ * provider 列表 × 账户 store；订阅同时听账户 store、provider 注册表和「显示所有平台」的设置。列表只有列出的平台
+ * （`listed`）：没列出的只当歌词来源，不能切过去、不能登录。
+ */
 export const accountStorePort: LibraryAccountStorePort = {
-    listProviders: () => omni.getProviderSummaries(),
+    listProviders: () => omni.getProviderSummaries().filter(provider => provider.listed !== false),
     getProviderLabel: providerId => omni.getProviderLabel(providerId),
     getStoredActiveProviderId: () => useOnlineProviderAccountStore.getState().activeProviderId,
     setActiveProviderId: providerId => useOnlineProviderAccountStore.getState().setActiveProviderId(providerId),
@@ -49,9 +53,11 @@ export const accountStorePort: LibraryAccountStorePort = {
     subscribe: listener => {
         const unsubscribeStore = useOnlineProviderAccountStore.subscribe(() => listener());
         const unsubscribeRegistry = omni.subscribeProviders(listener);
+        const unsubscribeListing = useOnlinePlatformListStore.subscribe(() => listener());
         return () => {
             unsubscribeStore();
             unsubscribeRegistry();
+            unsubscribeListing();
         };
     },
 };

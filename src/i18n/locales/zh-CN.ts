@@ -3219,6 +3219,8 @@ export default {
     "scanningFolder": "正在扫描 {{folderName}}",
     "lyricFilterUpdated": "歌词过滤规则已更新",
     "neteaseScrobble": "上报播放记录(仅网易云)",
+    "showAllOnlinePlatforms": "在平台列表中显示所有平台",
+    "showAllOnlinePlatformsDesc": "关闭时，网易云音乐、QQ 音乐、酷狗、波点、汽水音乐不出现在平台列表里，不能切换、登录，只用来自动匹配歌词。",
     "neteaseScrobbleDesc": "听满 30 秒后上报到你的网易云账号，有一定风险。",
     "neteaseScrobbleSignInHint": "需要先登录网易云音乐账号。",
     "queueDefaultBehavior": "加入队列的默认位置",

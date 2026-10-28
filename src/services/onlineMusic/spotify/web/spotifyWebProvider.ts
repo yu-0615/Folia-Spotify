@@ -47,6 +47,8 @@ export const spotifyWebProvider: OnlineMusicProvider = {
     id: 'spotify', displayName: 'Spotify', shortName: 'Spotify',
     mark: { letter: 'S', color: '#22c55e' },
     getAvailability: getSpotifyWebAvailability,
+    // Where a listener who has not chosen a platform starts.
+    startsHere: true,
     describeFailure,
     watch: watchSpotifyWebPlayback,
     capabilities: {

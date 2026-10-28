@@ -19,6 +19,8 @@ function clearAccountState() { clearQishuiExplore(); clearQishuiRecommendations(
 export const qishuiProvider: OnlineMusicProvider = {
     id: 'qishui', displayName: '汽水音乐', shortName: '汽水', mark: { letter: '汽', color: '#19a58c' },
     getAvailability: getQishuiAvailability,
+    // A platform in mainland China: a lyric source only, unless the settings show every platform.
+    offByDefault: true,
     capabilities: { search: true, playback: true, lyrics: true, wordByWordLyrics: true, auth: true,
         userLibrary: true, playlists: true, albums: false, artists: true, recommendations: true,
         mutations: true, likes: true, playlistTrackMutations: true, explore: true, personalFmModes: true },

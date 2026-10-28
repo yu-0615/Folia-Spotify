@@ -130,6 +130,14 @@ describe('active provider fallback', () => {
         expect(resolveActiveProviderId([], 'kugou')).toBe('netease');
     });
 
+    it('starts a listener whose provider is not listed on the configured starting platform', () => {
+        const listed = [summary({ providerId: 'ytm' }), summary({ providerId: 'spotify', startsHere: true })];
+        expect(resolveActiveProviderId(listed, 'netease')).toBe('spotify');
+        // A starting platform that is not configured is passed over for the first one that is.
+        const unconfigured = [summary({ providerId: 'ytm' }), summary({ providerId: 'spotify', startsHere: true, availability: { configured: false, reason: 'not-configured' } })];
+        expect(resolveActiveProviderId(unconfigured, 'netease')).toBe('ytm');
+    });
+
     it('finds the active summary, or the first provider when even netease is missing', () => {
         expect(resolveActiveProviderSummary(providers, 'kugou')?.providerId).toBe('kugou');
         const withoutNetease = [summary({ providerId: 'kugou' }), summary({ providerId: 'qq' })];
