@@ -64,8 +64,8 @@
     "manual:ai-probe": "node test/manual/ai_probe.mjs"
   },
   "build": {
-    "appId": "top.izuna.foliamajor",
-    "productName": "Folia",
+    "appId": "top.yu0615.foliaspotify",
+    "productName": "Folia-Spotify",
     "beforePack": "build/beforePack.cjs",
     "afterPack": "build/afterPack.cjs",
     "electronLanguages": [

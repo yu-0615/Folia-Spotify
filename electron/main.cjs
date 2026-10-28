@@ -2612,7 +2612,8 @@ const FOLIA_GITHUB_REPOSITORY = {
   owner: 'yu-0615',
   repo: 'Folia-Spotify',
 };
-const WINDOWS_APP_USER_MODEL_ID = 'top.izuna.foliamajor';
+// The same as package.json's build.appId: Folia-Spotify is an app of its own beside Folia.
+const WINDOWS_APP_USER_MODEL_ID = 'top.yu0615.foliaspotify';
 const REMOTE_CONTROL_WINDOW_TITLE = 'Folia Remote';
 const WINDOW_PLAYBACK_HANDOFF_REQUEST_TIMEOUT_MS = 800;
 const bundledAppIconPath = path.join(__dirname, '../build/icon.png');
