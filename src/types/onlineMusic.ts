@@ -902,6 +902,8 @@ export interface OnlinePlaybackDevicesProvider {
 export interface ProviderElsewherePlay {
     mediaId: string;
     positionMs: number;
+    /** The songs next there, in order, where the device says. */
+    upcoming?: string[];
 }
 
 export interface OnlineMusicProvider {

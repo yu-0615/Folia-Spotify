@@ -49,9 +49,11 @@ const START_RETRY_MS = 1000;
 // long to take it, before a track is started on it.
 const TRANSFER_WAIT_MS = 700;
 // A track started on another device is looked for this many times, this far apart; not there, it is
-// handed over and started once more.
+// handed over and started once more. How many of the songs next there are told with a track the app
+// follows (the app's queue becomes that one and those).
 const CONFIRM_TRIES = 3;
 const CONFIRM_MS = 800;
+const ELSEWHERE_UPCOMING = 20;
 // While the deck does not play, the chosen device is asked this often what it plays.
 const ELSEWHERE_CHECK_MS = 4000;
 // A track told is not told again for this long (the app is loading it).
@@ -360,14 +362,53 @@ const handOver = async (deviceId: string): Promise<void> => {
     await wait(TRANSFER_WAIT_MS);
 };
 
-// A Spotify app that is open but is not the account's active device may take a start, empty its
-// queue and play nothing. So the playback is handed to it first, and after the start the track is
-// looked for there: loaded but paused, it is resumed; not there, it is handed over and started again.
+// GET /me/player/queue: the songs next on the account's player.
+interface WireQueue { queue?: { id?: string | null }[] | null }
+
+const upcomingTracks = async (): Promise<string[]> => {
+    const answer = await callSpotifyWeb<WireQueue | undefined>('/me/player/queue');
+    return (answer?.queue ?? []).flatMap(track => (track.id ? [track.id] : [])).slice(0, ELSEWHERE_UPCOMING);
+};
+
+// The Spotify app takes a start of a lone track (`uris`) and plays nothing, emptying what it played.
+// So a track is started as the next of what plays there (that keeps the list it plays from, and its
+// queue), or else in its album, at it (`offset`); only a track without an album is started alone.
+const startTrackThere = async (deviceId: string, trackId: string, positionMs: number): Promise<void> => {
+    lastCommandAt = Date.now();
+    const [next] = await upcomingTracks();
+    if (next === trackId) {
+        await callSpotifyWeb('/me/player/next', { method: 'POST', query: { device_id: deviceId } });
+        if (positionMs > DRIFT_MS) await callSpotifyWeb('/me/player/seek', { method: 'PUT', query: { position_ms: positionMs, device_id: deviceId } });
+        console.log(`[Spotify] The chosen device skips to ${trackId}, the next of its own`);
+        return;
+    }
+    const track = await callSpotifyWeb<{ album?: { uri?: string | null } } | undefined>(`/tracks/${trackId}`);
+    const uri = `spotify:track:${trackId}`;
+    const album = track?.album?.uri;
+    lastCommandAt = Date.now();
+    await callSpotifyWeb('/me/player/play', {
+        method: 'PUT', query: { device_id: deviceId },
+        body: album ? { context_uri: album, offset: { uri }, position_ms: positionMs } : { uris: [uri], position_ms: positionMs },
+    });
+    console.log(`[Spotify] The chosen device starts ${trackId} at ${Math.round(positionMs / 1000)}s${album ? ' in its album' : ''}`);
+};
+
+// A Spotify app that is open but is not the account's active device may take a start and play
+// nothing. So the playback is handed to it first, and after the start the track is looked for there:
+// loaded but paused, it is resumed; not there, it is handed over and started again. A device that
+// plays the track already (it went on to it by itself) is left playing it.
 const startOnDevice = async (element: HTMLMediaElement, deviceId: string, trackId: string, positionMs: number): Promise<void> => {
     const now = await callSpotifyWeb<WirePlayer | undefined>('/me/player', { query: { additional_types: 'track' } });
-    if (now?.device?.id !== deviceId) await handOver(deviceId);
+    if (now?.device?.id !== deviceId) {
+        await handOver(deviceId);
+    } else if (now.item?.id === trackId || now.item?.linked_from?.id === trackId) {
+        lastCommandAt = Date.now();
+        if (!now.is_playing) await deviceSound(deviceId).resume();
+        console.log('[Spotify] The chosen device plays the track already');
+        return;
+    }
     for (let round = 1; ; round += 1) {
-        await startTrack(deviceId, trackId, positionMs);
+        await startTrackThere(deviceId, trackId, positionMs);
         for (let check = 1; check <= CONFIRM_TRIES; check += 1) {
             await wait(CONFIRM_MS);
             if (element !== deck || element.paused) return;
@@ -442,15 +483,17 @@ const enqueue = (work: () => Promise<void>): void => {
 // The chosen device plays `trackId` (started or resumed in its own Spotify app): the deck lets go of
 // the song it holds, so that its pause or its next song is not sent there, and the track is taken as
 // the one played, so that the deck playing it follows the device.
-const tellElsewhere = (trackId: string, positionMs: number): void => {
+// The songs next there are told too, for the app's queue.
+const tellElsewhere = async (trackId: string, positionMs: number): Promise<void> => {
     if (elsewhereListeners.size === 0) return;
     if (elsewhereTold?.trackId === trackId && Date.now() - elsewhereTold.at < ELSEWHERE_AGAIN_MS) return;
     elsewhereTold = { trackId, at: Date.now() };
     deck = null;
     playingTrack = trackId;
     stopDriftCheck();
-    console.log('[Spotify] The chosen device plays a track of its own: the app follows it');
-    elsewhereListeners.forEach(listener => listener({ mediaId: trackId, positionMs }));
+    const upcoming = await upcomingTracks().catch(() => []);
+    console.log(`[Spotify] The chosen device plays a track of its own: the app follows it, and the ${upcoming.length} next there`);
+    elsewhereListeners.forEach(listener => listener({ mediaId: trackId, positionMs, upcoming }));
 };
 
 // While the deck does not play: what the chosen device plays, if anything.
@@ -461,7 +504,7 @@ const checkElsewhere = async (): Promise<void> => {
     const state = await deviceSound(chosen).state();
     const trackId = state?.trackIds[0];
     if (!state || state.paused || !trackId || (deck && !deck.paused)) return;
-    tellElsewhere(trackId, state.position);
+    await tellElsewhere(trackId, state.position);
 };
 
 const checkDrift = async (): Promise<void> => {
@@ -493,7 +536,7 @@ const checkDrift = async (): Promise<void> => {
         stopDriftCheck();
         element.pause();
         const other = answered?.trackIds[0];
-        if (sound !== windowSound && answered && !answered.paused && other) tellElsewhere(other, answered.position);
+        if (sound !== windowSound && answered && !answered.paused && other) await tellElsewhere(other, answered.position);
         return;
     }
     // Paused from a Spotify app that controls this player: the deck pauses with it.
@@ -536,6 +579,13 @@ const onPause = (event: Event): void => {
     const element = deckOf(event);
     if (!element || element !== deck) return;
     stopDriftCheck();
+    // Another device that comes to the end of the track goes on by itself, to the next of its own,
+    // which is often the app's next too: it is not paused there, and what it plays is not taken for
+    // a song of its own while the app starts its next.
+    if (event.type === 'ended' && chosenSpotifyWebDevice().id !== null) {
+        lastCommandAt = Date.now();
+        return;
+    }
     enqueue(() => command(sound => sound.pause()));
 };
 

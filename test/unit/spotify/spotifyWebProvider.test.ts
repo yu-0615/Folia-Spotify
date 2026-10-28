@@ -339,6 +339,10 @@ describe('the device it plays on', () => {
         sourceRef: { kind: 'online' as const, providerId: 'spotify', mediaId: id('a') },
     };
     const phone = { id: 'phone-1', name: 'Pixel', kind: 'phone' as const };
+    // The deck's media events, caught on the document. The player listens once per run, so the
+    // tests that play a deck share where it listens.
+    const handlers: Record<string, (event: Event) => void> = {};
+    class FakeMedia {}
 
     afterEach(async () => {
         await omni.choosePlaybackDevice('spotify', { id: null, name: 'Folia', kind: 'this' });
@@ -395,8 +399,6 @@ describe('the device it plays on', () => {
     it('hands the playback to a device that is not the active one, starts the track there and resumes it loaded paused', async () => {
         vi.useFakeTimers();
         // A deck in a document whose media events are caught on the way down.
-        const handlers: Record<string, (event: Event) => void> = {};
-        class FakeMedia {}
         vi.stubGlobal('HTMLMediaElement', FakeMedia);
         vi.stubGlobal('document', {
             addEventListener: (type: string, handler: (event: Event) => void) => { handlers[type] = handler; },
@@ -415,11 +417,15 @@ describe('the device it plays on', () => {
             const asked: string[] = [];
             let started = false;
             answer({
+                'GET /me/player/queue': () => reply({ queue: [{ id: id('z') }] }),
                 'GET /me/player': () => reply(started
                     ? { is_playing: false, progress_ms: 0, device: { id: 'phone-1' }, item: { id: id('a') } }
                     : { is_playing: false, device: { id: 'computer-1' }, item: null }),
+                'GET /tracks/': () => reply({ album: { uri: `spotify:album:${id('m')}` } }),
                 'PUT /me/player/play': (_url, init) => {
-                    asked.push(init.body ? `start ${JSON.parse(String(init.body)).uris[0]}` : 'resume');
+                    // A lone track is not started there: the Spotify app plays nothing for it.
+                    const body = init.body ? JSON.parse(String(init.body)) : null;
+                    asked.push(body ? `start ${body.offset.uri} in ${body.context_uri}` : 'resume');
                     started = true;
                     return reply(undefined, 204);
                 },
@@ -428,7 +434,7 @@ describe('the device it plays on', () => {
             });
             handlers.playing({ target: deck } as unknown as Event);
             await vi.advanceTimersByTimeAsync(3000);
-            expect(asked).toEqual(['hand over phone-1', `start spotify:track:${id('a')}`, 'resume']);
+            expect(asked).toEqual(['hand over phone-1', `start spotify:track:${id('a')} in spotify:album:${id('m')}`, 'resume']);
             deck.pause();
             handlers.pause({ target: deck } as unknown as Event);
             await vi.advanceTimersByTimeAsync(100);
@@ -437,6 +443,45 @@ describe('the device it plays on', () => {
             vi.useRealTimers();
         }
     });
+    it('skips to the track where it is the next on the chosen device, keeping the list it plays from', async () => {
+        vi.useFakeTimers();
+        vi.stubGlobal('HTMLMediaElement', FakeMedia);
+        vi.stubGlobal('document', {
+            addEventListener: (type: string, handler: (event: Event) => void) => { handlers[type] = handler; },
+            querySelectorAll: () => [],
+        });
+        try {
+            signedIn();
+            await omni.choosePlaybackDevice('spotify', phone);
+            const url = (await omni.getAudioSource({ ...song, id: id('e'), sourceRef: { ...song.sourceRef, mediaId: id('e') } } as never, 'high'))!.url;
+            const deck = Object.assign(new FakeMedia(), {
+                currentSrc: url, paused: false, currentTime: 0,
+                hasAttribute: (name: string) => name === 'data-playback-deck',
+                getAttribute: () => url,
+                pause() { this.paused = true; },
+            });
+            const asked: string[] = [];
+            let skipped = false;
+            answer({
+                'GET /me/player/queue': () => reply({ queue: [{ id: id('e') }, { id: id('f') }] }),
+                'GET /me/player': () => reply({ is_playing: true, progress_ms: 0, device: { id: 'phone-1' }, item: { id: skipped ? id('e') : id('d') } }),
+                'POST /me/player/next': () => { asked.push('next'); skipped = true; return reply(undefined, 204); },
+                'PUT /me/player/play': () => { asked.push('start'); return reply(undefined, 204); },
+                'PUT /me/player/pause': () => { asked.push('pause'); return reply(undefined, 204); },
+            });
+            handlers.playing({ target: deck } as unknown as Event);
+            await vi.advanceTimersByTimeAsync(3000);
+            expect(asked).toEqual(['next']);
+            // The track's end leaves the device going on by itself.
+            deck.paused = true;
+            handlers.ended({ type: 'ended', target: deck } as unknown as Event);
+            await vi.advanceTimersByTimeAsync(100);
+            expect(asked).toEqual(['next']);
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
     it('tells what the chosen device plays that the app does not, once, and nothing while another device plays', async () => {
         vi.useFakeTimers();
         vi.stubGlobal('document', { addEventListener: () => undefined, querySelectorAll: () => [] });
@@ -445,13 +490,14 @@ describe('the device it plays on', () => {
             await omni.choosePlaybackDevice('spotify', phone);
             let where = 'phone-1';
             answer({
+                'GET /me/player/queue': () => reply({ queue: [{ id: id('c') }, { id: id('d') }] }),
                 'GET /me/player': () => reply({ is_playing: true, progress_ms: 42_000, device: { id: where }, item: { id: id('b') } }),
             });
             const told = vi.fn();
             const stop = omni.watchPlaybackElsewhere(told);
             await vi.advanceTimersByTimeAsync(12_000);
             expect(told).toHaveBeenCalledTimes(1);
-            expect(told).toHaveBeenCalledWith({ providerId: 'spotify', mediaId: id('b'), positionMs: 42_000 });
+            expect(told).toHaveBeenCalledWith({ providerId: 'spotify', mediaId: id('b'), positionMs: 42_000, upcoming: [id('c'), id('d')] });
             where = 'computer-1';
             await vi.advanceTimersByTimeAsync(12_000);
             expect(told).toHaveBeenCalledTimes(1);
