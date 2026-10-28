@@ -82,8 +82,8 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "chthollyphile",
-        "repo": "folia-major"
+        "owner": "yu-0615",
+        "repo": "Folia-Spotify"
       }
     ],
     "files": [
