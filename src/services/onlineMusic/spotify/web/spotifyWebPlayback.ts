@@ -28,9 +28,11 @@ const KEPT_STAND_INS = 4;
 // How far a resumed device may be from the deck before it is moved to it.
 const DRIFT_MS = 800;
 // How far the deck may be from the device before it is moved to it (the lyrics follow the deck),
-// and how often that is looked at.
+// and how often that is looked at; every END_CHECK_MS in the deck's last stretch (END_STRETCH_S),
+// where Spotify goes on to the next track early and the app is to follow within a second.
 const DECK_DRIFT_MS = 1000;
 const CHECK_MS = 3000;
+const END_CHECK_MS = 1000;
 // A volume dragged on is sent to the device once it rests this long.
 const VOLUME_WAIT_MS = 400;
 // After a command, the device's state is not read as its own doing for this long.
@@ -38,8 +40,11 @@ const SETTLE_MS = 4000;
 // Spotify ends a track up to 12 seconds early where it fades into the next (Crossfade, Automix): with
 // a next it plays that one, and without one it stops, paused there and then playing nothing (seen on
 // an iPhone, 11 seconds before the end). In this last stretch of the deck a stop is not taken for a
-// pause until Spotify says paused twice.
+// pause until Spotify has said paused for PAUSED_NEAR_END_MS. How long its fade is cannot be read
+// (the Web API does not tell it, and Automix's differs from one pair of tracks to the next), so it
+// is not asked of the listener: the device is asked more often there instead.
 const END_STRETCH_S = 15;
+const PAUSED_NEAR_END_MS = 3000;
 // A device that is not the account's active one is first handed the playback, and given this long
 // to take it, before a track is started on it.
 const TRANSFER_WAIT_MS = 700;
@@ -64,8 +69,10 @@ let driftTimer: ReturnType<typeof setInterval> | null = null;
 let volumeTimer: ReturnType<typeof setTimeout> | null = null;
 // Where the deck was moved to follow the device: its seek is not handed back to the device.
 let deckMovedTo: number | null = null;
-// Spotify said paused once in the last stretch of the deck.
-let pausedNearEnd = false;
+// When Spotify first said paused in the last stretch of the deck, since it last played there.
+let pausedNearEndAt: number | null = null;
+// When the device was last asked by the drift check.
+let checkedAt = 0;
 // The deck's events are answered one after another.
 let turn: Promise<void> = Promise.resolve();
 // Those told what Spotify plays that the deck does not, and the last track told.
@@ -231,11 +238,15 @@ const startTrackThere = async (deviceId: string, trackId: string, positionMs: nu
 // plays the track already (it went on to it by itself) is left playing it.
 const startOnDevice = async (element: HTMLMediaElement, deviceId: string, trackId: string, positionMs: number): Promise<void> => {
     const now = await readPlayer();
+    const readAt = Date.now();
     if (now?.device?.id !== deviceId) {
         await handOver(deviceId);
     } else if (now.item?.id === trackId || now.item?.linked_from?.id === trackId) {
         lastCommandAt = Date.now();
-        if (!now.is_playing) await resumeOn(deviceId);
+        // It went on to the track by itself, seconds before the app noticed and started the deck where
+        // it was then: the deck is put where it is now, not at the next drift check.
+        if (now.is_playing) moveDeck(element, (now.progress_ms ?? 0) + (Date.now() - readAt));
+        else await resumeOn(deviceId);
         console.log('[Spotify] The device plays the track already');
         return;
     }
@@ -269,10 +280,14 @@ const follow = async (element: HTMLMediaElement, trackId: string): Promise<void>
     if (element !== deck || element.paused) return;
     const atMs = Math.round(element.currentTime * 1000);
     const state = await playerState();
+    const readAt = Date.now();
     if (playingTrack === trackId && isSameTrack(state, trackId)) {
-        // A device still playing is left alone (the drift check moves the deck); a paused one is
-        // resumed where the deck is, which may have been sought meanwhile.
+        // A device still playing is left alone, and the deck is put where it is now: the app started
+        // the deck where the device was when it was told of the track (it went on to the track by
+        // itself, a Spotify app's own or its next after a fade), which the device has passed meanwhile.
+        // A paused one is resumed where the deck is, which may have been sought meanwhile.
         if (!state.paused) {
+            moveDeck(element, state.position + (Date.now() - readAt));
             startDriftCheck();
             await topUpFollowed(trackId);
             return;
@@ -349,6 +364,15 @@ const checkElsewhere = async (): Promise<void> => {
     await tellElsewhere(trackId, state.position, state.context);
 };
 
+// The deck is put where the device is, where the two are apart; its seek is not handed back to the device.
+const moveDeck = (element: HTMLMediaElement, positionMs: number): void => {
+    if (Math.abs(positionMs - element.currentTime * 1000) <= DECK_DRIFT_MS) return;
+    deckMovedTo = positionMs / 1000;
+    element.currentTime = deckMovedTo;
+};
+
+const inLastStretch = (element: HTMLMediaElement): boolean => element.duration - element.currentTime < END_STRETCH_S;
+
 const checkDrift = async (): Promise<void> => {
     if (!deck || deck.paused || !playingTrack) return;
     const element = deck;
@@ -358,26 +382,22 @@ const checkDrift = async (): Promise<void> => {
     if (element !== deck || element.paused) return;
     // Spotify plays the track (on whichever device it was moved to): the deck is put where it is.
     if (isSameTrack(state, playingTrack) && !state.paused) {
-        pausedNearEnd = false;
-        const atMs = element.currentTime * 1000;
-        if (Math.abs(state.position - atMs) > DECK_DRIFT_MS) {
-            deckMovedTo = state.position / 1000;
-            element.currentTime = deckMovedTo;
-        }
+        pausedNearEndAt = null;
+        moveDeck(element, state.position);
         return;
     }
     // Shortly after a command, the device may not show it yet.
     if (Date.now() - lastCommandAt < SETTLE_MS) return;
     // Near the end, Spotify that plays nothing ended the track early: the deck plays on to its end, and the
     // app goes on to its next. Paused there, it is a pause only when Spotify says so again.
-    if (element.duration - element.currentTime < END_STRETCH_S) {
+    if (inLastStretch(element)) {
         if (!state) {
             console.log('[Spotify] Spotify ended the track early: the deck plays on to its end');
             return;
         }
-        if (isSameTrack(state, playingTrack) && state.paused && !pausedNearEnd) {
-            pausedNearEnd = true;
-            return;
+        if (isSameTrack(state, playingTrack) && state.paused) {
+            pausedNearEndAt ??= Date.now();
+            if (Date.now() - pausedNearEndAt < PAUSED_NEAR_END_MS) return;
         }
     }
     // Spotify plays another track, started in one of its apps: that one is followed.
@@ -397,7 +417,13 @@ const checkDrift = async (): Promise<void> => {
 
 function startDriftCheck(): void {
     if (driftTimer) return;
-    driftTimer = setInterval(() => { enqueue(checkDrift); }, CHECK_MS);
+    checkedAt = Date.now();
+    driftTimer = setInterval(() => {
+        const nearEnd = deck !== null && inLastStretch(deck);
+        if (!nearEnd && Date.now() - checkedAt < CHECK_MS) return;
+        checkedAt = Date.now();
+        enqueue(checkDrift);
+    }, END_CHECK_MS);
 }
 
 function stopDriftCheck(): void {
@@ -412,7 +438,7 @@ const deckOf = (event: Event): HTMLMediaElement | null => (
 const onPlaying = (event: Event): void => {
     const element = deckOf(event);
     if (!element) return;
-    pausedNearEnd = false;
+    pausedNearEndAt = null;
     const trackId = trackOnDeck(element);
     if (!trackId) {
         // Another song plays: the device stops.

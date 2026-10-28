@@ -611,4 +611,50 @@ describe('the device it plays on', () => {
             vi.useRealTimers();
         }
     });
+
+    it('follows Spotify on to its next track within a second near the end, and puts the next deck where Spotify is', async () => {
+        vi.useFakeTimers();
+        onADocument();
+        try {
+            signedIn();
+            let next = false;
+            const { deck, asked } = await nearTheEnd('i', () => 'playing');
+            // Spotify fades into the next track 10 seconds early (Crossfade): the app hears of it within a second.
+            const told = vi.fn();
+            const stopWatching = omni.watchPlaybackElsewhere(told);
+            const player = { device: { id: 'phone-1', name: 'iPhone', type: 'Smartphone' } };
+            const startedAt = Date.now();
+            answer({
+                'GET /me/player/queue': () => reply({ queue: [] }),
+                'GET /me/player': () => reply(next
+                    ? { ...player, is_playing: true, progress_ms: Date.now() - startedAt, item: { id: id('j') } }
+                    : { ...player, is_playing: true, progress_ms: 170_000, item: { id: id('i') } }),
+                'PUT /me/player/play': () => { asked.push('play'); return reply(undefined, 204); },
+            });
+            next = true;
+            await vi.advanceTimersByTimeAsync(1000);
+            expect(deck.paused).toBe(true);
+            expect(told).toHaveBeenCalledWith(expect.objectContaining({ mediaId: id('j') }));
+            // The app starts the next deck where Spotify was when it was told; by the time it plays,
+            // Spotify is further on, and the deck goes there at once rather than at the next check.
+            const url = (await omni.getAudioSource({ ...song, id: id('j'), sourceRef: { ...song.sourceRef, mediaId: id('j') } } as never, 'high'))!.url;
+            const nextDeck = Object.assign(new FakeMedia(), {
+                currentSrc: url, paused: false, currentTime: 1, duration: 180,
+                hasAttribute: (name: string) => name === 'data-playback-deck',
+                getAttribute: () => url,
+                pause() { this.paused = true; },
+            });
+            await vi.advanceTimersByTimeAsync(2000);
+            handlers.playing({ target: nextDeck } as unknown as Event);
+            await vi.advanceTimersByTimeAsync(100);
+            expect(nextDeck.currentTime).toBeGreaterThan(2.9);
+            expect(asked).not.toContain('play');
+            nextDeck.paused = true;
+            handlers.pause({ type: 'pause', target: nextDeck } as unknown as Event);
+            await vi.advanceTimersByTimeAsync(100);
+            stopWatching();
+        } finally {
+            vi.useRealTimers();
+        }
+    });
 });
