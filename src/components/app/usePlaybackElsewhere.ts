@@ -10,7 +10,8 @@ import { getPlaybackSongKey, getPlaybackSourceRef } from '../../utils/appPlaybac
 // 在线平台的「播放设备」选了别的设备时，用的人在那台设备自己的 App 里放的歌，这里也跟着放
 // （omni.watchPlaybackElsewhere）：正在放的就是那首（停着），从那台设备放到的地方接着放；别的歌，
 // 查到以后从那台设备放到的地方开始放。队列都换成那首和那台设备接下来要放的歌（设备没说时插在当前这首后面）。
-// 之后播放器跟着那台设备走，不会让它从头再放。
+// 之后播放器跟着那台设备走，不会让它从头再放；接着放这份队列里的歌时，队列再换成那台设备接下来的歌
+// （平台一次只给 20 首，这样队列不会放完）。
 
 type PlaySong = (song: SongResult, queue?: SongResult[], isFmCall?: boolean, options?: PlaybackNavigationOptions) => Promise<void>;
 
@@ -29,9 +30,12 @@ export function usePlaybackElsewhere(playSong: PlaySong, seek: (timeSec: number)
             const found = await omni.getSongDetails(play.providerId, play.upcoming).catch(() => []);
             return found.flatMap(detail => (detail.status === 'found' ? [detail.song] : []));
         };
-        if (currentSong && playing?.kind === 'online' && playing.providerId === play.providerId && String(playing.mediaId) === play.mediaId) {
+        const playsIt = Boolean(currentSong && playing?.kind === 'online' && playing.providerId === play.providerId && String(playing.mediaId) === play.mediaId);
+        // Only the songs next: for the song playing here, and not for one that is no longer.
+        if (play.queueOnly && !playsIt) return;
+        if (currentSong && playsIt) {
             // A seek plays a paused song on; the queue becomes the device's, the song staying as it plays.
-            latest.current.seek(atSec);
+            if (!play.queueOnly) latest.current.seek(atSec);
             const upcoming = await upcomingOf();
             if (!upcoming || usePlaybackStore.getState().currentSong !== currentSong) return;
             noteWholeQueueWrite();

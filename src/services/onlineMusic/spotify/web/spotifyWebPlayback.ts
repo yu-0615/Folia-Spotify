@@ -53,7 +53,7 @@ const TRANSFER_WAIT_MS = 700;
 // follows (the app's queue becomes that one and those).
 const CONFIRM_TRIES = 3;
 const CONFIRM_MS = 800;
-const ELSEWHERE_UPCOMING = 50;
+const ELSEWHERE_UPCOMING = 20;
 // While the deck does not play, the chosen device is asked this often what it plays.
 const ELSEWHERE_CHECK_MS = 4000;
 // A track told is not told again for this long (the app is loading it).
@@ -453,6 +453,7 @@ const follow = async (element: HTMLMediaElement, trackId: string): Promise<void>
         // resumed where the deck is, which may have been sought meanwhile.
         if (!state.paused) {
             startDriftCheck();
+            if (sound !== windowSound) await topUpFollowed(trackId);
             return;
         }
         lastCommandAt = Date.now();
@@ -464,6 +465,19 @@ const follow = async (element: HTMLMediaElement, trackId: string): Promise<void>
         else await startOnDevice(element, deviceId, trackId, atMs);
     }
     startDriftCheck();
+    if (sound !== windowSound) await topUpFollowed(trackId);
+};
+
+// The app plays on through the list it followed (on another device, which plays it too): the songs
+// next there are told again, as Spotify tells no more than 20 at a time, so that the app's queue
+// keeps being the device's instead of running out.
+const topUpFollowed = async (trackId: string): Promise<void> => {
+    if (!followed?.tracks.has(trackId) || elsewhereListeners.size === 0) return;
+    if (elsewhereTold?.trackId === trackId && Date.now() - elsewhereTold.at < ELSEWHERE_AGAIN_MS) return;
+    const upcoming = await upcomingTracks().catch(() => []);
+    if (upcoming.length === 0) return;
+    upcoming.forEach(id => followed?.tracks.add(id));
+    elsewhereListeners.forEach(listener => listener({ mediaId: trackId, positionMs: 0, upcoming, queueOnly: true }));
 };
 
 // The player could not follow the deck: the deck stops too, so that silence does not play on.

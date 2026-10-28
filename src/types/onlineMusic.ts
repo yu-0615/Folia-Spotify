@@ -904,6 +904,8 @@ export interface ProviderElsewherePlay {
     positionMs: number;
     /** The songs next there, in order, where the device says. */
     upcoming?: string[];
+    /** The app plays the song already, on through what it followed: only the songs next are new. */
+    queueOnly?: boolean;
 }
 
 export interface OnlineMusicProvider {

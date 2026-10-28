@@ -524,11 +524,14 @@ describe('the device it plays on', () => {
             handlers.playing({ target: deck } as unknown as Event);
             await vi.advanceTimersByTimeAsync(2000);
             expect(started).toEqual([`spotify:track:${id('d')} in spotify:playlist:mix`]);
+            // Playing on through that list, the songs next there are told again for the queue.
+            expect(told).toHaveBeenLastCalledWith({ providerId: 'spotify', mediaId: id('d'), positionMs: 0, upcoming: [id('c'), id('d')], queueOnly: true });
             deck.paused = true;
             handlers.pause({ type: 'pause', target: deck } as unknown as Event);
+            // Nothing while another device plays.
             where = 'computer-1';
             await vi.advanceTimersByTimeAsync(12_000);
-            expect(told).toHaveBeenCalledTimes(1);
+            expect(told).toHaveBeenCalledTimes(2);
             stop();
         } finally {
             vi.useRealTimers();
