@@ -1,0 +1,9 @@
+{
+  "folium": 1,
+  "id": "zh-hant-lyrics",
+  "name": "簡轉繁",
+  "version": "1.0.0",
+  "author": "Folia-Spotify",
+  "description": "把简体的歌词原文与翻译换成繁体（OpenCC：台湾字形、台湾字形与用语或香港字形）。日文歌的原文不转，罗马音不碰；逐字时间与分词照旧对得上。纯 client，不需要权限。",
+  "client": "client.mjs"
+}
