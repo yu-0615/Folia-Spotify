@@ -32,6 +32,8 @@ Lyrics Reimagined // 辭曲新境
 ·
 [Spotify 說明](#spotify)
 ·
+[YouTube Music 說明](#youtube-music)
+·
 [使用指南](https://folia-site.cielaniska.top/guide/)
 ·
 [技術說明](docs/technical.md)
@@ -102,6 +104,31 @@ Spotify 對第三方應用的限制（不是 Folia 能改的）：
 ### 中國大陸的音樂平臺
 
 網易雲、QQ 音樂、酷狗、波點、汽水音樂預設只當歌詞來源，不會出現在平臺清單裡。要像原版一樣切換、登入這些平臺，到「設定 → 連線與整合」打開「在平臺清單中顯示所有平臺」。
+
+## YouTube Music
+
+只有桌面版能用 YouTube Music。
+
+### 登入
+
+1. 點「連線線上平臺」，選 YouTube Music。Folia 會用電腦上裝的 Chrome 開一個獨立的視窗。沒有 Chrome 時，依序改用 Edge、Chromium、Brave、Chrome Beta／Dev／Canary、Helium。
+2. 在那個視窗裡登入 Google，看到 YouTube Music 顯示你的帳號後，關掉視窗。macOS 要結束整個瀏覽器（⌘Q），只關視窗不算。
+3. 視窗不小心關掉或被蓋住了，在登入視窗按「重新開啟瀏覽器」。
+
+為什麼開的是 Chrome，不是你的預設瀏覽器：Google 不讓 Folia 內嵌的視窗登入，YouTube Music 也沒有給第三方 App 用的正式登入方式，所以 Folia 要在你登入後，從瀏覽器讀出 YouTube 的 cookie。能讓 Folia 讀的只有 Chromium 核心的瀏覽器，而且要用一個 Folia 自己的資料夾開，才不會碰到你平常的瀏覽資料。Safari 讀不到；Dia、Arc 雖然是 Chromium 核心，但不會打開 Folia 給的網址。
+
+Folia 只留下 YouTube 的 cookie，用系統的鑰匙圈加密保存；登入用的那個資料夾裡有你整個 Google 帳號的登入，讀完就整個刪掉。登出時 cookie 也會刪掉。
+
+### 怎麼運作
+
+- **讀取**：歌單、按讚的歌、首頁推薦和探索頁，都是帶著那組 cookie，以 YouTube Music 網頁版的身分讀它自己的頁面。介面是繁體中文時，YouTube 的頁面也用繁中讀。
+- **播放**：Folia 自己向 YouTube 取得音訊、自己播放。這和 Spotify 不同（Spotify 是遙控 Spotify App 播放），所以等化器、音效、視覺化和自動混音都能用在 YouTube Music 的歌上。
+- **音質**：播放頁控制面板的「音質」頁，「預設音質」有標準和極高（極高是 Opus，約 130–160 kbit/s）；YouTube Music Premium 帳號另有超高（約 256 kbit/s）。
+- **歌詞**：先用 YouTube 自己的同步歌詞，沒有的話再從其他來源匹配。
+- **探索頁**：依序是 YouTube Music 的首頁、探索頁（新發行、熱門）、排行榜、心情與曲風（每個類別一排歌單），最後是「與某首歌相似」。YouTube 自己的「最近播放」「再聽一次」「重溫舊愛」不放進來，「最近播放」一律用 Folia 自己的播放紀錄。
+- **電臺頁**：私人 FM 以你按讚的歌為起點，推薦歌單取自 YouTube Music 首頁。
+
+帳號裡沒有按讚的歌、沒有收藏的歌單或專輯時，歌單、電臺、專輯這幾頁就會是空的，這是帳號本身沒有資料，不是讀取失敗。
 
 ## 展示
 

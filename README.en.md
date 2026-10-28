@@ -30,6 +30,8 @@ Lyrics Reimagined // 辞曲新境
 ·
 [Spotify](#spotify)
 ·
+[YouTube Music](#youtube-music)
+·
 [User Guide](https://folia-site.cielaniska.top/guide/)
 ·
 [Technical Notes](docs/technical.md)
@@ -100,6 +102,31 @@ Limits Spotify sets for third-party apps (not something Folia can change):
 ### Platforms in mainland China
 
 NetEase Cloud Music, QQ Music, Kugou, Bodian and Qishui serve as lyric sources only by default and stay out of the platform list. To switch to and sign in to them as in the original, turn on "Show every platform in the platform list" under Settings → Connections.
+
+## YouTube Music
+
+YouTube Music is in the desktop app only.
+
+### Signing in
+
+1. Click "Connect a streaming service" and choose YouTube Music. Folia opens a window of its own in the Chrome installed on the computer. Without Chrome it uses Edge, Chromium, Brave, Chrome Beta / Dev / Canary or Helium, in that order.
+2. Sign in to Google in that window, and close it once YouTube Music shows your account. On macOS quit the whole browser (⌘Q): closing the window is not enough.
+3. If the window was closed by mistake or is hidden behind others, press "Open the browser again" in the sign-in window.
+
+Why Chrome and not your default browser: Google does not take a sign-in in a window Folia draws itself, and YouTube Music has no sign-in for third-party apps, so after you sign in Folia reads YouTube's cookies from the browser. Only a Chromium browser lets it, and only one started on a folder of Folia's own, which keeps your everyday browsing out of it. Safari cannot be read; Dia and Arc are Chromium but do not open the address Folia gives them.
+
+Folia keeps only YouTube's cookies, sealed with the system keychain. The sign-in folder holds your whole Google sign-in, so it is deleted as soon as it has been read. Signing out deletes the cookies.
+
+### How it works
+
+- **Reading**: your playlists, liked songs, home recommendations and the explore page are YouTube Music's own pages, read as its web client with those cookies. With the interface in Traditional Chinese, YouTube's pages come in Traditional Chinese too.
+- **Playing**: Folia fetches the audio from YouTube and plays it itself. Unlike Spotify (which Folia plays by remote-controlling the Spotify app), the equalizer, effects, visualizer and automix all work on YouTube Music songs.
+- **Quality**: on the "Quality" page of the player's control panel, "Default Quality" offers Standard and Very High (Very High is Opus at about 130–160 kbit/s); a YouTube Music Premium account also gets Ultra High (about 256 kbit/s).
+- **Lyrics**: YouTube's own synced lyrics first, then the other lyric sources.
+- **Explore page**: YouTube Music's home feed, its explore page (new releases, trending), the charts, Moods & genres (a row of playlists for each category), then "like this song" rows. YouTube's own "Recently played", "Listen again" and "Forgotten favorites" are left out: "Recently played" always comes from Folia's own record.
+- **Radio page**: the personal FM starts from your liked songs; the recommended playlists come from YouTube Music's home feed.
+
+An account with no liked songs and no saved playlists or albums shows empty playlist, radio and album pages: the account has nothing there, nothing failed to load.
 
 ## Showcase
 
