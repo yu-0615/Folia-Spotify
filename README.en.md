@@ -241,7 +241,7 @@ For Linux packages, the Wayland / Hyprland remote control window, and other desk
 | Option | Details |
 | --- | --- |
 | **PWA (recommended)** | Deploy the web or self-hosted version, then add it to your home screen from Chrome for Android or iOS Safari to use it as a PWA. |
-| **iPhone deployment** | [yu-0615/Folia-on-iPhone](https://github.com/yu-0615/Folia-on-iPhone): the Folia web version deployed to Vercel and added to the home screen from Safari on iPhone. See that repository for how to deploy it. |
+| **iPhone deployment** | [yu-0615/Folia-Spotify-on-iPhone](https://github.com/yu-0615/Folia-Spotify-on-iPhone): the iPhone version of Folia-Spotify, deployed to Vercel and added to the home screen from Safari on iPhone, with its layout adjusted for the iPhone and Spotify sign-in working from the home screen. See that repository for how to deploy it. |
 | **Community ports (Android)** | [maimai993/folia-sonnet](https://github.com/maimai993/folia-sonnet) · [whycfawa/folia-android](https://github.com/whycfawa/folia-android) |
 | **Build it yourself (Android)** | If you are comfortable with the tooling, package the web version as an installable APK with Capacitor. See the example repository [chthollyphile/folia-sonnet](https://github.com/chthollyphile/folia-sonnet). |
 
