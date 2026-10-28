@@ -1,6 +1,6 @@
 {
   "name": "folia-major",
-  "productName": "Folia",
+  "productName": "Folia-Spotify",
   "desktopName": "folia-major.desktop",
   "description": "Lyrics Reimagine",
   "author": {
@@ -12,6 +12,13 @@
   "license": "AGPL-3.0",
   "type": "module",
   "main": "electron/main.cjs",
+  "foliaIdentity": {
+    "repository": {
+      "owner": "yu-0615",
+      "repo": "Folia-Spotify"
+    },
+    "appUserModelId": "top.yu0615.foliaspotify"
+  },
   "engines": {
     "node": ">=24.0.0"
   },

@@ -2605,15 +2605,22 @@ const MOD_SYSTEM_ENABLED_SETTING_KEY = 'MOD_SYSTEM_ENABLED';
 const DEFAULT_STAGE_API_PORT = 32107;
 const DEFAULT_OBS_BROWSER_SOURCE_PORT = 32108;
 const DEFAULT_LYRIC_API_PORT = 32109;
-// Folia-Spotify looks for its updates in its own repository, not in Folia's (chthollyphile/folia-major):
-// an update from there would replace this version with Folia itself.
-const FOLIA_RELEASES_URL = 'https://github.com/yu-0615/Folia-Spotify/releases';
+// Who this build is: package.json's `foliaIdentity` (the packaged app keeps it, unlike `build`), else
+// Folia's own. A fork names its own repository there, so that its updates come from it and not from
+// Folia's (which would replace the fork with Folia), and its own Windows id (the same as build.appId).
+const OWN_IDENTITY = (() => {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(app.getAppPath(), 'package.json'), 'utf8')).foliaIdentity ?? {};
+  } catch {
+    return {};
+  }
+})();
 const FOLIA_GITHUB_REPOSITORY = {
-  owner: 'yu-0615',
-  repo: 'Folia-Spotify',
+  owner: OWN_IDENTITY.repository?.owner || 'chthollyphile',
+  repo: OWN_IDENTITY.repository?.repo || 'folia-major',
 };
-// The same as package.json's build.appId: Folia-Spotify is an app of its own beside Folia.
-const WINDOWS_APP_USER_MODEL_ID = 'top.yu0615.foliaspotify';
+const FOLIA_RELEASES_URL = `https://github.com/${FOLIA_GITHUB_REPOSITORY.owner}/${FOLIA_GITHUB_REPOSITORY.repo}/releases`;
+const WINDOWS_APP_USER_MODEL_ID = OWN_IDENTITY.appUserModelId || 'top.izuna.foliamajor';
 const REMOTE_CONTROL_WINDOW_TITLE = 'Folia Remote';
 const WINDOW_PLAYBACK_HANDOFF_REQUEST_TIMEOUT_MS = 800;
 const bundledAppIconPath = path.join(__dirname, '../build/icon.png');
