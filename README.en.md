@@ -14,9 +14,9 @@
 
 Lyrics Reimagined // 辞曲新境
 
-[简体中文](README.md) | English
+[繁體中文](README.md) | English
 
-[![GitHub release](https://img.shields.io/github/v/release/chthollyphile/folia-major?label=release)](https://github.com/chthollyphile/folia-major/releases)
+[![GitHub release](https://img.shields.io/github/v/release/yu-0615/Folia-Spotify?label=release)](https://github.com/yu-0615/Folia-Spotify/releases)
 [![License](https://img.shields.io/github/license/chthollyphile/folia-major)](https://github.com/chthollyphile/folia-major/blob/main/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/chthollyphile/folia-major?style=social)](https://github.com/chthollyphile/folia-major/stargazers)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D24-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
@@ -26,7 +26,9 @@ Lyrics Reimagined // 辞曲新境
 
 [Get Folia](#get-folia)
 ·
-[Deploy to Vercel](https://vercel.com/new/clone?repository-url=https://github.com/chthollyphile/folia-major)
+[Deploy to Vercel](https://vercel.com/new/clone?repository-url=https://github.com/yu-0615/Folia-Spotify)
+·
+[Spotify](#spotify)
 ·
 [User Guide](https://folia-site.cielaniska.top/guide/)
 ·
@@ -45,10 +47,54 @@ To use Folia on a phone or in a browser, [deploy the web app to Vercel in one cl
 ## Quick download
 
 > [!TIP]
-> - **GitHub**: [Latest Release](https://github.com/chthollyphile/folia-major/releases/latest) has installers for Windows, macOS, and Linux.
-> - **Cloud drives** (faster in mainland China): [Quark](https://pan.quark.cn/s/6e4c6fa3bc6f) · [Baidu](https://pan.baidu.com/s/1f0x3g-8PMcNCO-TJ5z1rPw?pwd=flia) (code `flia`). Stable installers for Windows and Apple silicon only.
+> - **GitHub**: [Latest Release](https://github.com/yu-0615/Folia-Spotify/releases/latest) has Folia-Spotify installers for Windows, macOS, and Linux (it installs beside the original Folia).
+> - The original Folia's installers, cloud-drive downloads included, are on [the original project's Releases](https://github.com/chthollyphile/folia-major/releases/latest).
 >
 > For other options (web deployment, Docker, AUR, Flatpak, mobile), see [Get Folia](#get-folia) below.
+
+## Spotify
+
+Folia-Spotify plays Spotify in both the desktop app and the web version, each in its own way.
+
+### Desktop
+
+Choose Spotify under "Connect a streaming service"; your browser opens Spotify's consent page, and agreeing signs you in. Nothing to set up. The desktop app keeps the original author's implementation through the services of Spotify's own client: search, playback, your playlists and library, Spotify's own line-timed lyrics, and the radio and explore pages. Playback needs Spotify Premium.
+
+### Web version
+
+The web version uses Spotify's official Web API and Web Playback SDK, through a Spotify app that whoever deploys it registers:
+
+1. Create an app on [Spotify for Developers](https://developer.spotify.com/dashboard) with **Web API** and **Web Playback SDK** checked.
+2. Under **Redirect URIs**, add `https://<your domain>/spotify-callback.html`. For local development, `http://127.0.0.1:3000/spotify-callback.html` (Spotify does not accept `localhost`; a public site must use https).
+3. Build with `VITE_SPOTIFY_CLIENT_ID=<your Client ID>`, in `.env.local` for local development. Set `VITE_SPOTIFY_REDIRECT_URI` only when the redirect differs from the default. The Client ID is not a secret; **the Client Secret is not used, so leave it out**.
+4. Add the accounts that will sign in under the app's **User Management**. An app in development mode lets in at most 5 accounts, and the owner and the users need Premium.
+
+Without `VITE_SPOTIFY_CLIENT_ID`, the web version shows Spotify as desktop-only.
+
+For local development, this starts the web version together with the NetEase, QQ Music and Kugou APIs that lyric matching uses (from `node_modules`, no Docker):
+
+```bash
+npm run dev:web
+```
+
+Then open `http://127.0.0.1:3000` (not `localhost`, or the Spotify sign-in redirect will not match).
+
+What the web version does:
+
+- Search, playback, your playlists and library, likes, adding songs to and removing them from your playlists, creating playlists.
+- **Playing on another device**: "Playing on" in the player's controls moves playback to another Spotify device of your account (a phone, the Spotify app on a computer, a speaker), which Folia keeps controlling, with synced lyrics. A device shows up once Spotify is open on it.
+- Lyrics are matched from NetEase, QQ Music, Kugou and AMLL.
+
+Limits Spotify sets for third-party apps (not something Folia can change):
+
+- Only the songs of playlists you made or collaborate on can be read. Other people's playlists, and Spotify's own ones such as Daily Mix, Discover Weekly and Release Radar, cannot. The desktop app goes through other services without these limits.
+- No Spotify lyrics, radio or explore page.
+- The sound comes from Spotify's own player (protected audio) or the device you chose, so the equalizer, effects, visualizer and automix cannot reach Spotify songs.
+- Playing in this browser needs Widevine (Chrome, Edge and Firefox have it); only controlling another device does not.
+
+### Platforms in mainland China
+
+NetEase Cloud Music, QQ Music, Kugou, Bodian and Qishui serve as lyric sources only by default and stay out of the platform list. To switch to and sign in to them as in the original, turn on "Show every platform in the platform list" under Settings → Connections.
 
 ## Showcase
 
@@ -138,11 +184,11 @@ The desktop app bundles both frontend and backend, so it works right after insta
 
 To put the web app online quickly, follow the [Vercel deployment guide](https://folia-site.cielaniska.top/guide/deploy-vercel).
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/chthollyphile/folia-major)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yu-0615/Folia-Spotify)
 
 Folia also deploys to Cloudflare in one click; adapt the Vercel guide accordingly.
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/chthollyphile/folia-major)
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/yu-0615/Folia-Spotify)
 
 On Vercel and Cloudflare, QQ Music no longer needs a separate, always-on API instance: set `VITE_QQ_API_BASE` to `/api/qq` and add a `QQ_SESSION_SECRET` (a server-side secret, **without the `VITE_` prefix**). This setup supports login by scanning a QR code with WeChat or mobile QQ (mobile QQ requires qq-music-api 3.3.3 or later), and you must log in before playback. On Cloudflare you can also bind a Durable Object so QQ QR login uses a long-lived connection and gains QR login with the QQ Music app. For full steps, platform differences, and troubleshooting, see the [QQ Music deployment guide](docs/qq-music-deployment.md) (Chinese).
 
@@ -150,13 +196,9 @@ Self-hosters can use the [Docker Compose full-stack deployment](deploy/docker/RE
 
 ### Direct download
 
-- **Windows / macOS / Linux**: Download the latest installers from the [Releases page](https://github.com/chthollyphile/folia-major/releases/latest).
-- **Arch Linux**: Install [folia-major-bin](https://aur.archlinux.org/packages/folia-major-bin) from the AUR.
-- **Flatpak**: A community-maintained third-party Flatpak is available on [Flatpark](https://flatpark.org/apps/top.izuna.foliamajor/).
+- **Windows / macOS / Linux**: Download Folia-Spotify from the [Releases page](https://github.com/yu-0615/Folia-Spotify/releases/latest). The macOS build is unsigned; if macOS says it is damaged on first launch, see [this note](docs/desktop/macos-app-damaged.md) (Chinese).
+- **The original Folia**: [folia-major-bin](https://aur.archlinux.org/packages/folia-major-bin) on the AUR and the community [Flatpak](https://flatpark.org/apps/top.izuna.foliamajor/) are the original, without this fork's changes.
 - **Android**: Third-party community ports are listed under [Mobile](#mobile) below.
-
-> [!IMPORTANT]
-> If GitHub Releases is slow from mainland China, download from [Quark](https://pan.quark.cn/s/6e4c6fa3bc6f) or [Baidu](https://pan.baidu.com/s/1f0x3g-8PMcNCO-TJ5z1rPw?pwd=flia) instead. These links host stable installers for Windows and Apple silicon only.
 
 For Linux packages, the Wayland / Hyprland remote control window, and other desktop details, see [Technical Notes](docs/technical.md) (Chinese).
 
