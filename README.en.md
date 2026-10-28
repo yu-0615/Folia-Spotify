@@ -2,6 +2,11 @@
   <img src="https://github.com/user-attachments/assets/b5d0e863-48be-497b-b0e9-4bd8d8ce9bf0" alt="Folia" width="100%" />
 </p>
 
+> [!NOTE]
+> **Folia-Spotify** is a fork of [Folia](https://github.com/chthollyphile/folia-major) by [chthollyphile](https://github.com/chthollyphile), released under the original project's [AGPL-3.0](LICENSE) license. Folia's design and nearly all of its code are the work of the original author and [its contributors](CONTRIBUTORS.md); please report issues with the original features to, and star, the original project.
+>
+> Changes made in this fork since 2026-10: Spotify in the web version (official Web API, PKCE sign-in and Web Playback SDK playback, see `src/services/onlineMusic/spotify/web/`); lyrics for Spotify songs on the web matched from other sources; NetEase Cloud Music, QQ Music, Kugou, Bodian and Qishui serve as lyric sources only by default (they can be turned back on under Settings → Connections); listeners who have not chosen a platform start on Spotify; `npm run dev:web` starts the web version together with local NetEase, QQ and Kugou APIs. See this repository's commit history for each change.
+
 <div align="center">
 <a href="https://trendshift.io/repositories/71740?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-71740" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/71740" alt="chthollyphile%2Ffolia-major | Trendshift" width="250" height="55"/></a>
 
