@@ -74,6 +74,7 @@ const { createYtmSandbox } = require('./ytm/sandbox.cjs');
 const { YTM_AUDIO_PRIVILEGED_SCHEME, YTM_AUDIO_SCHEME } = require('./ytm/audio.cjs');
 const { createSpotifyApiBridge } = require('./spotify/spotifyApiBridge.cjs');
 const { SPOTIFY_AUDIO_PRIVILEGED_SCHEME, SPOTIFY_AUDIO_SCHEME } = require('./spotify/audio.cjs');
+const { createLoopbackSignIn } = require('./loopbackSignIn.cjs');
 const { createQqAuthSessionRepository } = require('./qq/qqAuthSessionRepository.cjs');
 const { DEFAULT_DISCORD_APPLICATION_ID, createDiscordPresenceController } = require('./discordPresence.cjs');
 const { createVoiceInputPauseMonitor } = require('./voiceInputPause.cjs');
@@ -7033,6 +7034,20 @@ ipcMain.handle('spotify-api-request', (event, operation, params) => {
     return { ok: false, error: { code: 'unavailable', message: 'Untrusted Spotify request' } };
   }
   return spotifyApiBridge.request(operation, params);
+});
+
+// A sign-in page of the main window's, opened in the listener's browser and coming back to a
+// loopback address (loopbackSignIn.cjs); its answer goes back to the main window alone.
+const loopbackSignIn = createLoopbackSignIn({
+  send: query => {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('loopback-sign-in-callback', query);
+  },
+  openExternal: url => shell.openExternal(url),
+});
+ipcMain.handle('loopback-sign-in-open', async (event, request) => {
+  if (!isTrustedMainWindowContents(event.sender)) throw new Error('Untrusted sign-in request');
+  await loopbackSignIn.open(request ?? {});
+  return true;
 });
 
 ipcMain.handle('window-minimize', () => {

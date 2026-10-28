@@ -952,6 +952,10 @@ declare global {
         operation: import('./services/onlineMusic/spotify/spotifyTransport').SpotifyOperation,
         params?: import('./services/onlineMusic/spotify/spotifyTransport').SpotifyParams,
       ) => Promise<import('./services/onlineMusic/spotify/spotifyTransport').SpotifyBridgeResult>;
+      /** Opens a sign-in page in the listener's browser that comes back to http://127.0.0.1:<port><path> (electron/loopbackSignIn.cjs). */
+      openLoopbackSignIn?: (request: { url: string; port: number; path: string }) => Promise<boolean>;
+      /** The query the sign-in page came back with; answers with the way to stop listening. */
+      onLoopbackSignIn?: (callback: (query: { code?: string; state?: string; error?: string }) => void) => () => void;
       kugouRequest: (
         operation: ElectronKugouOperation,
         params?: Record<string, string | number | boolean | undefined>,

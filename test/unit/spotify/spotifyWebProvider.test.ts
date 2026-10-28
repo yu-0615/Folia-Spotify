@@ -79,10 +79,47 @@ describe('which Spotify adapter is registered', () => {
         expect(spotify().getAvailability?.()).toEqual({ configured: true });
     });
 
-    it('is the desktop one without a Client ID, which says it needs the desktop app', () => {
+    it('is the web one in a browser without a Client ID too, which asks for one at sign-in and keeps it here', async () => {
         vi.stubEnv('VITE_SPOTIFY_CLIENT_ID', '');
+        expect(spotify().capabilities.explore).toBe(false);
+        expect(spotify().getAvailability?.()).toEqual({ configured: true });
+        const setting = spotify().auth!.setting!;
+        expect(setting.get()).toBe('');
+        expect(setting.hintValues?.()).toEqual({ redirect: 'https://folia.test/spotify-callback.html' });
+        await expect(spotify().auth!.startLogin!()).rejects.toMatchObject({ code: 'unavailable' });
+        setting.set('  client-mine ');
+        expect(setting.get()).toBe('client-mine');
+        expect(memory.get('folia_spotify_client_id')).toBe('client-mine');
+        // A sign-in made through another app is dropped when the Client ID changes.
+        signedIn();
+        setting.set('client-other');
+        expect(memory.has(SESSION_KEY)).toBe(false);
+    });
+
+    it('signs the desktop app in through the listener\'s browser, coming back to a loopback address', async () => {
+        const openLoopbackSignIn = vi.fn(async () => true);
+        let callback: ((query: { code?: string; state?: string }) => void) | null = null;
+        vi.stubGlobal('window', {
+            location: { origin: 'file://' }, open: openMock,
+            electron: { spotifyRequest: vi.fn(), openLoopbackSignIn, onLoopbackSignIn: (listener: never) => { callback = listener; return () => undefined; } },
+        });
+        // (The desktop adapter is registered; its devices sign in this way.)
         expect(spotify().capabilities.explore).toBe(true);
-        expect(spotify().getAvailability?.()).toEqual({ configured: false, reason: 'runtime-unavailable' });
+        expect(spotify().devices?.signIn?.needed()).toBe(true);
+        answer({
+            'POST /api/token': () => reply({ access_token: 'access-d', refresh_token: 'refresh-d', expires_in: 3600 }),
+            'GET /me': () => reply({ id: 'me', display_name: 'Me' }),
+        });
+        const done = spotify().devices!.signIn!.start();
+        await vi.waitFor(() => expect(openLoopbackSignIn).toHaveBeenCalled());
+        const request = (openLoopbackSignIn.mock.calls[0] as unknown as [{ url: string; port: number; path: string }])[0];
+        expect(request).toMatchObject({ port: 5590, path: '/spotify-callback.html' });
+        const page = new URL(request.url);
+        expect(page.searchParams.get('redirect_uri')).toBe('http://127.0.0.1:5590/spotify-callback.html');
+        expect(openMock).not.toHaveBeenCalled();
+        callback!({ state: page.searchParams.get('state')!, code: 'code-d' });
+        await done;
+        expect(spotify().devices?.signIn?.needed()).toBe(false);
     });
 
     it('is the desktop one where the desktop bridge is there', () => {
@@ -287,7 +324,8 @@ describe('lyrics', () => {
         useOnlineProviderAccountStore.setState({ accounts: { ...accounts, spotify: { ...accounts.spotify, user: { id: 'me', nickname: 'Me', avatarUrl: '' } } as never } });
         try {
             expect(isLyricMatchSourceOffered('spotify')).toBe(false);
-            vi.stubEnv('VITE_SPOTIFY_CLIENT_ID', '');
+            // The desktop app reads Spotify's own lyrics.
+            vi.stubGlobal('window', { location: { origin: 'file://' }, electron: { spotifyRequest: vi.fn() } });
             expect(isLyricMatchSourceOffered('spotify')).toBe(true);
         } finally {
             useOnlineProviderAccountStore.setState({ accounts });
@@ -323,6 +361,21 @@ describe('the device it plays on', () => {
             { id: 'phone-1', name: 'Pixel', kind: 'phone' },
             { id: 'tv-1', name: 'Living room', kind: 'tv' },
         ]);
+    });
+
+    it('plays a song of the desktop app on the device chosen as silence for the deck, without the desktop side\'s audio', async () => {
+        const spotifyRequest = vi.fn();
+        vi.stubGlobal('window', { location: { origin: 'file://' }, localStorage: storage, electron: { spotifyRequest } });
+        signedIn();
+        await omni.choosePlaybackDevice('spotify', phone);
+        expect(spotify().capabilities.explore).toBe(true);
+        expect(await spotify().playback!.getAudioSource(song as never, 'high')).toMatchObject({ standIn: true });
+        expect(spotifyRequest).not.toHaveBeenCalled();
+        // Without the sign-in that controls the device, the app's own player plays it.
+        memory.delete(SESSION_KEY);
+        spotifyRequest.mockResolvedValue({ ok: true, data: { url: 'folia-spotify://audio/x', format: 'OGG_VORBIS_320' } });
+        expect((await spotify().playback!.getAudioSource(song as never, 'high'))?.standIn).toBeUndefined();
+        expect(spotifyRequest).toHaveBeenCalledWith('audio', expect.objectContaining({ id: id('a') }));
     });
 
     it('keeps the device chosen, tells it, and plays a song there without this window\'s player', async () => {

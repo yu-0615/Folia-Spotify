@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { LibraryLoginSessionSnapshot } from '../../../library/core/account/account.contract';
+import type { LibraryLoginSessionSnapshot, LibraryLoginSetting } from '../../../library/core/account/account.contract';
 import { resolveLoginSessionReportRoute, translateLoginSelfCheck } from '../../../library/core/account/useLibraryAccount';
 import { LOGIN_REPORT_ELSEWHERE_COPY, retryOpensAt } from '../../../library/core/account/accountRules';
 import type { LoginFailure } from '../../../types/loginFailure';
@@ -38,6 +38,8 @@ export type LoginScreenProps = {
     onChoose: (providerId: OnlineProviderId) => void;
     /** 开始（浏览器登录的那一下），或者重来，保留选过的登录方式。 */
     onStart: () => void;
+    /** 浏览器登录之前选中的这一行要填的值（文字是 i18n key）；没有为 null。没填时「打开浏览器」按不下去。 */
+    setting?: (LibraryLoginSetting & { onChange: (value: string) => void }) | null;
     /** 用这种登录方式开始（任何时候都可以换）。 */
     onSelectMethod: (methodId: string) => void;
     onReopenBrowser: () => void;
@@ -73,7 +75,7 @@ const useReached = (at: number): boolean => {
 };
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({
-    isOpen, onClose, rows, activeProviderId, chosen, login, onChoose, onStart, onSelectMethod, onReopenBrowser, onRestartService, onSwitch, onSignOut,
+    isOpen, onClose, rows, activeProviderId, chosen, login, onChoose, onStart, setting = null, onSelectMethod, onReopenBrowser, onRestartService, onSwitch, onSignOut,
     buildReport, origin, done = false, onDoneLeave = nothing, onDoneEnd = nothing,
 }) => {
     const { t } = useTranslation();
@@ -150,7 +152,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         // 'title'：平台自己的登录标题；没有声明的平台是「登录到 平台名」。
         headline = key.includes('.') ? t(key) : texts ? t(texts.title) : t('home.loginToProvider', { provider: label });
         if (texts && scene !== 'none' && scene !== 'scanned' && scene !== 'reading') note = t(texts.note);
-        if (scene === 'browser-ready') actions = [{ label: t('login.openBrowser'), primary: true, onClick: onStart }];
+        if (scene === 'browser-ready') actions = [{ label: t('login.openBrowser'), primary: true, onClick: onStart, disabled: Boolean(setting) && !setting!.value.trim() }];
         if (scene === 'browser' && login?.canReopenLoginPage) actions = [{ label: t('home.loginBrowserOpen'), onClick: onReopenBrowser }];
     }
 
@@ -233,6 +235,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                         options: login.methods.map(method => ({ value: method.id, label: t(method.labelKey), icon: loginMethodIcon(method.iconKey) })),
                         value: login.selectedMethodId,
                         onChange: onSelectMethod,
+                    } : undefined}
+                    // Asked before the browser opens, and again after a failure (a mistyped id is the usual one).
+                    field={setting && (scene === 'browser-ready' || scene === 'failed') ? {
+                        label: t(setting.labelKey),
+                        placeholder: t(setting.placeholderKey),
+                        hint: t(setting.hintKey, setting.hintValues),
+                        value: setting.value,
+                        onChange: setting.onChange,
                     } : undefined}
                     actions={actions}
                     waitFor={waitFor}

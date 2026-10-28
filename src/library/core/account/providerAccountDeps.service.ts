@@ -32,6 +32,7 @@ export const omniAccountAuthPort: LibraryAccountAuthPort = {
     openLoginPage: (providerId, key) => omni.openLoginPage(providerId, key),
     getLoginTtlMs: providerId => omni.getLoginTtlMs(providerId),
     getLoginTexts: providerId => omni.getLoginTexts(providerId),
+    getLoginSetting: providerId => omni.getLoginSetting(providerId),
     getLoginLocalService: providerId => omni.getLoginLocalService(providerId),
     getLoginDiagnostics: providerId => omni.getLoginDiagnostics(providerId),
     canRunLoginSelfCheck: providerId => omni.canRunLoginSelfCheck(providerId),

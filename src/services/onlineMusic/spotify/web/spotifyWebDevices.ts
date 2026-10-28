@@ -14,6 +14,8 @@ const CHOSEN_KEY = 'folia_spotify_web_device';
 interface WireDevice { id?: string | null; name?: string; type?: string; is_restricted?: boolean }
 
 const THIS_WINDOW: ProviderPlaybackDevice = { id: null, name: 'Folia', kind: 'this' };
+/** This window's own player (in the desktop app, the app's own). */
+export const spotifyThisDevice = THIS_WINDOW;
 
 const KINDS: Record<string, ProviderPlaybackDevice['kind']> = {
     computer: 'computer', smartphone: 'phone', tablet: 'phone',

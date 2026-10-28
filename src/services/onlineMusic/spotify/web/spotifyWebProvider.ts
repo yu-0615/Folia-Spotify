@@ -6,7 +6,7 @@ import { normalizeSpotifyUser, requireSpotifySong } from '../spotifyNormalize';
 import { describeSpotifyFailure } from '../spotifyFailure';
 import {
     SPOTIFY_WEB_LOGIN_TTL_MS, SPOTIFY_WEB_POPUP_BLOCKED, cancelSpotifyWebLogin, checkSpotifyWebLogin, clearSpotifyWebSession,
-    getSpotifyWebAvailability, hasSpotifyWebSession, openSpotifyWebLogin, startSpotifyWebLogin,
+    getSpotifyWebAvailability, hasSpotifyWebSession, openSpotifyWebLogin, spotifyClientIdSetting, startSpotifyWebLogin,
 } from './spotifyWebAuth';
 import { callSpotifyWeb, isSpotifyWebNotFound } from './spotifyWebApi';
 import { isSpotifyWebPlaylistClosed, spotifyWebCatalog } from './spotifyWebCatalog';
@@ -103,6 +103,8 @@ export const spotifyWebProvider: OnlineMusicProvider = {
         },
     },
     auth: {
+        // The listener's own app on developer.spotify.com, asked for before the browser opens.
+        setting: spotifyClientIdSetting,
         getLoginTexts: () => ({
             title: 'home.loginTitleSpotify',
             note: 'home.loginNoteSpotifyWeb',

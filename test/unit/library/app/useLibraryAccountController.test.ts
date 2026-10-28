@@ -153,7 +153,8 @@ describe('application account controller with Folium mod sources', () => {
         expect(cleanup.resetForProviderSwitch).not.toHaveBeenCalled();
     });
 
-    it('falls back to NetEase and remembers it when the active mod source goes away', async () => {
+    // In a browser Spotify asks for the listener's own app at sign-in, so it is on offer, and it is the starting platform.
+    it('falls back to the starting platform and remembers it when the active mod source goes away', async () => {
         registerOnlineMusicProvider(modProvider);
         useOnlineProviderAccountStore.getState().setActiveProviderId(MOD_PROVIDER_ID);
         mount();
@@ -164,10 +165,10 @@ describe('application account controller with Folium mod sources', () => {
             await Promise.resolve();
         });
 
-        expect(view!.activeProviderId).toBe('netease');
+        expect(view!.activeProviderId).toBe('spotify');
         expect(view!.providers.some(provider => provider.providerId === MOD_PROVIDER_ID)).toBe(false);
-        expect(storage.get('active_online_provider_id')).toBe('netease');
-        expect(useSearchNavigationStore.getState().searchSourceTab).toBe('netease');
+        expect(storage.get('active_online_provider_id')).toBe('spotify');
+        expect(useSearchNavigationStore.getState().searchSourceTab).toBe('spotify');
     });
 });
 

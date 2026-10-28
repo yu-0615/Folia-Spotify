@@ -5,6 +5,7 @@ import type { LoginFailure } from '../../../types/loginFailure';
 import { buildLoginIssueUrl } from '../../../services/onlineMusic/login/loginDiagnosticReport';
 import type { OnlineProviderId } from '../../../types/onlineMusic';
 import { Button, CopyButton, Segmented } from '../../modal/settings/kit';
+import { FIELD_SURFACE_CLASS } from '../../modal/settings/kit/TextField';
 import { openOutsideLink } from '../../../utils/system/outsideLink';
 import { copyText } from '../../../utils/system/clipboard';
 import { useKitReducedMotion } from '../../modal/settings/kit/motion';
@@ -23,6 +24,8 @@ export type MessageAction = {
     onClick: () => void;
     primary?: boolean;
     busy?: boolean;
+    /** Out of reach until something is filled in above. */
+    disabled?: boolean;
 };
 
 type LoginMessageProps = {
@@ -34,6 +37,8 @@ type LoginMessageProps = {
     quote?: { who: string; text: string; code?: string };
     /** 登录方式：一个分段的选择，选了之后还留着，可以再换。 */
     methods?: { options: Array<{ value: string; label: string; icon: string }>; value: string | null; onChange: (id: string) => void };
+    /** 打开浏览器之前平台要用的人填的一个值（它自己的应用的 id），和它是做什么的。 */
+    field?: { label: string; placeholder: string; hint: string; value: string; onChange: (value: string) => void };
     actions: MessageAction[];
     /** 「稍后再试」：按钮先倒数到这一种失败等完的时刻，再变成第一个操作。 */
     waitFor?: LoginFailure | null;
@@ -101,7 +106,7 @@ const WaitButton: React.FC<{ failure: LoginFailure; action: MessageAction }> = (
     );
 };
 
-export const LoginMessage: React.FC<LoginMessageProps> = ({ sceneKey, headline, note, quote, methods, actions, waitFor, details, steps }) => {
+export const LoginMessage: React.FC<LoginMessageProps> = ({ sceneKey, headline, note, quote, methods, field, actions, waitFor, details, steps }) => {
     const { t } = useTranslation();
     const reduced = useKitReducedMotion();
     const [first, ...rest] = actions;
@@ -131,18 +136,33 @@ export const LoginMessage: React.FC<LoginMessageProps> = ({ sceneKey, headline, 
                         {quote.code && <code className="shrink-0 font-mono text-[color:var(--st-t3)]">{quote.code}</code>}
                     </div>
                 )}
+                {field && (
+                    <label className="mt-3 block">
+                        <span className="text-xs font-medium text-[color:var(--st-t1)]">{field.label}</span>
+                        <input
+                            type="text"
+                            value={field.value}
+                            placeholder={field.placeholder}
+                            spellCheck={false}
+                            autoComplete="off"
+                            onChange={event => field.onChange(event.target.value)}
+                            className={`${FIELD_SURFACE_CLASS} mt-1.5 h-8 w-full px-2.5 font-mono text-[13px]`}
+                        />
+                        <span className="mt-1.5 block select-text whitespace-pre-line text-xs leading-[18px] text-[color:var(--st-t3)] [overflow-wrap:anywhere]">{field.hint}</span>
+                    </label>
+                )}
             </div>
             <div className="mt-4 flex min-h-8 flex-wrap items-center gap-2">
                 {first && (waitFor
                     ? <WaitButton key={waitFor.at} failure={waitFor} action={first} />
                     : (
-                        <Button variant={first.primary ? 'primary' : undefined} onClick={first.onClick} disabled={first.busy}>
+                        <Button variant={first.primary ? 'primary' : undefined} onClick={first.onClick} disabled={first.busy || first.disabled}>
                             {first.busy && <Loader2 size={14} className={reduced ? undefined : 'animate-spin'} />}
                             {first.label}
                         </Button>
                     ))}
                 {rest.map(action => (
-                    <Button key={action.label} variant={action.primary ? 'primary' : undefined} onClick={action.onClick} disabled={action.busy}>{action.label}</Button>
+                    <Button key={action.label} variant={action.primary ? 'primary' : undefined} onClick={action.onClick} disabled={action.busy || action.disabled}>{action.label}</Button>
                 ))}
                 {details && (
                     <button

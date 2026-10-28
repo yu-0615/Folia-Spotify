@@ -9,6 +9,7 @@ import type {
     LibraryLoginCloseResult,
     LibraryLoginCompletion,
     LibraryLoginDiagnosticResult,
+    LibraryLoginSetting,
     LibraryLoginPageResult,
     LibraryLoginPhase,
     LibraryLoginRequestResult,
@@ -477,6 +478,22 @@ export const createProviderAccountController = (deps: LibraryAccountControllerDe
         return { status: 'resumed', sessionId: beginSession(++loginSeq, login, login.selectedMethodId) };
     };
 
+    // 浏览器登录之前要填的值：问 provider，不进快照（用的人一边打字它一边变）。
+    const getLoginSetting = (providerId: OnlineProviderId): LibraryLoginSetting | null => {
+        const setting = askSafely(() => auth.getLoginSetting?.(providerId) ?? null, null);
+        if (!setting) return null;
+        return {
+            labelKey: setting.labelKey,
+            placeholderKey: setting.placeholderKey,
+            hintKey: setting.hintKey,
+            hintValues: askSafely(() => setting.hintValues?.() ?? {}, {}),
+            value: askSafely(() => setting.get(), ''),
+        };
+    };
+    const setLoginSetting = (providerId: OnlineProviderId, value: string): void => {
+        askSafely(() => auth.getLoginSetting?.(providerId)?.set(value), undefined);
+    };
+
     const buildLoginDiagnosticReport = async (): Promise<LibraryLoginDiagnosticResult> => {
         if (disposed) return { status: 'no-session' };
         const report = await session.buildDiagnosticReport();
@@ -602,6 +619,8 @@ export const createProviderAccountController = (deps: LibraryAccountControllerDe
         closeLogin,
         restartLocalService,
         buildLoginDiagnosticReport,
+        getLoginSetting,
+        setLoginSetting,
         logout: logoutProvider,
         dispose,
     };

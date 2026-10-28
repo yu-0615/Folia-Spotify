@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { LibraryAccountController, LibraryAccountSnapshot, LibraryLoginSessionSnapshot } from '../../library/core/account/account.contract';
 import {
     useLibraryAccountLogin,
@@ -50,6 +50,19 @@ const LoginHost: React.FC<LoginHostProps> = ({ account }) => {
     }), []);
     const { chosen, done } = useSyncExternalStore(host.subscribe, host.getState);
     const providerId = chosen?.providerId ?? null;
+
+    // 浏览器登录之前这一行要填的值（用的人自己注册的应用的 id）：打字时窗口里的是这里记着的，同时交给 provider 存下。
+    const [typed, setTyped] = useState<string | null>(null);
+    useEffect(() => setTyped(null), [providerId]);
+    const asked = chosen?.lead === 'sign-in' && providerId ? account.getLoginSetting?.(providerId) ?? null : null;
+    const setting = asked && providerId ? {
+        ...asked,
+        value: typed ?? asked.value,
+        onChange: (value: string) => {
+            setTyped(value);
+            account.setLoginSetting?.(providerId, value);
+        },
+    } : null;
 
     // 跟着窗口的开关走：每打开一次从头来；关了（不管是谁关的）就停下正在进行的登录。
     useEffect(() => {
@@ -111,6 +124,7 @@ const LoginHost: React.FC<LoginHostProps> = ({ account }) => {
             chosen={chosen}
             login={shownLogin}
             onChoose={host.choose}
+            setting={setting}
             onStart={() => void account.retryLogin()}
             onSelectMethod={methodId => void account.selectLoginMethod(methodId)}
             onReopenBrowser={() => void account.openLoginPage()}

@@ -177,6 +177,12 @@ contextBridge.exposeInMainWorld('electron', {
     bodianRequest: (operation, params) => ipcRenderer.invoke('bodian-api-request', operation, params),
     ytmRequest: (operation, params) => ipcRenderer.invoke('ytm-api-request', operation, params),
     spotifyRequest: (operation, params) => ipcRenderer.invoke('spotify-api-request', operation, params),
+    openLoopbackSignIn: (request) => ipcRenderer.invoke('loopback-sign-in-open', request),
+    onLoopbackSignIn: (callback) => {
+        const listener = (_event, query) => callback(query);
+        ipcRenderer.on('loopback-sign-in-callback', listener);
+        return () => ipcRenderer.removeListener('loopback-sign-in-callback', listener);
+    },
     getQqPort: () => ipcRenderer.invoke('get-qq-port'),
     getQqApiStatus: () => ipcRenderer.invoke('get-qq-api-status'),
     onQqApiStatusChanged: (callback) => {

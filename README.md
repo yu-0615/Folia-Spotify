@@ -62,16 +62,21 @@ Folia-Spotify 的桌面版和網頁版都能用 Spotify，但兩邊接法不同�
 
 在「連線線上平臺」選 Spotify，瀏覽器會打開 Spotify 的授權頁，按「同意」就登入了，不用自己設定任何東西。桌面版沿用原作者的實作，走 Spotify 自家用戶端的服務：可以搜尋、播放、讀取你的歌單和收藏，有 Spotify 自己的逐行歌詞，也有電台頁和探索頁。播放需要 Spotify Premium。
 
+播放時如果出現「平臺限制 2024 年底後註冊的帳號在第三方播放器中播放」：這是 Spotify 不發解密金鑰給較新的帳號，桌面版內建的播放器因此放不了。改成**由 Folia 控制、Spotify App 發聲**：
+
+1. 照下面網頁版的第 1、2、4 步建立你自己的 Spotify 應用，Redirect URI 加上 `http://127.0.0.1:5590/spotify-callback.html`。
+2. 打開 Spotify App（或手機、音箱上的 Spotify）。
+3. 在 Folia 播放頁的控制面板點「播放裝置」，填入你的 Client ID，按「登入以選擇其他裝置」，在瀏覽器按「同意」。
+4. 選 Spotify App 或其他裝置。之後 Folia 照樣選歌、控制播放、顯示同步歌詞，聲音從那台裝置發出。要改回內建播放，選「Folia 內建播放」。
+
 ### 網頁版
 
-網頁版用的是 Spotify 官方的 Web API 和 Web Playback SDK，要由部署的人自己註冊一個 Spotify 應用：
+網頁版用的是 Spotify 官方的 Web API 和 Web Playback SDK，要用你自己註冊的 Spotify 應用登入：
 
 1. 到 [Spotify for Developers](https://developer.spotify.com/dashboard) 建立應用，API 勾選 **Web API** 和 **Web Playback SDK**。
 2. 在 **Redirect URIs** 加上 `https://<你的網域>/spotify-callback.html`。本機開發用 `http://127.0.0.1:3000/spotify-callback.html`（Spotify 不接受 `localhost`，正式網站必須是 https）。
-3. 建置時設定環境變數 `VITE_SPOTIFY_CLIENT_ID=<你的 Client ID>`；本機開發寫在 `.env.local`。回呼網址不是上面的預設值時，再設 `VITE_SPOTIFY_REDIRECT_URI`。Client ID 不是機密；**Client Secret 用不到，也不要放進來**。
+3. 登入時，登入視窗會要你填 Client ID（只存在這台裝置上）。部署的人也可以在建置時設 `VITE_SPOTIFY_CLIENT_ID` 當預設值；回呼網址不是上面的預設值時，再設 `VITE_SPOTIFY_REDIRECT_URI`。Client ID 不是機密；**Client Secret 用不到，也不要放進來**。
 4. 在應用的 **User Management** 加入要登入的帳號。開發模式的應用最多 5 個帳號，應用擁有者和使用者都需要 Premium。
-
-沒設 `VITE_SPOTIFY_CLIENT_ID` 的網頁版，Spotify 會顯示「需要桌面版」。
 
 本機開發時，這個指令會一次啟動網頁版，以及歌詞匹配要用的網易雲、QQ 音樂、酷狗 API（用 `node_modules` 裡的套件，不需要 Docker）：
 

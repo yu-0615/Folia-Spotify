@@ -7,6 +7,7 @@ import type {
     LoginSelfCheckResult,
     LoginState,
     LoginTexts,
+    ProviderSetting,
     OnlineProviderId,
     ProviderAccountSummary,
     ProviderCapabilities,
@@ -272,6 +273,15 @@ export type LibraryLogoutResult =
  * 在线账户的 controller：App 创建（换 suite 不重建），suite、登录窗口与 AccountTab 经 props 拿到它。
  * 快照对象在没有变化时保持身份（useSyncExternalStore 友好）；所有动作返回判别式结果，UI 自己翻译。
  */
+/** 浏览器登录之前要填的那个值，给登录窗口画的样子（文字是 i18n key）。 */
+export interface LibraryLoginSetting {
+    labelKey: string;
+    placeholderKey: string;
+    hintKey: string;
+    hintValues: Record<string, string>;
+    value: string;
+}
+
 export interface LibraryAccountController {
     getSnapshot(): LibraryAccountSnapshot;
     subscribe(listener: () => void): () => void;
@@ -298,6 +308,10 @@ export interface LibraryAccountController {
     /** 重启登录要靠的本地服务；起来了接着登录。 */
     restartLocalService(): Promise<LibraryLocalServiceRestartResult>;
     buildLoginDiagnosticReport(): Promise<LibraryLoginDiagnosticResult>;
+    /** 浏览器登录之前这个平台要用的人填的值（OnlineAuthProvider.setting）：文字的 key 与现在的值；没有为 null。 */
+    getLoginSetting?(providerId: OnlineProviderId): LibraryLoginSetting | null;
+    /** 记下用的人填的值（存在这台设备上，由 provider 自己存）。 */
+    setLoginSetting?(providerId: OnlineProviderId, value: string): void;
     /** 只对已登录的平台；先经宿主问用的人，退的是当前平台时清空播放器，再走宿主注入的登出。 */
     logout(providerId: OnlineProviderId): Promise<LibraryLogoutResult>;
     /** 宿主卸载：关闭登录会话（keyed 取消），待确认切换按 declined / disposed 结算。 */
@@ -324,6 +338,8 @@ export type LibraryAccountAuthPort = {
     /** 声明了这一次登录的有效期才由前端计时；null 表示只认平台报的过期。 */
     getLoginTtlMs(providerId: OnlineProviderId): number | null;
     getLoginTexts(providerId: OnlineProviderId): LoginTexts | null;
+    /** 浏览器登录之前要填的值；没有为 null。 */
+    getLoginSetting?(providerId: OnlineProviderId): ProviderSetting | null;
     getLoginLocalService(providerId: OnlineProviderId): LoginLocalService | null;
     /** 自己不会失败（omni 把 provider 的错误写成一行）。 */
     getLoginDiagnostics(providerId: OnlineProviderId): Promise<LoginDiagnosticLine[]>;

@@ -60,16 +60,21 @@ Folia-Spotify plays Spotify in both the desktop app and the web version, each in
 
 Choose Spotify under "Connect a streaming service"; your browser opens Spotify's consent page, and agreeing signs you in. Nothing to set up. The desktop app keeps the original author's implementation through the services of Spotify's own client: search, playback, your playlists and library, Spotify's own line-timed lyrics, and the radio and explore pages. Playback needs Spotify Premium.
 
+If playback says the platform blocks accounts created since late 2024 from third-party players, Spotify gives newer accounts no audio key, so the app's own player cannot play them. Have **Folia control and the Spotify app sound** instead:
+
+1. Create your own Spotify app as in steps 1, 2 and 4 of the web version below, with the Redirect URI `http://127.0.0.1:5590/spotify-callback.html`.
+2. Open the Spotify app (or Spotify on a phone or a speaker).
+3. In the player's controls, open "Playing on", enter your Client ID, choose "Sign in to choose another device", and agree in your browser.
+4. Choose the Spotify app or another device. Folia keeps choosing songs, controlling playback and showing synced lyrics, and the sound comes from that device. "Folia's own player" switches back.
+
 ### Web version
 
-The web version uses Spotify's official Web API and Web Playback SDK, through a Spotify app that whoever deploys it registers:
+The web version uses Spotify's official Web API and Web Playback SDK, signed in through a Spotify app you register:
 
 1. Create an app on [Spotify for Developers](https://developer.spotify.com/dashboard) with **Web API** and **Web Playback SDK** checked.
 2. Under **Redirect URIs**, add `https://<your domain>/spotify-callback.html`. For local development, `http://127.0.0.1:3000/spotify-callback.html` (Spotify does not accept `localhost`; a public site must use https).
-3. Build with `VITE_SPOTIFY_CLIENT_ID=<your Client ID>`, in `.env.local` for local development. Set `VITE_SPOTIFY_REDIRECT_URI` only when the redirect differs from the default. The Client ID is not a secret; **the Client Secret is not used, so leave it out**.
+3. The sign-in window asks for the Client ID (kept on that device only). A deployment can also build with `VITE_SPOTIFY_CLIENT_ID` as the default; set `VITE_SPOTIFY_REDIRECT_URI` only when the redirect differs from the default. The Client ID is not a secret; **the Client Secret is not used, so leave it out**.
 4. Add the accounts that will sign in under the app's **User Management**. An app in development mode lets in at most 5 accounts, and the owner and the users need Premium.
-
-Without `VITE_SPOTIFY_CLIENT_ID`, the web version shows Spotify as desktop-only.
 
 For local development, this starts the web version together with the NetEase, QQ Music and Kugou APIs that lyric matching uses (from `node_modules`, no Docker):
 

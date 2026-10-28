@@ -12,6 +12,7 @@ import type {
     OmniHistoryEntry,
     OmniLyricsResult,
     OmniPlaybackDevice,
+    ProviderSetting,
     OmniPage,
     OmniPlaybackReport,
     OmniProviderCapabilities,
@@ -1076,6 +1077,26 @@ export const omni = {
 
     subscribePlaybackDevice(providerId: OmniProviderId, listener: () => void): () => void {
         return getOnlineMusicProvider(providerId)?.devices?.subscribe(listener) ?? (() => undefined);
+    },
+
+    // The sign-in the other devices need apart from the provider's (`OnlinePlaybackDevicesProvider.signIn`).
+    playbackDevicesNeedSignIn(providerId: OmniProviderId): boolean {
+        return Boolean(getOnlineMusicProvider(providerId)?.devices?.signIn?.needed());
+    },
+
+    getPlaybackDevicesSetting(providerId: OmniProviderId): ProviderSetting | null {
+        return getOnlineMusicProvider(providerId)?.devices?.signIn?.setting ?? null;
+    },
+
+    async signInForPlaybackDevices(providerId: OmniProviderId): Promise<void> {
+        const signIn = requireOnlineMusicProvider(providerId).devices?.signIn;
+        if (!signIn) return unsupported(providerId, 'devices.signIn');
+        await signIn.start();
+    },
+
+    // The value the sign-in window asks for before a browser sign-in (`OnlineAuthProvider.setting`).
+    getLoginSetting(providerId: OmniProviderId): ProviderSetting | null {
+        return getOnlineMusicProvider(providerId)?.auth?.setting ?? null;
     },
 
     getSongAvailability(song: SongResult): OmniSongAvailability {

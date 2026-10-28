@@ -582,6 +582,9 @@ export interface OnlineAuthProvider {
     forgetOldKeptAccount?(): Promise<void>;
     // 登录窗口里这个平台自己的标题和说明。
     getLoginTexts?(): LoginTexts;
+    // 浏览器登录之前要用的人先在登录窗口里填的一个值（用的人自己注册的应用的 Client ID）。
+    // 没填时「打开浏览器」按不下去。
+    setting?: ProviderSetting;
     // 登录要靠的本地服务：它没起来时登录窗口显示它的错误原话和重启的按钮。
     localService?: LoginLocalService;
     getLoginMethods?(): LoginMethod[];
@@ -853,6 +856,20 @@ export interface ProviderPlaybackDevice {
     kind: 'this' | 'computer' | 'phone' | 'speaker' | 'tv' | 'other';
 }
 
+/**
+ * A value the listener gives a provider, on this device, before it can sign in (the id of an app the
+ * listener registered with the platform). The texts are i18n keys; `hintValues` fills the hint's
+ * placeholders (an address to register, say).
+ */
+export interface ProviderSetting {
+    labelKey: string;
+    placeholderKey: string;
+    hintKey: string;
+    hintValues?(): Record<string, string>;
+    get(): string;
+    set(value: string): void;
+}
+
 /** Where a provider's songs sound, for a provider that can sound them on another device than this window. */
 export interface OnlinePlaybackDevicesProvider {
     /** The devices to choose from: this window's own player first, then the others that are on now. */
@@ -861,8 +878,19 @@ export interface OnlinePlaybackDevicesProvider {
     chosen(): ProviderPlaybackDevice;
     /** The songs play there from now on; a song playing moves there, where it is. */
     choose(device: ProviderPlaybackDevice): Promise<void>;
-    /** Calls `listener` when the chosen device changes; answers with the way to stop. */
+    /** Calls `listener` when the chosen device changes, or the sign-in below; answers with the way to stop. */
     subscribe(listener: () => void): () => void;
+    /**
+     * A sign-in of its own the other devices need, apart from the provider's (the desktop app reads
+     * through one sign-in and controls the devices through another): whether it is needed now, the
+     * value it asks for first, and starting it (the platform's page opens in the browser; the
+     * promise settles once the sign-in is confirmed or has failed).
+     */
+    signIn?: {
+        needed(): boolean;
+        setting?: ProviderSetting;
+        start(): Promise<void>;
+    };
 }
 
 export interface OnlineMusicProvider {
