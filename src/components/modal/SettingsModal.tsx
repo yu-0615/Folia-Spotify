@@ -37,7 +37,6 @@ import { buildSettingsSearchEntries, searchSettings, type SettingsSearchEntry } 
 import { isSettingsSectionSubview, resolveInitialSettingsSection, sectionForSettingsSubview, writeLastSettingsSection } from './settings/navigation/settingsLastSection';
 import { useSettingsLanding, type SettingsLandingTarget } from './settings/navigation/useSettingsLanding';
 import { runsOnWindows } from '../../utils/platform';
-import { openOutsideLink } from '../../utils/system/outsideLink';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { useSettingsScrollSpy } from '../../hooks/useSettingsScrollSpy';
 import { useReducedMotionFor } from '../../hooks/useReducedMotionFor';
@@ -110,8 +109,6 @@ interface SettingsModalProps {
     customTheme?: DualTheme | null;
 }
 
-const QUARK_DOWNLOAD_URL = 'https://pan.quark.cn/s/6e4c6fa3bc6f';
-const BAIDU_DOWNLOAD_URL = 'https://pan.baidu.com/s/1f0x3g-8PMcNCO-TJ5z1rPw?pwd=flia';
 const DEFAULT_UPDATE_CHANNEL: 'realeco' | 'limo' | 'cielo' | 'internal' = __APP_RELEASE_CHANNEL__ === 'limo'
     ? 'limo'
     : __APP_RELEASE_CHANNEL__ === 'cielo'
@@ -685,8 +682,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         await window.electron?.quitAndInstallUpdate?.();
     };
 
-    const handleOpenChinaDownload = () => openOutsideLink(QUARK_DOWNLOAD_URL);
-    const handleOpenBaiduDownload = () => openOutsideLink(BAIDU_DOWNLOAD_URL);
 
     // Navidrome Settings State
     // One truth: this used to be a second copy kept in step with App.tsx's by hand.
@@ -1134,8 +1129,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     onClearAiApiKey: handleClearAiApiKey,
                     onDownloadUpdate: handleDownloadUpdate,
                     onInstallUpdate: handleInstallUpdate,
-                    onOpenBaiduDownload: handleOpenBaiduDownload,
-                    onOpenChinaDownload: handleOpenChinaDownload,
                     onUpdateChannelChange: handleUpdateChannelChange,
                     onSaveElectronSettings: saveElectronSettings,
                     onToggleAutoUpdate: handleToggleAutoUpdate,

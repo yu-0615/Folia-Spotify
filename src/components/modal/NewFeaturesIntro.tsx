@@ -4,7 +4,7 @@ import { Sparkles } from 'lucide-react';
 import { NEW_FEATURES_RELEASE } from './newFeaturesRelease';
 
 // 在这里编辑当前版本的新功能介绍
-// 修改这里的介绍的同时，需要修改 src\components\modal\userGuideContent.ts 中的 USER_GUIDE_AUTO_OPEN_VERSION 到下一个发布版本号
+// 这里是原版 Folia 那一版的新功能（版本更新的「原版新功能」页）；这个 fork 每一版的更动写在 forkReleaseNotes.ts
 // The intro, then the features as the rows of one card. A major update carries a tag above the
 // intro with its codename. It is drawn with the settings kit's variables, so it goes inside a
 // sheet (ReleaseNotesDialog) or the settings window.
@@ -23,6 +23,9 @@ export const NewFeaturesIntro: React.FC = () => {
                     {t('help.majorUpdateLabel', { codename: majorUpdate.codename })}
                 </span>
             )}
+            <h3 className="mb-1 text-xs font-semibold leading-5 text-[color:var(--st-t2)]">
+                {t('forkReleaseNotes.originalLabel', { version: i18nKey.replace(/^releaseNotes\.v/, '').replace(/_/g, '.') })}
+            </h3>
             <p className="text-[13px] leading-[21px] text-[color:var(--st-t1)]">{t(`${i18nKey}.intro`)}</p>
             <div className="st-card mt-3.5 overflow-hidden rounded-xl bg-[var(--st-card)] shadow-[0_0_0_1px_var(--st-line)]">
                 {features.map(({ id, icon: Icon }) => (

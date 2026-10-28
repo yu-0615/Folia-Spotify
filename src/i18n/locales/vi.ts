@@ -3275,6 +3275,44 @@ export default {
     "visualizerMode": "Chế độ",
     "noDescription": "Chưa có mô tả",
   },
+  "forkReleaseNotes": {
+    "tabChanges": "Thay đổi",
+    "tabSignIn": "Đăng nhập",
+    "tabOriginal": "Tính năng bản gốc",
+    "originalLabel": "Mới trong Folia gốc v{{version}}",
+    "changesIntro": "Mỗi phiên bản Folia-Spotify đã thay đổi gì. Các tính năng tác giả gốc thêm vào nằm ở “Tính năng bản gốc”.",
+    "v0_1_1": {
+      "releaseNotes": "“Cập nhật phiên bản” có ba trang: các thay đổi, hướng dẫn đăng nhập và các tính năng tác giả gốc thêm vào.",
+      "signInGuide": "Hướng dẫn đăng nhập: từng bước tạo ứng dụng Spotify của riêng bạn, lấy Client ID và đăng nhập, cùng cách đăng nhập YouTube Music."
+    },
+    "v0_1_0": {
+      "renumber": "Số phiên bản bắt đầu lại từ 0.1.0. Nếu đang cài 0.7.x, hãy tự tải phiên bản này một lần; các bản sau sẽ tự cập nhật như trước.",
+      "playsInApp": "Bài hát Spotify luôn phát trong ứng dụng Spotify của chính bạn (iPhone, Mac…), không cần chọn thiết bị; Folia theo nó để hiện lời bài hát và điều khiển.",
+      "follow": "Đổi bài hoặc chuyển bài trong ứng dụng Spotify, hay crossfade bắt đầu bài sau sớm hơn, đều được theo kịp trong một giây; kéo thanh tiến trình không còn làm Spotify tạm dừng.",
+      "dailyMix": "Trang danh sách phát có Daily Mix 1–6 của Spotify.",
+      "lyrics": "Lời bài hát Spotify được ghép từ NetEase, QQ Music, Kugou và AMLL; NetEase, QQ Music, Kugou, Bodian và Qishui mặc định chỉ làm nguồn lời bài hát.",
+      "videoPlatform": "Đăng nhập YouTube Music có thể mở lại trình duyệt; khi giao diện là tiếng Trung phồn thể, các trang được đọc bằng tiếng Trung phồn thể, và Khám phá có thêm Tâm trạng & thể loại.",
+      "mods": "Mod chưa ký có thể bật “Không cần duyệt lại khi tệp thay đổi”; thay đổi quyền hoặc điểm vào vẫn sẽ được hỏi."
+    }
+  },
+  "signInGuide": {
+    "intro": "Spotify và YouTube Music được cấp quyền trong trình duyệt trước khi Folia đọc được tài khoản của bạn. Lần đầu, hãy làm theo các bước sau.",
+    "spotifyTitle": "Spotify",
+    "spotifyNote": "Spotify chỉ cho ứng dụng do chính bạn tạo đăng nhập, nên hãy tạo một ứng dụng trên Spotify for Developers trước (miễn phí, chỉ một lần). Phát nhạc cần Premium.",
+    "spotifyStep1": "Đăng nhập Spotify for Developers bằng tài khoản Spotify và chọn “Create app”; tên và mô tả tùy ý.",
+    "spotifyStep2": "Ở phần API, chọn Web API và Web Playback SDK, rồi thêm địa chỉ này vào Redirect URIs:",
+    "spotifyStep3": "Trong User Management của ứng dụng, thêm các tài khoản Spotify sẽ đăng nhập (tên và email).",
+    "spotifyStep4": "Sao chép Client ID trong phần cài đặt của ứng dụng. Client Secret không dùng đến; đừng dán vào Folia.",
+    "spotifyStep5Desktop": "Quay lại Folia: chọn Spotify ở “Kết nối dịch vụ trực tuyến” và đồng ý trong trình duyệt; sau đó nhập Client ID ở “Đang phát trên” trong bảng điều khiển trình phát, chọn “Đăng nhập Spotify” và đồng ý thêm lần nữa.",
+    "spotifyStep5Web": "Quay lại Folia: chọn Spotify ở “Kết nối dịch vụ trực tuyến”, nhập Client ID và đồng ý trong cửa sổ Spotify vừa mở.",
+    "spotifyStep6": "Phát một bài trong ứng dụng Spotify; Folia sẽ theo thiết bị đó.",
+    "openDashboard": "Mở Spotify for Developers",
+    "ytmTitle": "YouTube Music",
+    "ytmNote": "Không cần tạo ứng dụng; chỉ có trên ứng dụng máy tính.",
+    "ytmStep1": "Chọn YouTube Music ở “Kết nối dịch vụ trực tuyến”; Folia mở một cửa sổ riêng trong Chrome (hoặc Edge, Brave và tương tự).",
+    "ytmStep2": "Đăng nhập Google trong cửa sổ đó, và khi YouTube Music hiện tài khoản của bạn thì đóng nó (trên macOS, thoát trình duyệt đó bằng ⌘Q).",
+    "ytmStep3": "Nếu cửa sổ biến mất, chọn “Mở lại trình duyệt” trong cửa sổ đăng nhập."
+  },
   "releaseNotes": {
     "v0_7_0": {
       "intro": "Dưới đây là các tính năng mới và cải tiến trong phiên bản 0.7.0.",

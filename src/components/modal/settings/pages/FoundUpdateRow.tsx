@@ -7,7 +7,7 @@ import { useSettingsPage } from './settingsPageContext';
 
 // src/components/modal/settings/pages/FoundUpdateRow.tsx
 // The row a found update gets, on the 通用 page and on the Help page: the new version, the list of
-// places to download it from (pages outside the app, with notes under the list), and what the app
+// places to download it from (GitHub only, with notes under the list), and what the app
 // itself can do with it: download it, show how far the download has come, restart to install. It
 // unfolds once the update check has found a version.
 
@@ -37,8 +37,6 @@ export const FoundUpdateRow: React.FC<FoundUpdateRowProps> = ({ sub }) => {
     const isDownloaded = updateStatus?.status === 'downloaded';
     const isLinuxBuild = updateStatus?.platform === 'linux';
     const isStableChannel = electronSettings.UPDATE_CHANNEL === 'realeco';
-    // The two drives are offered for the stable channel, and not on Linux.
-    const offersDrives = isStableChannel && !isLinuxBuild;
     // What a found version needs from the listener where the app cannot update itself.
     const manualNotice = updateStatus?.platform === 'darwin'
         ? t('options.macManualUpdateNotice')
@@ -47,10 +45,6 @@ export const FoundUpdateRow: React.FC<FoundUpdateRowProps> = ({ sub }) => {
             : autoUpdateSupported ? null : t('options.manualUpdateNotice');
 
     const sources = [
-        ...(offersDrives ? [
-            { id: 'quark', label: t('options.quarkDrive'), onSelect: () => void update.onOpenChinaDownload() },
-            { id: 'baidu', label: t('options.baiduDrive'), onSelect: () => void update.onOpenBaiduDownload() },
-        ] : []),
         {
             id: 'github',
             label: t(autoUpdateSupported ? 'options.githubRelease' : 'options.fullInstallerGithub'),
@@ -60,10 +54,7 @@ export const FoundUpdateRow: React.FC<FoundUpdateRowProps> = ({ sub }) => {
             { id: 'aur', label: t('options.aurPackage'), onSelect: () => openOutsideLink(AUR_PACKAGE_URL) },
         ] : []),
     ].map(source => ({ ...source, end: <ExternalLink size={14} /> }));
-    const notes = [
-        ...(manualNotice ? [manualNotice] : []),
-        ...(offersDrives ? [t('options.chinaDownloadHint')] : []),
-    ];
+    const notes = manualNotice ? [manualNotice] : [];
     // The updater gives no usable percent while it does not know the size.
     const reported = updateStatus?.downloadProgress?.percent;
     const percent = typeof reported === 'number' && Number.isFinite(reported) ? reported : 0;

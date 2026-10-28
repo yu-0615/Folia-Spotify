@@ -14,6 +14,7 @@ import { ytmMutations } from './ytmMutations';
 import { resetYtmRecommendations, ytmRecommendations } from './ytmRecommendations';
 import { describeYtmLoginFailure, ytmLoginFailure } from './ytmLoginFailure';
 import { describeYtmFailure } from './ytmFailure';
+import { ytmLoginGuide } from './ytmLoginGuide';
 import i18n from '../../../i18n/config';
 
 // src/services/onlineMusic/ytm/ytmProvider.ts
@@ -150,6 +151,7 @@ export const ytmProvider: OnlineMusicProvider = {
     },
     auth: {
         // On macOS a browser goes on running after its last window is closed: the note says to quit it.
+        getLoginGuide: ytmLoginGuide,
         getLoginTexts: () => ({
             title: 'home.loginTitleYtm',
             note: isMacPlatform ? 'home.loginNoteYtmBrowserMac' : 'home.loginNoteYtmBrowser',

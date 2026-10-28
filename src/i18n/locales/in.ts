@@ -3275,6 +3275,44 @@ export default {
     "visualizerMode": "Mode",
     "noDescription": "Tidak ada deskripsi tersedia"
   },
+  "forkReleaseNotes": {
+    "tabChanges": "Perubahan",
+    "tabSignIn": "Cara masuk",
+    "tabOriginal": "Fitur versi asli",
+    "originalLabel": "Baru di Folia asli v{{version}}",
+    "changesIntro": "Apa yang diubah setiap versi Folia-Spotify. Fitur yang ditambahkan pembuat aslinya ada di “Fitur versi asli”.",
+    "v0_1_1": {
+      "releaseNotes": "“Pembaruan versi” kini punya tiga halaman: perubahan, panduan masuk, dan fitur yang ditambahkan pembuat aslinya.",
+      "signInGuide": "Panduan masuk: langkah demi langkah membuat aplikasi Spotify sendiri, mengambil Client ID-nya lalu masuk, juga cara masuk ke YouTube Music."
+    },
+    "v0_1_0": {
+      "renumber": "Nomor versi dimulai lagi dari 0.1.0. Jika 0.7.x terpasang, unduh versi ini sekali secara manual; versi berikutnya diperbarui otomatis seperti biasa.",
+      "playsInApp": "Lagu Spotify selalu diputar di aplikasi Spotify milikmu sendiri (iPhone, Mac…), tanpa memilih perangkat; Folia mengikutinya untuk lirik dan kontrol.",
+      "follow": "Mengganti lagu atau melompat di aplikasi Spotify, atau crossfade yang memulai lagu berikutnya lebih awal, diikuti dalam satu detik; menggeser bilah progres tidak lagi menjeda Spotify.",
+      "dailyMix": "Halaman playlist menampilkan Daily Mix 1–6 dari Spotify.",
+      "lyrics": "Lirik lagu Spotify dicocokkan dari NetEase, QQ Music, Kugou, dan AMLL; NetEase, QQ Music, Kugou, Bodian, dan Qishui secara bawaan hanya menjadi sumber lirik.",
+      "videoPlatform": "Proses masuk YouTube Music bisa membuka browser lagi; dengan antarmuka Tionghoa Tradisional halamannya dibaca dalam Tionghoa Tradisional, dan Jelajahi kini punya Suasana & genre.",
+      "mods": "Mod tanpa tanda tangan bisa diatur agar “Tidak perlu disetujui lagi saat berkas berubah”; perubahan izin atau entri tetap ditanyakan."
+    }
+  },
+  "signInGuide": {
+    "intro": "Spotify dan YouTube Music diotorisasi di browser sebelum Folia bisa membaca akunmu. Untuk pertama kali, ikuti langkah berikut.",
+    "spotifyTitle": "Spotify",
+    "spotifyNote": "Spotify hanya mengizinkan aplikasi buatanmu sendiri untuk masuk, jadi buat satu dulu di Spotify for Developers (gratis, cukup sekali). Pemutaran membutuhkan Premium.",
+    "spotifyStep1": "Masuk ke Spotify for Developers dengan akun Spotify-mu dan pilih “Create app”; nama dan deskripsinya bebas.",
+    "spotifyStep2": "Di bagian API, centang Web API dan Web Playback SDK, lalu tambahkan alamat ini di Redirect URIs:",
+    "spotifyStep3": "Di User Management aplikasi, tambahkan akun Spotify yang akan masuk (nama dan email).",
+    "spotifyStep4": "Salin Client ID dari pengaturan aplikasi. Client Secret tidak dipakai; jangan tempelkan ke Folia.",
+    "spotifyStep5Desktop": "Kembali ke Folia: pilih Spotify di “Hubungkan layanan streaming” dan setujui di browser; lalu masukkan Client ID di “Diputar di” pada kontrol pemutar, pilih “Masuk ke Spotify”, dan setujui sekali lagi.",
+    "spotifyStep5Web": "Kembali ke Folia: pilih Spotify di “Hubungkan layanan streaming”, masukkan Client ID, dan setujui di jendela Spotify yang terbuka.",
+    "spotifyStep6": "Putar lagu di aplikasi Spotify; Folia mengikuti perangkat itu.",
+    "openDashboard": "Buka Spotify for Developers",
+    "ytmTitle": "YouTube Music",
+    "ytmNote": "Tidak perlu membuat aplikasi; hanya di aplikasi desktop.",
+    "ytmStep1": "Pilih YouTube Music di “Hubungkan layanan streaming”; Folia membuka jendela tersendiri di Chrome (atau Edge, Brave, dan sejenisnya).",
+    "ytmStep2": "Masuk ke Google di jendela itu, dan setelah YouTube Music menampilkan akunmu, tutup jendelanya (di macOS, keluar dari browser itu dengan ⌘Q).",
+    "ytmStep3": "Jika jendelanya hilang, pilih “Buka browser lagi” di jendela masuk."
+  },
   "releaseNotes": {
     "v0_7_0": {
       "intro": "Berikut fitur baru dan peningkatan di versi 0.7.0.",

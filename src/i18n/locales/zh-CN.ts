@@ -3275,6 +3275,44 @@ export default {
     "lyricFilterRegexDesc": "逐行过滤规则，以及开头制作人员信息的处理。",
     "noDescription": "暂无详细介绍",
   },
+  "forkReleaseNotes": {
+    "tabChanges": "更新记录",
+    "tabSignIn": "授权登录",
+    "tabOriginal": "原版新功能",
+    "originalLabel": "原版 Folia v{{version}} 的新功能",
+    "changesIntro": "Folia-Spotify 每一版改了什么。原作者加入的功能在「原版新功能」。",
+    "v0_1_1": {
+      "releaseNotes": "「版本更新」分成三页：更新记录、授权登录导览，以及原作者加入的新功能。",
+      "signInGuide": "新增授权登录导览：一步步说明怎么建立自己的 Spotify 应用、取得 Client ID 并登录，也说明 YouTube Music 怎么登录。"
+    },
+    "v0_1_0": {
+      "renumber": "版本号从 0.1.0 重新开始。装着 0.7.x 的话要手动下载一次这一版，之后会照常自动更新。",
+      "playsInApp": "Spotify 的歌一律在你自己的 Spotify App 里播放（iPhone、Mac……），不用选设备；Folia 跟着显示歌词、控制播放。",
+      "follow": "在 Spotify App 里换歌、跳到下一首，或淡入淡出提早换歌时，Folia 一秒内跟上；拖动进度条不再让 Spotify 暂停。",
+      "dailyMix": "歌单页放上 Spotify 的 Daily Mix 1–6。",
+      "lyrics": "Spotify 的歌词从网易云、QQ 音乐、酷狗、AMLL 自动匹配；网易云、QQ 音乐、酷狗、波点、汽水音乐默认只作为歌词来源。",
+      "videoPlatform": "YouTube Music 登录可以重新打开浏览器；繁体中文界面下页面用繁中读取，探索页多了「心情与曲风」。",
+      "mods": "未签名的模组可以打开「文件改了也不用重新确认」，权限或入口变了时仍会再问。"
+    }
+  },
+  "signInGuide": {
+    "intro": "Spotify 和 YouTube Music 要在浏览器里授权，Folia 才能读取你的账号。第一次登录时照下面做。",
+    "spotifyTitle": "Spotify",
+    "spotifyNote": "Spotify 只让你自己建立的应用登录，所以要先在 Spotify for Developers 建一个（免费，只要做一次）。播放需要 Premium。",
+    "spotifyStep1": "到 Spotify for Developers 用你的 Spotify 账号登录，按「Create app」建立应用，名称和说明随意填。",
+    "spotifyStep2": "API 勾选 Web API 和 Web Playback SDK，Redirect URIs 加上这个地址：",
+    "spotifyStep3": "在应用的 User Management 加入要登录的 Spotify 账号（名称和 Email）。",
+    "spotifyStep4": "在应用的设置页复制 Client ID。Client Secret 用不到，不要贴进 Folia。",
+    "spotifyStep5Desktop": "回到 Folia：先在「连接在线平台」选 Spotify，在浏览器按「同意」；再到播放页控制面板的「播放设备」填入 Client ID，按「登录 Spotify」，再按一次「同意」。",
+    "spotifyStep5Web": "回到 Folia：在「连接在线平台」选 Spotify，填入 Client ID，在打开的 Spotify 窗口按「同意」。",
+    "spotifyStep6": "打开 Spotify App 放歌，Folia 会跟上那台设备。",
+    "openDashboard": "打开 Spotify for Developers",
+    "ytmTitle": "YouTube Music",
+    "ytmNote": "不用建立应用，只有桌面版能用。",
+    "ytmStep1": "在「连接在线平台」选 YouTube Music，Folia 会用 Chrome（或 Edge、Brave 等）打开一个单独的窗口。",
+    "ytmStep2": "在那个窗口登录 Google，看到 YouTube Music 显示你的账号后关掉窗口（macOS 上按 ⌘Q 退出那个浏览器）。",
+    "ytmStep3": "窗口不见了的话，回到 Folia 按「重新打开浏览器」。"
+  },
   "releaseNotes": {
     "v0_7_0": {
       "intro": "以下是 0.7.0 的新功能与改进",

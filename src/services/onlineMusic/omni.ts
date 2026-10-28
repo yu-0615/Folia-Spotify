@@ -41,6 +41,7 @@ import type {
     ProviderNotice,
     LoginState,
     LoginTexts,
+    LoginGuide,
     ProviderMark,
     JsonValue,
     ProviderRawEndpoint,
@@ -573,6 +574,18 @@ export const omni = {
     // 登录窗口里这个平台自己的标题和说明（i18n key）；没有声明就回 null。
     getLoginTexts(providerId: OmniProviderId): LoginTexts | null {
         return getOnlineMusicProvider(providerId)?.auth?.getLoginTexts?.() ?? null;
+    },
+
+    // The first sign-in of each platform that gives one, step by step (`auth.getLoginGuide`): the
+    // platform a listener starts on first, then the order they were registered in.
+    getLoginGuides(): { providerId: OmniProviderId; guide: LoginGuide }[] {
+        return listOnlineMusicProviders()
+            .flatMap(provider => {
+                const guide = provider.auth?.getLoginGuide?.();
+                return guide ? [{ providerId: provider.id, guide, first: Boolean(provider.startsHere) }] : [];
+            })
+            .sort((a, b) => Number(b.first) - Number(a.first))
+            .map(({ providerId, guide }) => ({ providerId, guide }));
     },
 
     // Starts what each provider watches while the app is open (`watch`): the registered ones,

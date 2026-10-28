@@ -3275,6 +3275,44 @@ export default {
     "visualizerMode": "Mode",
     "noDescription": "No description available",
   },
+  "forkReleaseNotes": {
+    "tabChanges": "Changes",
+    "tabSignIn": "Signing in",
+    "tabOriginal": "Original features",
+    "originalLabel": "New in the original Folia v{{version}}",
+    "changesIntro": "What each version of Folia-Spotify changed. The features the original author added are under “Original features”.",
+    "v0_1_1": {
+      "releaseNotes": "“What's new” has three pages: the changes, a guide to signing in, and the features the original author added.",
+      "signInGuide": "A guide to signing in: step by step, how to make your own Spotify app, get its Client ID and sign in, and how to sign in to YouTube Music."
+    },
+    "v0_1_0": {
+      "renumber": "Version numbers start again from 0.1.0. With 0.7.x installed, download this version once yourself; later ones update on their own as before.",
+      "playsInApp": "Spotify's songs always play in your own Spotify app (an iPhone, a Mac…), with no device to choose; Folia follows it for the lyrics and the controls.",
+      "follow": "Changing songs or skipping in the Spotify app, or a crossfade starting the next song early, is followed within a second; dragging the progress bar no longer pauses Spotify.",
+      "dailyMix": "The playlists page shows Spotify's Daily Mix 1–6.",
+      "lyrics": "Lyrics for Spotify songs are matched from NetEase, QQ Music, Kugou and AMLL; NetEase, QQ Music, Kugou, Bodian and Qishui serve as lyric sources only by default.",
+      "videoPlatform": "The YouTube Music sign-in can open the browser again; with the interface in Traditional Chinese its pages are read in Traditional Chinese, and Explore gains Moods & genres.",
+      "mods": "An unsigned mod can be set to “No new approval when its files change”; a change of permissions or entry is still asked about."
+    }
+  },
+  "signInGuide": {
+    "intro": "Spotify and YouTube Music are authorized in the browser before Folia can read your account. The first time, follow these steps.",
+    "spotifyTitle": "Spotify",
+    "spotifyNote": "Spotify lets only an app you made yourself sign in, so make one on Spotify for Developers first (free, and only once). Playback needs Premium.",
+    "spotifyStep1": "Sign in to Spotify for Developers with your Spotify account and choose “Create app”; any name and description will do.",
+    "spotifyStep2": "Under APIs, check Web API and Web Playback SDK, and add this address under Redirect URIs:",
+    "spotifyStep3": "Under the app's User Management, add the Spotify accounts that will sign in (name and email).",
+    "spotifyStep4": "Copy the Client ID from the app's settings. The Client Secret is not used; never paste it into Folia.",
+    "spotifyStep5Desktop": "Back in Folia: choose Spotify under “Connect a streaming service” and agree in the browser; then enter the Client ID under “Playing on” in the player's controls, choose “Sign in to Spotify”, and agree once more.",
+    "spotifyStep5Web": "Back in Folia: choose Spotify under “Connect a streaming service”, enter the Client ID, and agree in the Spotify window that opens.",
+    "spotifyStep6": "Play a song in the Spotify app; Folia follows that device.",
+    "openDashboard": "Open Spotify for Developers",
+    "ytmTitle": "YouTube Music",
+    "ytmNote": "No app to make; desktop app only.",
+    "ytmStep1": "Choose YouTube Music under “Connect a streaming service”; Folia opens a window of its own in Chrome (or Edge, Brave and the like).",
+    "ytmStep2": "Sign in to Google in that window, and once YouTube Music shows your account, close it (on macOS, quit that browser with ⌘Q).",
+    "ytmStep3": "If the window is gone, choose “Open the browser again” in the sign-in window."
+  },
   "releaseNotes": {
     "v0_7_0": {
       "intro": "Here are the new features and improvements in version 0.7.0.",

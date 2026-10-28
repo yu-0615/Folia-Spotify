@@ -470,6 +470,21 @@ export interface LoginTexts {
     caseNotes?: Partial<Record<LoginCaseId, string>>;
 }
 
+// 「版本更新」的「授权登录」页里，这个平台第一次登录的步骤，都是 i18n key，由 UI 层翻译。
+export interface LoginGuide {
+    title: string;
+    note: string;
+    steps: LoginGuideStep[];
+}
+
+export interface LoginGuideStep {
+    text: string;
+    // 这一步要打开的网页：按钮上的字（i18n key）和地址。
+    link?: { label: string; url: string };
+    // 这一步要贴到别处的值（例如要登记的回调地址），旁边有复制按钮。
+    copy?: string;
+}
+
 // 登录要靠的、可以在登录窗口里重启的本地服务（桌面端内嵌的后端）此刻的样子。
 export interface LoginLocalServiceStatus {
     // 服务没能起来。
@@ -584,6 +599,8 @@ export interface OnlineAuthProvider {
     forgetOldKeptAccount?(): Promise<void>;
     // 登录窗口里这个平台自己的标题和说明。
     getLoginTexts?(): LoginTexts;
+    // 第一次登录要做的事，一步一步（「版本更新」的「授权登录」页）；不用准备什么的平台不给。
+    getLoginGuide?(): LoginGuide;
     // 浏览器登录之前要用的人先在登录窗口里填的一个值（用的人自己注册的应用的 Client ID）。
     // 没填时「打开浏览器」按不下去。
     setting?: ProviderSetting;

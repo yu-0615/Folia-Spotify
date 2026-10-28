@@ -25,11 +25,11 @@ const AUTH_MEMBERS: Record<string, string[]> = {
         'cancelLogin', 'checkLogin', 'createQr', 'getLoginStatus', 'getLoginTexts', 'getLoginTtlMs', 'logout', 'startLogin',
     ],
     spotify: [
-        'cancelLogin', 'checkLogin', 'describeLoginFailure', 'getLoginStatus', 'getLoginTexts', 'getLoginTtlMs', 'logout', 'openLoginPage',
+        'cancelLogin', 'checkLogin', 'describeLoginFailure', 'getLoginGuide', 'getLoginStatus', 'getLoginTexts', 'getLoginTtlMs', 'logout', 'openLoginPage',
         'startLogin',
     ],
     ytm: [
-        'cancelLogin', 'checkLogin', 'describeLoginFailure', 'getLoginStatus', 'getLoginTexts', 'getLoginTtlMs', 'logout', 'openLoginPage',
+        'cancelLogin', 'checkLogin', 'describeLoginFailure', 'getLoginGuide', 'getLoginStatus', 'getLoginTexts', 'getLoginTtlMs', 'logout', 'openLoginPage',
         'opensLoginPageItself', 'signInRanOut', 'startLogin',
     ],
     qishui: [

@@ -17,6 +17,7 @@ import { normalizeSpotifyWebCollection, normalizeSpotifyWebSong, present, spotif
 import type { SpotifyWebPage, SpotifyWebTrack } from './spotifyWebNormalize';
 import { currentSpotifyWebDevice, subscribeSpotifyWebDevice } from './spotifyWebDevices';
 import { spotifyWebStandIn, stopSpotifyWebPlayback, watchSpotifyElsewhere, watchSpotifyWebPlayback } from './spotifyWebPlayback';
+import { spotifyLoginGuide } from '../spotifyLoginGuide';
 
 // src/services/onlineMusic/spotify/web/spotifyWebProvider.ts
 // Spotify in the web version (the desktop version is spotify/spotifyProvider.ts; which of the two is
@@ -102,6 +103,7 @@ export const spotifyWebProvider: OnlineMusicProvider = {
     auth: {
         // The listener's own app on developer.spotify.com, asked for before the browser opens.
         setting: spotifyClientIdSetting,
+        getLoginGuide: () => spotifyLoginGuide('web'),
         getLoginTexts: () => ({
             title: 'home.loginTitleSpotify',
             note: 'home.loginNoteSpotifyWeb',

@@ -20,6 +20,7 @@ import { resetSpotifyRecommendations, spotifyRecommendations } from './spotifyRe
 import { describeSpotifyLoginFailure, spotifyLoginFailure } from './spotifyLoginFailure';
 import { describeSpotifyFailure } from './spotifyFailure';
 import { SPOTIFY_LYRIC_OFFSET_MS } from './spotifyLyricOffset';
+import { spotifyLoginGuide } from './spotifyLoginGuide';
 import { hasSpotifyWebSession, signInSpotifyWebUntilDone, spotifyClientIdSetting, subscribeSpotifyWebSession } from './web/spotifyWebAuth';
 import { currentSpotifyWebDevice, subscribeSpotifyWebDevice } from './web/spotifyWebDevices';
 import { readSpotifyWebMe } from './web/spotifyWebLibrary';
@@ -219,6 +220,7 @@ export const spotifyProvider: OnlineMusicProvider = {
         },
     },
     auth: {
+        getLoginGuide: () => spotifyLoginGuide('desktop'),
         getLoginTexts: () => ({
             title: 'home.loginTitleSpotify',
             note: 'home.loginNoteSpotify',
