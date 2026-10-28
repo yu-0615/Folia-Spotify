@@ -42,6 +42,13 @@ const SETTLE_MS = 4000;
 // Spotify may not know the player for a moment after it is ready: a start is asked again this often.
 const START_TRIES = 3;
 const START_RETRY_MS = 1000;
+// Another device that is not the account's active one is first handed the playback, and given this
+// long to take it, before a track is started on it.
+const TRANSFER_WAIT_MS = 700;
+// A track started on another device is looked for this many times, this far apart; not there, it is
+// handed over and started once more.
+const CONFIRM_TRIES = 3;
+const CONFIRM_MS = 800;
 
 interface SdkTrack { id: string | null; linked_from?: { id: string | null } }
 interface SdkState { paused: boolean; position: number; track_window: { current_track: SdkTrack } }
@@ -332,6 +339,46 @@ const startTrack = async (deviceId: string, trackId: string, positionMs: number)
 
 const isSameTrack = (state: PlayState | null, trackId: string): state is PlayState => Boolean(state?.trackIds.includes(trackId));
 
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// The account's playback moves to the device (it is not started there yet).
+const handOver = async (deviceId: string): Promise<void> => {
+    lastCommandAt = Date.now();
+    await callSpotifyWeb('/me/player', { method: 'PUT', body: { device_ids: [deviceId], play: false } });
+    console.log('[Spotify] Playback handed over to the chosen device');
+    await wait(TRANSFER_WAIT_MS);
+};
+
+// A Spotify app that is open but is not the account's active device may take a start, empty its
+// queue and play nothing. So the playback is handed to it first, and after the start the track is
+// looked for there: loaded but paused, it is resumed; not there, it is handed over and started again.
+const startOnDevice = async (element: HTMLMediaElement, deviceId: string, trackId: string, positionMs: number): Promise<void> => {
+    const now = await callSpotifyWeb<WirePlayer | undefined>('/me/player', { query: { additional_types: 'track' } });
+    if (now?.device?.id !== deviceId) await handOver(deviceId);
+    for (let round = 1; ; round += 1) {
+        await startTrack(deviceId, trackId, positionMs);
+        for (let check = 1; check <= CONFIRM_TRIES; check += 1) {
+            await wait(CONFIRM_MS);
+            if (element !== deck || element.paused) return;
+            const state = await deviceSound(deviceId).state();
+            if (!isSameTrack(state, trackId)) continue;
+            if (state.paused) {
+                console.log('[Spotify] The chosen device loaded the track paused: resumed');
+                lastCommandAt = Date.now();
+                await deviceSound(deviceId).resume();
+            }
+            return;
+        }
+        if (round >= 2) {
+            console.warn('[Spotify] The chosen device did not start the track');
+            throw new OnlineProviderError('unavailable', 'The chosen Spotify device did not start the track', 'spotify');
+        }
+        console.warn('[Spotify] The chosen device did not start the track: handed over and started again');
+        await handOver(deviceId);
+        positionMs = Math.round(element.currentTime * 1000);
+    }
+};
+
 // The deck `element` plays the stand-in of `trackId`: the player plays that track where the deck is.
 const follow = async (element: HTMLMediaElement, trackId: string): Promise<void> => {
     const sound = soundNow();
@@ -351,7 +398,8 @@ const follow = async (element: HTMLMediaElement, trackId: string): Promise<void>
         await sound.resume();
     } else {
         playingTrack = trackId;
-        await startTrack(deviceId, trackId, atMs);
+        if (sound === windowSound) await startTrack(deviceId, trackId, atMs);
+        else await startOnDevice(element, deviceId, trackId, atMs);
     }
     startDriftCheck();
 };

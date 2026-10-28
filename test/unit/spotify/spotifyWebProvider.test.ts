@@ -392,4 +392,49 @@ describe('the device it plays on', () => {
         expect(source).toMatchObject({ standIn: true });
         expect(ensurePlayer).not.toHaveBeenCalled();
     });
+    it('hands the playback to a device that is not the active one, starts the track there and resumes it loaded paused', async () => {
+        vi.useFakeTimers();
+        // A deck in a document whose media events are caught on the way down.
+        const handlers: Record<string, (event: Event) => void> = {};
+        class FakeMedia {}
+        vi.stubGlobal('HTMLMediaElement', FakeMedia);
+        vi.stubGlobal('document', {
+            addEventListener: (type: string, handler: (event: Event) => void) => { handlers[type] = handler; },
+            querySelectorAll: () => [],
+        });
+        try {
+            signedIn();
+            await omni.choosePlaybackDevice('spotify', phone);
+            const url = (await omni.getAudioSource(song as never, 'high'))!.url;
+            const deck = Object.assign(new FakeMedia(), {
+                currentSrc: url, paused: false, currentTime: 0,
+                hasAttribute: (name: string) => name === 'data-playback-deck',
+                getAttribute: () => url,
+                pause() { this.paused = true; },
+            });
+            const asked: string[] = [];
+            let started = false;
+            answer({
+                'GET /me/player': () => reply(started
+                    ? { is_playing: false, progress_ms: 0, device: { id: 'phone-1' }, item: { id: id('a') } }
+                    : { is_playing: false, device: { id: 'computer-1' }, item: null }),
+                'PUT /me/player/play': (_url, init) => {
+                    asked.push(init.body ? `start ${JSON.parse(String(init.body)).uris[0]}` : 'resume');
+                    started = true;
+                    return reply(undefined, 204);
+                },
+                'PUT /me/player/pause': () => { asked.push('pause'); return reply(undefined, 204); },
+                'PUT /me/player': (_url, init) => { asked.push(`hand over ${JSON.parse(String(init.body)).device_ids[0]}`); return reply(undefined, 204); },
+            });
+            handlers.playing({ target: deck } as unknown as Event);
+            await vi.advanceTimersByTimeAsync(3000);
+            expect(asked).toEqual(['hand over phone-1', `start spotify:track:${id('a')}`, 'resume']);
+            deck.pause();
+            handlers.pause({ target: deck } as unknown as Event);
+            await vi.advanceTimersByTimeAsync(100);
+            expect(asked.at(-1)).toBe('pause');
+        } finally {
+            vi.useRealTimers();
+        }
+    });
 });

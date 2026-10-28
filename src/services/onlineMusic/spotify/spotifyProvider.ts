@@ -22,7 +22,7 @@ import { describeSpotifyFailure } from './spotifyFailure';
 import { hasSpotifyWebSession, signInSpotifyWebUntilDone, spotifyClientIdSetting, subscribeSpotifyWebSession } from './web/spotifyWebAuth';
 import { chosenSpotifyWebDevice, spotifyThisDevice, subscribeSpotifyWebDevice } from './web/spotifyWebDevices';
 import { readSpotifyWebMe } from './web/spotifyWebLibrary';
-import { chooseSpotifyWebDevice, listSpotifyWebPlaybackDevices, spotifyWebStandIn } from './web/spotifyWebPlayback';
+import { chooseSpotifyWebDevice, listSpotifyWebPlaybackDevices, spotifyWebStandIn, watchSpotifyWebPlayback } from './web/spotifyWebPlayback';
 
 // src/services/onlineMusic/spotify/spotifyProvider.ts
 // Spotify adapter. Sign-in happens in the browser where the person is already signed in to
@@ -82,6 +82,8 @@ export const spotifyProvider: OnlineMusicProvider = {
     // Where a listener who has not chosen a platform starts.
     startsHere: true,
     describeFailure: describeSpotifyFailure,
+    // What playing on another device has to tell (it stopped, the device is gone).
+    watch: watchSpotifyWebPlayback,
     // `recommendations` is the radio tab: a personal FM, daily songs and playlists, each made of
     // what Spotify has for the account (spotifyRecommendations.ts). `personalFmModes` stays off:
     // the FM here has no modes. Spotify's recommendation page is the explore tab.
