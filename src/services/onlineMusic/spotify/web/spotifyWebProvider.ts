@@ -14,13 +14,18 @@ import { forgetSpotifyWebMe, readSpotifyWebMe, spotifyWebLibrary } from './spoti
 import { spotifyWebMutations } from './spotifyWebMutations';
 import { normalizeSpotifyWebCollection, normalizeSpotifyWebSong, present, spotifyWebSongOf } from './spotifyWebNormalize';
 import type { SpotifyWebPage, SpotifyWebTrack } from './spotifyWebNormalize';
-import { disconnectSpotifyWebPlayer, ensureSpotifyWebPlayer, spotifyWebStandIn, watchSpotifyWebPlayback } from './spotifyWebPlayback';
+import { chosenSpotifyWebDevice, subscribeSpotifyWebDevice } from './spotifyWebDevices';
+import {
+    chooseSpotifyWebDevice, disconnectSpotifyWebPlayer, ensureSpotifyWebPlayer, listSpotifyWebPlaybackDevices, spotifyWebStandIn,
+    watchSpotifyWebPlayback,
+} from './spotifyWebPlayback';
 
 // src/services/onlineMusic/spotify/web/spotifyWebProvider.ts
 // Spotify in the web version (the desktop version is spotify/spotifyProvider.ts; which of the two is
 // registered is decided in spotifyRuntimeProvider.ts). It reads through Spotify's public Web API
 // as an app the person registered (VITE_SPOTIFY_CLIENT_ID), and plays through the Web Playback SDK,
-// which needs Premium. Its songs and collections are the desktop version's, so a song kept by one
+// which needs Premium, or on another Spotify Connect device of the account that Folia controls
+// (`devices`, spotifyWebDevices.ts). Its songs and collections are the desktop version's, so a song kept by one
 // plays in the other. Spotify's own lyrics, the radio tab and the explore page are not in the
 // public API: lyrics come from the other sources, and the two tabs are left out.
 
@@ -86,11 +91,12 @@ export const spotifyWebProvider: OnlineMusicProvider = {
         // The SDK chooses the file itself (256 kbit/s AAC on the web for Premium): one level.
         audioQualityLevels: ['high'],
         // A stand-in for the deck; the song itself is sounded by the Web Playback SDK, which is
-        // connected first, so that a browser without it or an account without Premium fails here.
+        // connected first, so that a browser without it or an account without Premium fails here,
+        // or by the other device chosen, which is asked once the deck plays.
         async getAudioSource(song, quality) {
             const id = requireSpotifySong(song);
             if (!hasSpotifyWebSession()) throw new OnlineProviderError('auth-required', 'Not signed in to Spotify', 'spotify');
-            await ensureSpotifyWebPlayer();
+            if (chosenSpotifyWebDevice().id === null) await ensureSpotifyWebPlayer();
             const durationMs = song.durationMs || (await getSongDetail(id))?.durationMs || 0;
             if (!durationMs) throw new OnlineProviderError('not-playable', 'Spotify did not say how long the song is', 'spotify');
             return { url: spotifyWebStandIn(id, durationMs), fetchedAt: Date.now(), quality, standIn: true };
@@ -133,6 +139,12 @@ export const spotifyWebProvider: OnlineMusicProvider = {
         ),
         async cancelLogin(key) { cancelSpotifyWebLogin(key); },
         getLoginTtlMs: () => SPOTIFY_WEB_LOGIN_TTL_MS,
+    },
+    devices: {
+        list: listSpotifyWebPlaybackDevices,
+        chosen: chosenSpotifyWebDevice,
+        choose: chooseSpotifyWebDevice,
+        subscribe: subscribeSpotifyWebDevice,
     },
     catalog: spotifyWebCatalog,
     library: spotifyWebLibrary,

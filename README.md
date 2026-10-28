@@ -5,7 +5,7 @@
 > [!NOTE]
 > **Folia-Spotify** 是 [Folia](https://github.com/chthollyphile/folia-major)（作者 [chthollyphile](https://github.com/chthollyphile)）的 fork，按原项目的 [AGPL-3.0](LICENSE) 许可证发布。Folia 的设计与绝大部分代码都出自原作者和[贡献者们](CONTRIBUTORS.md)，请到原项目反馈原有功能的问题、给原项目点星。
 >
-> 本 fork 自 2026-10 起所做的修改：网页版接入 Spotify（官方 Web API + PKCE 登录 + Web Playback SDK 播放，见 `src/services/onlineMusic/spotify/web/`）；Spotify 网页版的歌词改从其他来源匹配；网易云、QQ 音乐、酷狗、波点、汽水音乐默认只作为歌词来源（设置「连接与集成」里可以打开）；没选过平台时从 Spotify 开始；新增 `npm run dev:web` 一次启动网页版和本地的网易云、QQ、酷狗 API。逐项修改见本仓库的提交记录。
+> 本 fork 自 2026-10 起所做的修改：网页版接入 Spotify（官方 Web API + PKCE 登录 + Web Playback SDK 播放，见 `src/services/onlineMusic/spotify/web/`），也能在播放页控制面板选账号里的其他 Spotify 设备（手机、电脑、音箱）来放；Spotify 网页版的歌词改从其他来源匹配；网易云、QQ 音乐、酷狗、波点、汽水音乐默认只作为歌词来源（设置「连接与集成」里可以打开）；没选过平台时从 Spotify 开始；新增 `npm run dev:web` 一次启动网页版和本地的网易云、QQ、酷狗 API。逐项修改见本仓库的提交记录。
 
 <div align="center">
 <a href="https://trendshift.io/repositories/71740?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-71740" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/71740" alt="chthollyphile%2Ffolia-major | Trendshift" width="250" height="55"/></a>

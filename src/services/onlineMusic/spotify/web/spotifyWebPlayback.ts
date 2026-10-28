@@ -1,8 +1,9 @@
 import { OnlineProviderError } from '../../../../types/onlineMusic';
-import type { ProviderNotice } from '../../../../types/onlineMusic';
+import type { ProviderNotice, ProviderPlaybackDevice } from '../../../../types/onlineMusic';
 import { useAudioSettingsStore } from '../../../../stores/useAudioSettingsStore';
 import { spotifyWebAccessToken } from './spotifyWebAuth';
 import { callSpotifyWeb } from './spotifyWebApi';
+import { chosenSpotifyWebDevice, keepChosenSpotifyWebDevice, listSpotifyWebDevices } from './spotifyWebDevices';
 
 // src/services/onlineMusic/spotify/web/spotifyWebPlayback.ts
 // The web version plays Spotify through Spotify's Web Playback SDK, which sounds protected audio in
@@ -15,6 +16,9 @@ import { callSpotifyWeb } from './spotifyWebApi';
 // player makes it stop to load again, and so drift further.
 // The decks are found by their media events, caught on the document (`data-playback-deck`, App.tsx).
 // What follows from it: the visualizer and automix see silence, and nothing of the song is stored.
+// The song sounds where the listener chose (spotifyWebDevices.ts): in this window's player, or on
+// another Spotify Connect device of the account, which is told through the Web API and asked
+// where it is less often, as each question is a request.
 
 const SDK_URL = 'https://sdk.scdn.co/spotify-player.js';
 const PLAYER_NAME = 'Folia';
@@ -28,6 +32,11 @@ const DRIFT_MS = 800;
 // and how often that is looked at.
 const DECK_DRIFT_MS = 250;
 const DRIFT_CHECK_MS = 1000;
+// The same for another device, whose answers come over the network.
+const REMOTE_DECK_DRIFT_MS = 1000;
+const REMOTE_CHECK_MS = 3000;
+// A volume dragged on is sent to another device once it rests this long.
+const REMOTE_VOLUME_WAIT_MS = 400;
 // After a command, the player's state is not read as its own doing for this long.
 const SETTLE_MS = 4000;
 // Spotify may not know the player for a moment after it is ready: a start is asked again this often.
@@ -235,10 +244,73 @@ const trackOnDeck = (element: HTMLMediaElement): string | null => (
     standIns.get(element.currentSrc) ?? standIns.get(element.getAttribute('src') ?? '') ?? null
 );
 
-const command = async (run: (player: SdkPlayer) => Promise<void>): Promise<void> => {
-    if (!connected) return;
+// What a device answers it is playing.
+interface PlayState { paused: boolean; position: number; trackIds: (string | null | undefined)[] }
+// Where the song sounds: what it is told, what it answers, and how closely the deck follows it.
+interface Sound {
+    deviceId: () => Promise<string>;
+    state: () => Promise<PlayState | null>;
+    pause: () => Promise<unknown>;
+    resume: () => Promise<unknown>;
+    seek: (positionMs: number) => Promise<unknown>;
+    deckDriftMs: number;
+    checkEveryMs: number;
+}
+
+const windowSound: Sound = {
+    deviceId: async () => (await ensureSpotifyWebPlayer()).deviceId,
+    state: async () => {
+        const state = connected ? await connected.player.getCurrentState() : null;
+        const track = state?.track_window.current_track;
+        return state && { paused: state.paused, position: state.position, trackIds: [track?.id, track?.linked_from?.id] };
+    },
+    pause: async () => connected?.player.pause(),
+    resume: async () => connected?.player.resume(),
+    seek: async positionMs => connected?.player.seek(positionMs),
+    deckDriftMs: DECK_DRIFT_MS,
+    checkEveryMs: DRIFT_CHECK_MS,
+};
+
+// GET /me/player: what plays on the account now, and where.
+interface WirePlayer {
+    is_playing?: boolean;
+    progress_ms?: number | null;
+    device?: { id?: string | null };
+    item?: { id?: string | null; linked_from?: { id?: string | null } } | null;
+}
+
+// A command a device does not take in the state it is in (pausing one that is paused) is answered
+// 403 without a reason of Premium; it changes nothing, so it is let go.
+const unlessRestricted = (error: unknown): void => {
+    if (error instanceof OnlineProviderError && error.httpStatus === 403 && error.cause !== 'PREMIUM_REQUIRED') return;
+    throw error;
+};
+
+const deviceSound = (id: string): Sound => ({
+    deviceId: async () => id,
+    state: async () => {
+        const answer = await callSpotifyWeb<WirePlayer | undefined>('/me/player', { query: { additional_types: 'track' } });
+        // Nothing plays, or it plays on another device.
+        if (!answer?.item || answer.device?.id !== id) return null;
+        return { paused: !answer.is_playing, position: answer.progress_ms ?? 0, trackIds: [answer.item.id, answer.item.linked_from?.id] };
+    },
+    pause: () => callSpotifyWeb('/me/player/pause', { method: 'PUT', query: { device_id: id } }).catch(unlessRestricted),
+    resume: () => callSpotifyWeb('/me/player/play', { method: 'PUT', query: { device_id: id } }).catch(unlessRestricted),
+    seek: positionMs => callSpotifyWeb('/me/player/seek', { method: 'PUT', query: { position_ms: positionMs, device_id: id } }).catch(unlessRestricted),
+    deckDriftMs: REMOTE_DECK_DRIFT_MS,
+    checkEveryMs: REMOTE_CHECK_MS,
+});
+
+const soundNow = (): Sound => {
+    const chosen = chosenSpotifyWebDevice();
+    return chosen.id === null ? windowSound : deviceSound(chosen.id);
+};
+
+const command = async (run: (sound: Sound) => Promise<unknown>): Promise<void> => {
+    // This window's player that never connected has nothing to be told.
+    if (chosenSpotifyWebDevice().id === null && !connected) return;
     lastCommandAt = Date.now();
-    await run(connected.player);
+    await run(soundNow());
 };
 
 const startTrack = async (deviceId: string, trackId: string, positionMs: number): Promise<void> => {
@@ -258,17 +330,15 @@ const startTrack = async (deviceId: string, trackId: string, positionMs: number)
     }
 };
 
-const isSameTrack = (state: SdkState | null, trackId: string): state is SdkState => {
-    const current = state?.track_window.current_track;
-    return Boolean(current && (current.id === trackId || current.linked_from?.id === trackId));
-};
+const isSameTrack = (state: PlayState | null, trackId: string): state is PlayState => Boolean(state?.trackIds.includes(trackId));
 
 // The deck `element` plays the stand-in of `trackId`: the player plays that track where the deck is.
 const follow = async (element: HTMLMediaElement, trackId: string): Promise<void> => {
-    const { player, deviceId } = await ensureSpotifyWebPlayer();
+    const sound = soundNow();
+    const deviceId = await sound.deviceId();
     if (element !== deck || element.paused) return;
     const atMs = Math.round(element.currentTime * 1000);
-    const state = await player.getCurrentState();
+    const state = await sound.state();
     if (playingTrack === trackId && isSameTrack(state, trackId)) {
         // A player still playing is left alone (the drift check moves the deck); a paused one is
         // resumed where the deck is, which may have been sought meanwhile.
@@ -277,8 +347,8 @@ const follow = async (element: HTMLMediaElement, trackId: string): Promise<void>
             return;
         }
         lastCommandAt = Date.now();
-        if (Math.abs(state.position - atMs) > DRIFT_MS) await player.seek(atMs);
-        await player.resume();
+        if (Math.abs(state.position - atMs) > DRIFT_MS) await sound.seek(atMs);
+        await sound.resume();
     } else {
         playingTrack = trackId;
         await startTrack(deviceId, trackId, atMs);
@@ -293,8 +363,14 @@ const stopDeck = (error: unknown): void => {
     playingTrack = null;
     stopDriftCheck();
     element?.pause();
-    const premium = error instanceof OnlineProviderError && (error.code === 'subscription-required' || error.httpStatus === 403);
-    tell?.({ type: 'error', textKey: premium ? 'status.spotifyWebPremiumOnly' : 'status.spotifyWebPlaybackFailed' });
+    const elsewhere = chosenSpotifyWebDevice().id !== null;
+    const failure = error instanceof OnlineProviderError ? error : null;
+    // A 403 of this window's player is its account (no Premium); another device says so in its reason.
+    const premium = failure?.code === 'subscription-required'
+        || (failure?.httpStatus === 403 && (!elsewhere || failure.cause === 'PREMIUM_REQUIRED'));
+    // The device chosen is not on (its Spotify app was closed, or it went offline).
+    const gone = elsewhere && failure?.httpStatus === 404;
+    tell?.({ type: 'error', textKey: premium ? 'status.spotifyWebPremiumOnly' : gone ? 'status.spotifyWebDeviceGone' : 'status.spotifyWebPlaybackFailed' });
 };
 
 const enqueue = (work: () => Promise<void>): void => {
@@ -305,14 +381,16 @@ const enqueue = (work: () => Promise<void>): void => {
 };
 
 const checkDrift = async (): Promise<void> => {
-    if (!connected || !deck || deck.paused || !playingTrack) return;
+    if (!deck || deck.paused || !playingTrack) return;
+    const sound = soundNow();
+    if (sound === windowSound && !connected) return;
     const element = deck;
-    const state = await connected.player.getCurrentState();
+    const state = await sound.state();
     if (element !== deck || element.paused) return;
     // The player plays the track: the deck is put where it is.
     if (isSameTrack(state, playingTrack) && !state.paused) {
         const atMs = element.currentTime * 1000;
-        if (Math.abs(state.position - atMs) > DECK_DRIFT_MS) {
+        if (Math.abs(state.position - atMs) > sound.deckDriftMs) {
             deckMovedTo = state.position / 1000;
             element.currentTime = deckMovedTo;
         }
@@ -335,7 +413,7 @@ const checkDrift = async (): Promise<void> => {
 
 function startDriftCheck(): void {
     if (driftTimer) return;
-    driftTimer = setInterval(() => { enqueue(checkDrift); }, DRIFT_CHECK_MS);
+    driftTimer = setInterval(() => { enqueue(checkDrift); }, soundNow().checkEveryMs);
 }
 
 function stopDriftCheck(): void {
@@ -357,7 +435,7 @@ const onPlaying = (event: Event): void => {
             deck = null;
             playingTrack = null;
             stopDriftCheck();
-            enqueue(() => command(player => player.pause()));
+            enqueue(() => command(sound => sound.pause()));
         }
         return;
     }
@@ -369,7 +447,7 @@ const onPause = (event: Event): void => {
     const element = deckOf(event);
     if (!element || element !== deck) return;
     stopDriftCheck();
-    enqueue(() => command(player => player.pause()));
+    enqueue(() => command(sound => sound.pause()));
 };
 
 const onSeeked = (event: Event): void => {
@@ -379,7 +457,7 @@ const onSeeked = (event: Event): void => {
     deckMovedTo = null;
     if (moved !== null && Math.abs(element.currentTime - moved) < 0.1) return;
     if (element.paused) return;
-    enqueue(() => command(player => player.seek(Math.round(element.currentTime * 1000))));
+    enqueue(() => command(sound => sound.seek(Math.round(element.currentTime * 1000))));
 };
 
 // The deck took up another source.
@@ -389,7 +467,7 @@ const onEmptied = (event: Event): void => {
     deck = null;
     playingTrack = null;
     stopDriftCheck();
-    enqueue(() => command(player => player.pause()));
+    enqueue(() => command(sound => sound.pause()));
 };
 
 // A click or a key lets the player's frame sound, once.
@@ -411,9 +489,43 @@ function install(): void {
     document.addEventListener('keydown', onGesture, true);
     useAudioSettingsStore.subscribe((state, previous) => {
         if (state.volume === previous.volume && state.isMuted === previous.isMuted) return;
-        void connected?.player.setVolume(volumeNow()).catch(() => undefined);
+        const elsewhere = chosenSpotifyWebDevice().id;
+        if (elsewhere === null) {
+            void connected?.player.setVolume(volumeNow()).catch(() => undefined);
+            return;
+        }
+        // Another device: once the volume rests; one that keeps its own volume answers 403.
+        if (volumeTimer) clearTimeout(volumeTimer);
+        volumeTimer = setTimeout(() => {
+            volumeTimer = null;
+            void callSpotifyWeb('/me/player/volume', {
+                method: 'PUT', query: { volume_percent: Math.round(volumeNow() * 100), device_id: elsewhere },
+            }).catch(() => undefined);
+        }, REMOTE_VOLUME_WAIT_MS);
     });
 }
+
+let volumeTimer: ReturnType<typeof setTimeout> | null = null;
+
+/** This window's own player, then the account's other devices on now. */
+export const listSpotifyWebPlaybackDevices = (): Promise<ProviderPlaybackDevice[]> => listSpotifyWebDevices(connected?.deviceId ?? null);
+
+/**
+ * Plays on `device` from now on. A song playing moves there, where the deck is (starting it on
+ * another device moves the account's playback there); a paused one starts there when played.
+ */
+export const chooseSpotifyWebDevice = async (device: ProviderPlaybackDevice): Promise<void> => {
+    const before = chosenSpotifyWebDevice().id;
+    keepChosenSpotifyWebDevice(device);
+    if (before === device.id) return;
+    install();
+    stopDriftCheck();
+    const element = deck;
+    const trackId = playingTrack;
+    playingTrack = null;
+    if (!element || !trackId || element.paused) return;
+    enqueue(() => follow(element, trackId));
+};
 
 /** What the player has to tell the listener goes through `notify` while the app is open. */
 export const watchSpotifyWebPlayback = (notify: (notice: ProviderNotice) => void): (() => void) => {

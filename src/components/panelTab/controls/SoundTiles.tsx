@@ -8,6 +8,7 @@ import { openHifiSignalPath } from '../../hifi/hifiPanelStore';
 import { signalPathTone, verdictLabel } from '../../hifi/hifiSignalText';
 import { useHifiSignalPath } from '../../hifi/useHifiSignalPath';
 import { loopModeIcon, loopModeLabelName } from '../../shared/loopModeDisplay';
+import { useSoundOutsideFolia } from '../equalizer/useSoundOutsideFolia';
 import { QuickTile } from './QuickTile';
 
 // src/components/panelTab/controls/SoundTiles.tsx
@@ -23,6 +24,8 @@ interface SoundTilesProps {
 const SoundTiles: React.FC<SoundTilesProps> = ({ loopMode, onToggleLoop, loopToggleDisabled }) => {
     const { t } = useTranslation();
     const isEqualizerOn = useAudioSettingsStore(state => state.audioEqualizerSettings.enabled);
+    // A song that sounds outside Folia is not reached by the equalizer: the tile is not lit for it.
+    const soundOutside = useSoundOutsideFolia();
     const openAudioEqualizer = useAudioSettingsStore(state => state.openAudioEqualizer);
     const automixEnabled = useAutomixSettingsStore(state => state.automixEnabled);
     const toggleAutomix = useAutomixSettingsStore(state => state.handleToggleAutomix);
@@ -69,7 +72,7 @@ const SoundTiles: React.FC<SoundTilesProps> = ({ loopMode, onToggleLoop, loopTog
                         kind="open"
                         icon={<SlidersHorizontal size={18} />}
                         label={t('ui.equalizerTitle')}
-                        lit={isEqualizerOn}
+                        lit={isEqualizerOn && !soundOutside}
                         data-ponder="audio-equalizer"
                         onClick={openAudioEqualizer}
                     />

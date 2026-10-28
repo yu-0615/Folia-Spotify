@@ -6,11 +6,12 @@ import AppearanceSection from './controls/AppearanceSection';
 import SoundTiles from './controls/SoundTiles';
 import ThemeNameRow from './controls/ThemeNameRow';
 import ThemeSourceRow from './controls/ThemeSourceRow';
+import PlaybackDeviceRow from './controls/PlaybackDeviceRow';
 import VolumeRow from './controls/VolumeRow';
 import { GroupLine } from './shell/GroupLine';
 
 // src/components/panelTab/ControlsTab.tsx
-// 控制标签页只负责装配，三组：声音（音量和三块）、外观（歌词样式、背景、播放页透明背景）、主题（来源和当前主题那一行）。
+// 控制标签页只负责装配，三组：声音（音量、能在别的设备上放时的播放设备、三块）、外观（歌词样式、背景、播放页透明背景）、主题（来源和当前主题那一行）。
 
 interface ControlsTabProps {
     loopMode: 'off' | 'all' | 'one';
@@ -79,6 +80,7 @@ const ControlsTab: React.FC<ControlsTabProps> = ({
             onVolumeChange={onVolumeChange}
             onToggleMute={onToggleMute}
         />
+        <PlaybackDeviceRow />
         <SoundTiles
             loopMode={loopMode}
             onToggleLoop={onToggleLoop}

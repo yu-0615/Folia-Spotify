@@ -294,3 +294,49 @@ describe('lyrics', () => {
         }
     });
 });
+
+describe('the device it plays on', () => {
+    const song = {
+        id: id('a'), name: 'Song a', artists: [], album: { id: id('m'), name: 'Album' }, durationMs: 2000,
+        sourceRef: { kind: 'online' as const, providerId: 'spotify', mediaId: id('a') },
+    };
+    const phone = { id: 'phone-1', name: 'Pixel', kind: 'phone' as const };
+
+    afterEach(async () => {
+        await omni.choosePlaybackDevice('spotify', { id: null, name: 'Folia', kind: 'this' });
+    });
+
+    it('lists this window first, then the devices on now that take commands', async () => {
+        signedIn();
+        answer({
+            'GET /me/player/devices': () => reply({
+                devices: [
+                    { id: 'phone-1', name: 'Pixel', type: 'Smartphone', is_restricted: false },
+                    { id: 'tv-1', name: 'Living room', type: 'TV', is_restricted: false },
+                    { id: 'locked', name: 'Car', type: 'Automobile', is_restricted: true },
+                ],
+            }),
+        });
+        expect(omni.hasPlaybackDevices('spotify')).toBe(true);
+        expect(await omni.listPlaybackDevices('spotify')).toEqual([
+            { id: null, name: 'Folia', kind: 'this' },
+            { id: 'phone-1', name: 'Pixel', kind: 'phone' },
+            { id: 'tv-1', name: 'Living room', kind: 'tv' },
+        ]);
+    });
+
+    it('keeps the device chosen, tells it, and plays a song there without this window\'s player', async () => {
+        signedIn();
+        const told = vi.fn();
+        const stop = omni.subscribePlaybackDevice('spotify', told);
+        await omni.choosePlaybackDevice('spotify', phone);
+        stop();
+        expect(told).toHaveBeenCalledTimes(1);
+        expect(omni.getChosenPlaybackDevice('spotify')).toEqual(phone);
+        expect(JSON.parse(memory.get('folia_spotify_web_device')!)).toEqual(phone);
+
+        const source = await omni.getAudioSource(song as never, 'high');
+        expect(source).toMatchObject({ standIn: true });
+        expect(ensurePlayer).not.toHaveBeenCalled();
+    });
+});

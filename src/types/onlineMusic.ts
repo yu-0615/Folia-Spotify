@@ -843,6 +843,28 @@ export interface OnlineRawRequestProvider {
     request(endpoint: string, params: Record<string, JsonValue>, signal: AbortSignal): Promise<unknown>;
 }
 
+/**
+ * A device a provider can play on (a phone, a computer, a speaker of the account). `id` null is
+ * this window's own player; `kind` 'this' is that one, which the interface names itself.
+ */
+export interface ProviderPlaybackDevice {
+    id: string | null;
+    name: string;
+    kind: 'this' | 'computer' | 'phone' | 'speaker' | 'tv' | 'other';
+}
+
+/** Where a provider's songs sound, for a provider that can sound them on another device than this window. */
+export interface OnlinePlaybackDevicesProvider {
+    /** The devices to choose from: this window's own player first, then the others that are on now. */
+    list(): Promise<ProviderPlaybackDevice[]>;
+    /** The device chosen: this window's own player until another is chosen. */
+    chosen(): ProviderPlaybackDevice;
+    /** The songs play there from now on; a song playing moves there, where it is. */
+    choose(device: ProviderPlaybackDevice): Promise<void>;
+    /** Calls `listener` when the chosen device changes; answers with the way to stop. */
+    subscribe(listener: () => void): () => void;
+}
+
 export interface OnlineMusicProvider {
     id: OnlineProviderId;
     displayName: string;
@@ -879,6 +901,7 @@ export interface OnlineMusicProvider {
     playback?: OnlinePlaybackProvider;
     playbackReports?: OnlinePlaybackReportProvider;
     lyrics?: OnlineLyricsProvider;
+    devices?: OnlinePlaybackDevicesProvider;
     auth?: OnlineAuthProvider;
     library?: OnlineLibraryProvider;
     catalog?: OnlineCatalogProvider;
@@ -902,6 +925,7 @@ export type OmniAudioSource = ProviderAudioSource;
 export type OmniSongAvailability = ProviderSongAvailability;
 export type OmniSongReplacement = ProviderSongReplacement;
 export type OmniLyricsResult = ProviderLyricsResult;
+export type OmniPlaybackDevice = ProviderPlaybackDevice;
 export type OmniPlaybackReport = ProviderPlaybackReport;
 export type OmniChorusRange = ChorusRange;
 export type OmniAlbum = ProviderAlbumSummary;

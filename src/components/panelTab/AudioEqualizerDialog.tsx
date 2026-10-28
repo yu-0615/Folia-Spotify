@@ -19,6 +19,8 @@ import AudioEffectGrid from './equalizer/AudioEffectGrid';
 import EqualizerBandGrid from './equalizer/EqualizerBandGrid';
 import PresetChips from './equalizer/PresetChips';
 import ModCurveNotice from './equalizer/ModCurveNotice';
+import SoundOutsideNotice from './equalizer/SoundOutsideNotice';
+import { useSoundOutsideFolia } from './equalizer/useSoundOutsideFolia';
 import HifiBypassNotice from '../hifi/HifiBypassNotice';
 import { useIsHifiRoute } from '../hifi/useHifiSignalPath';
 import { useAudioSettingsStore } from '../../stores/useAudioSettingsStore';
@@ -51,7 +53,10 @@ const AudioEqualizerDialog: React.FC<AudioEqualizerDialogProps> = ({ isDaylight 
     const curveHeard = Boolean(modCurve) && !modCurveSuspended;
     // On the HiFi route mpv plays the song and none of this is heard: the window only shows the settings, kept for the web engine.
     const isHifiRoute = useIsHifiRoute();
-    const readOnly = curveHeard || isHifiRoute;
+    // On HiFi, or for a song that sounds outside Folia, the equalizer is not heard: the settings are kept for other songs.
+    const soundOutside = useSoundOutsideFolia();
+    const bypassed = isHifiRoute || soundOutside;
+    const readOnly = curveHeard || bypassed;
     const [draft, setDraft] = useState<AudioEqualizerSettings>(settings);
     const draftRef = useRef(draft);
     const mountedRef = useRef(false);
@@ -193,15 +198,16 @@ const AudioEqualizerDialog: React.FC<AudioEqualizerDialogProps> = ({ isDaylight 
                     <span className="whitespace-nowrap text-xs text-[color:var(--st-t2)] max-sm:sr-only">
                         {t(draft.enabled ? 'ui.equalizerEnabled' : 'ui.equalizerDisabled')}
                     </span>
-                    <Toggle checked={draft.enabled} onChange={setEnabled} disabled={isHifiRoute} />
+                    <Toggle checked={draft.enabled} onChange={setEnabled} disabled={bypassed} />
                 </label>
             )}
         >
             {/* 这一层排窗口里的内容（至少和窗口一样高，多出的高度给推子），也让这扇对话框自己能被思索命中。 */}
             <div data-ponder="audio-equalizer" className="flex min-h-full flex-col">
                 <HifiBypassNotice />
+                <SoundOutsideNotice />
                 <ModCurveNotice />
-                {isHifiRoute ? (
+                {bypassed ? (
                     // Out of reach on HiFi as well: a preset would write a sound that is not heard.
                     <div inert className="opacity-40">{presetChips}</div>
                 ) : presetChips}

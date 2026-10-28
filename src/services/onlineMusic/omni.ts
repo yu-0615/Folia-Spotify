@@ -11,6 +11,7 @@ import type {
     OmniExplorePage,
     OmniHistoryEntry,
     OmniLyricsResult,
+    OmniPlaybackDevice,
     OmniPage,
     OmniPlaybackReport,
     OmniProviderCapabilities,
@@ -1050,6 +1051,31 @@ export const omni = {
     // Another name the song's artist may be listed under elsewhere, when its provider knows one.
     async getAlternateArtistName(song: SongResult): Promise<string | null> {
         return await getOnlineMusicProviderForSong(song)?.lyrics?.getAlternateArtistName?.(song) ?? null;
+    },
+
+    // The devices a provider can play on (`OnlineMusicProvider.devices`), for one that can play
+    // elsewhere than in this window: whether it can, the devices on now, the one chosen, choosing one.
+    hasPlaybackDevices(providerId: OmniProviderId): boolean {
+        return Boolean(getOnlineMusicProvider(providerId)?.devices);
+    },
+
+    async listPlaybackDevices(providerId: OmniProviderId): Promise<OmniPlaybackDevice[]> {
+        const devices = requireOnlineMusicProvider(providerId).devices;
+        return devices ? await devices.list() : [];
+    },
+
+    getChosenPlaybackDevice(providerId: OmniProviderId): OmniPlaybackDevice | null {
+        return getOnlineMusicProvider(providerId)?.devices?.chosen() ?? null;
+    },
+
+    async choosePlaybackDevice(providerId: OmniProviderId, device: OmniPlaybackDevice): Promise<void> {
+        const devices = requireOnlineMusicProvider(providerId).devices;
+        if (!devices) return unsupported(providerId, 'devices');
+        await devices.choose(device);
+    },
+
+    subscribePlaybackDevice(providerId: OmniProviderId, listener: () => void): () => void {
+        return getOnlineMusicProvider(providerId)?.devices?.subscribe(listener) ?? (() => undefined);
     },
 
     getSongAvailability(song: SongResult): OmniSongAvailability {
