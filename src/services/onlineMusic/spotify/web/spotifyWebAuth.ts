@@ -41,6 +41,21 @@ interface LoginAttempt { verifier: string; answer: CallbackAnswer | null; exchan
 const desktopBridge = () => (typeof window === 'undefined' ? undefined : window.electron);
 const signsInThroughDesktop = () => typeof desktopBridge()?.openLoopbackSignIn === 'function';
 
+// In an app added to the home screen (the iPhone's Safari), a window of its own opens in another
+// browser with storage of its own, so the answer never comes back to the app. There Spotify's page
+// opens in place of the app instead: the attempt waits in storage under this key,
+// public/spotify-callback.html adds Spotify's answer to it and goes back to the app, and the app's
+// next start exchanges the code (resumeSpotifyWebRedirectLogin).
+const REDIRECT_KEY = 'folia_spotify_web_redirect';
+interface RedirectAttempt extends CallbackAnswer { verifier: string; returnTo: string; startedAt: number }
+
+const runsFromHomeScreen = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    const browser = window.navigator as (Navigator & { standalone?: boolean }) | undefined;
+    if (browser?.standalone === true) return true;
+    return typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches;
+};
+
 // The listener's own, else the build's.
 export const spotifyWebClientId = (): string => (
     getStoredString(CLIENT_ID_KEY, '').trim() || String(import.meta.env.VITE_SPOTIFY_CLIENT_ID ?? '').trim()
@@ -215,6 +230,13 @@ export const openSpotifyWebLogin = async (key: string): Promise<void> => {
         }
         return;
     }
+    if (runsFromHomeScreen()) {
+        const pending: RedirectAttempt = { state: key, verifier: attempt.verifier, returnTo: window.location.href, startedAt: Date.now() };
+        setStoredString(REDIRECT_KEY, JSON.stringify(pending));
+        console.log('[Spotify] Web sign-in opens in place of the home-screen app');
+        window.location.assign(url);
+        return;
+    }
     const opened = window.open(url, 'folia-spotify-login', 'popup,width=520,height=760');
     if (!opened) throw new OnlineProviderError('unavailable', SPOTIFY_WEB_POPUP_BLOCKED, 'spotify');
 };
@@ -303,3 +325,43 @@ export const signInSpotifyWebUntilDone = async (readAccount: () => Promise<unkno
         cancelSpotifyWebLogin(key);
     }
 };
+
+/**
+ * Finishes a sign-in that opened Spotify's page in place of the home-screen app (REDIRECT_KEY):
+ * exchanges the code it came back with and keeps the tokens. Answers whether a sign-in was kept.
+ * An attempt that never came back is dropped once it runs out.
+ */
+export const resumeSpotifyWebRedirectLogin = async (): Promise<boolean> => {
+    let pending: RedirectAttempt | null;
+    try {
+        pending = JSON.parse(getStoredString(REDIRECT_KEY, 'null')) as RedirectAttempt | null;
+    } catch {
+        pending = null;
+    }
+    if (!pending?.verifier) return false;
+    if (!pending.code && !pending.error) {
+        if (Date.now() - (Number(pending.startedAt) || 0) > SPOTIFY_WEB_LOGIN_TTL_MS) removeStoredKey(REDIRECT_KEY);
+        return false;
+    }
+    removeStoredKey(REDIRECT_KEY);
+    if (!pending.code) {
+        console.warn(`[Spotify] Web sign-in from the home-screen app answered ${pending.error}`);
+        return false;
+    }
+    try {
+        const token = await askToken({
+            grant_type: 'authorization_code', code: pending.code, redirect_uri: spotifyWebRedirectUri(), code_verifier: pending.verifier,
+        });
+        writeSession(token, null);
+        console.log('[Spotify] Web sign-in from the home-screen app confirmed');
+        return true;
+    } catch (error) {
+        console.warn('[Spotify] Web sign-in from the home-screen app could not be finished', error);
+        return false;
+    }
+};
+
+// A page loaded fresh may be the app coming back from Spotify's page.
+if (typeof window !== 'undefined' && typeof localStorage !== 'undefined' && !signsInThroughDesktop()) {
+    void resumeSpotifyWebRedirectLogin();
+}

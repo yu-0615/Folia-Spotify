@@ -21,6 +21,19 @@
     var params = new URLSearchParams(window.location.search);
     var answer = { state: params.get('state') || '', code: params.get('code') || '', error: params.get('error') || '' };
     history.replaceState(null, '', window.location.pathname);
+    // A sign-in from an app on the home screen opened Spotify's page in place of the app
+    // (spotifyWebAuth.ts, REDIRECT_KEY): the answer goes with its attempt, and the page goes back.
+    try {
+      var pending = JSON.parse(window.localStorage.getItem('folia_spotify_web_redirect') || 'null');
+      if (pending && pending.state && pending.state === answer.state) {
+        pending.code = answer.code;
+        pending.error = answer.error;
+        window.localStorage.setItem('folia_spotify_web_redirect', JSON.stringify(pending));
+        var back = new URL(pending.returnTo || '/', window.location.origin);
+        window.location.replace(back.origin === window.location.origin ? back.href : window.location.origin + '/');
+        return;
+      }
+    } catch (error) { /* no storage: the answer goes over the channel below */ }
     try {
       var channel = new BroadcastChannel('folia-spotify-login');
       channel.postMessage(answer);

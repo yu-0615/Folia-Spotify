@@ -11,6 +11,7 @@ vi.mock('@/services/onlineMusic/providerAccountCache', () => ({ saveProviderAcco
 
 import { omni } from '@/services/onlineMusic/omni';
 import { callSpotifyWeb } from '@/services/onlineMusic/spotify/web/spotifyWebApi';
+import { resumeSpotifyWebRedirectLogin } from '@/services/onlineMusic/spotify/web/spotifyWebAuth';
 import { findSpotifyWebDevice } from '@/services/onlineMusic/spotify/web/spotifyWebDevices';
 import { getOnlineMusicProvider } from '@/services/onlineMusic/providerRegistry';
 import { whyPreviewClip } from '@/services/wholeSongCheck';
@@ -186,6 +187,65 @@ describe('signing in', () => {
         await expect(opened).rejects.toBeInstanceOf(OnlineProviderError);
         const error = await opened.catch(caught => caught);
         expect(spotify().auth!.describeLoginFailure!('open', error)).toEqual({ case: 'browser-not-opened' });
+    });
+});
+
+// An app on the iPhone's home screen: a window of its own would open in Safari, with storage of its
+// own, so Spotify's page opens in place of the app and the next start exchanges the code.
+describe('signing in from an app on the home screen', () => {
+    const REDIRECT_KEY = 'folia_spotify_web_redirect';
+    const assignMock = vi.fn();
+    beforeEach(() => {
+        assignMock.mockReset();
+        vi.stubGlobal('window', {
+            location: { origin: 'https://folia.test', href: 'https://folia.test/?npHost=mac.test', assign: assignMock },
+            navigator: { standalone: true },
+            open: openMock,
+            localStorage: storage,
+        });
+    });
+
+    it('opens the consent page in place of the app and keeps the attempt', async () => {
+        const key = await spotify().auth!.startLogin!();
+        await spotify().auth!.openLoginPage!(key);
+        expect(openMock).not.toHaveBeenCalled();
+        const page = new URL(assignMock.mock.calls[0][0]);
+        expect(page.searchParams.get('state')).toBe(key);
+        expect(page.searchParams.get('redirect_uri')).toBe('https://folia.test/spotify-callback.html');
+        expect(JSON.parse(memory.get(REDIRECT_KEY)!)).toMatchObject({ state: key, returnTo: 'https://folia.test/?npHost=mac.test' });
+    });
+
+    it('exchanges the code the page came back with, once', async () => {
+        memory.set(REDIRECT_KEY, JSON.stringify({ state: 'k', verifier: 'v'.repeat(43), returnTo: '/', startedAt: Date.now(), code: 'code-h', error: '' }));
+        answer({
+            'POST /api/token': (_url, init) => {
+                const form = new URLSearchParams(String(init.body));
+                expect(form.get('code')).toBe('code-h');
+                expect(form.get('code_verifier')).toBe('v'.repeat(43));
+                return reply({ access_token: 'access-h', refresh_token: 'refresh-h', expires_in: 3600 });
+            },
+        });
+        expect(await resumeSpotifyWebRedirectLogin()).toBe(true);
+        expect(JSON.parse(memory.get(SESSION_KEY)!)).toMatchObject({ accessToken: 'access-h', refreshToken: 'refresh-h' });
+        expect(memory.has(REDIRECT_KEY)).toBe(false);
+        expect(await resumeSpotifyWebRedirectLogin()).toBe(false);
+    });
+
+    it('keeps no sign-in where Spotify\'s page was declined', async () => {
+        memory.set(REDIRECT_KEY, JSON.stringify({ state: 'k', verifier: 'v'.repeat(43), returnTo: '/', startedAt: Date.now(), code: '', error: 'access_denied' }));
+        expect(await resumeSpotifyWebRedirectLogin()).toBe(false);
+        expect(fetchMock).not.toHaveBeenCalled();
+        expect(memory.has(SESSION_KEY)).toBe(false);
+        expect(memory.has(REDIRECT_KEY)).toBe(false);
+    });
+
+    it('leaves an attempt that has not come back yet, and drops one that ran out', async () => {
+        memory.set(REDIRECT_KEY, JSON.stringify({ state: 'k', verifier: 'v'.repeat(43), returnTo: '/', startedAt: Date.now() }));
+        expect(await resumeSpotifyWebRedirectLogin()).toBe(false);
+        expect(memory.has(REDIRECT_KEY)).toBe(true);
+        memory.set(REDIRECT_KEY, JSON.stringify({ state: 'k', verifier: 'v'.repeat(43), returnTo: '/', startedAt: Date.now() - 11 * 60 * 1000 }));
+        expect(await resumeSpotifyWebRedirectLogin()).toBe(false);
+        expect(memory.has(REDIRECT_KEY)).toBe(false);
     });
 });
 
