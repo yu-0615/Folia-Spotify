@@ -437,4 +437,27 @@ describe('the device it plays on', () => {
             vi.useRealTimers();
         }
     });
+    it('tells what the chosen device plays that the app does not, once, and nothing while another device plays', async () => {
+        vi.useFakeTimers();
+        vi.stubGlobal('document', { addEventListener: () => undefined, querySelectorAll: () => [] });
+        try {
+            signedIn();
+            await omni.choosePlaybackDevice('spotify', phone);
+            let where = 'phone-1';
+            answer({
+                'GET /me/player': () => reply({ is_playing: true, progress_ms: 42_000, device: { id: where }, item: { id: id('b') } }),
+            });
+            const told = vi.fn();
+            const stop = omni.watchPlaybackElsewhere(told);
+            await vi.advanceTimersByTimeAsync(12_000);
+            expect(told).toHaveBeenCalledTimes(1);
+            expect(told).toHaveBeenCalledWith({ providerId: 'spotify', mediaId: id('b'), positionMs: 42_000 });
+            where = 'computer-1';
+            await vi.advanceTimersByTimeAsync(12_000);
+            expect(told).toHaveBeenCalledTimes(1);
+            stop();
+        } finally {
+            vi.useRealTimers();
+        }
+    });
 });

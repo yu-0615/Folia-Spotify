@@ -101,6 +101,7 @@ import { useBackgroundLyricHold } from './components/app/backgroundThrottling/us
 import { readLiveLyricTime, useBackgroundLyricHoldStore } from './components/app/backgroundThrottling/backgroundLyricHoldStore';
 import { useSleepTimer } from './hooks/useSleepTimer';
 import { useProviderNotices } from './components/app/useProviderNotices';
+import { usePlaybackElsewhere } from './components/app/usePlaybackElsewhere';
 import { useLocalLibraryAutoScan } from './hooks/useLocalLibraryAutoScan';
 import { useElectronVideoExportController } from './hooks/useElectronVideoExportController';
 import { useElectronWindowPlaybackHandoff } from './components/app/playback/restore/useElectronWindowPlaybackHandoff';
@@ -2050,6 +2051,8 @@ export default function App() {
             void publishStagePlayerPlaybackUpdate();
         }
     }, [publishStagePlayerPlaybackUpdate]);
+    // A song started in another device's own app, where the songs play: played here too.
+    usePlaybackElsewhere(playSong, seekMainAudio);
 
     const handleMonetLyricLineSeek = useCallback((lyricTimeSec: number) => {
         if (isNowPlayingControlDisabled) {

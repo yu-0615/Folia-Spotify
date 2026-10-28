@@ -11,6 +11,7 @@ import type {
     OmniExplorePage,
     OmniHistoryEntry,
     OmniLyricsResult,
+    OmniElsewherePlay,
     OmniPlaybackDevice,
     ProviderSetting,
     OmniPage,
@@ -577,6 +578,15 @@ export const omni = {
     // once. Answers with the way to stop them all.
     watchProviders(tell: (notice: ProviderNotice) => void): () => void {
         const stops = listOnlineMusicProviders().flatMap(provider => (provider.watch ? [provider.watch(tell)] : []));
+        return () => stops.forEach(stop => stop());
+    },
+
+    // Calls `listener` when the device chosen on any provider plays a song the app is not playing
+    // (`devices.watchElsewhere`). Answers with the way to stop.
+    watchPlaybackElsewhere(listener: (play: OmniElsewherePlay) => void): () => void {
+        const stops = listOnlineMusicProviders().flatMap(provider => (
+            provider.devices?.watchElsewhere ? [provider.devices.watchElsewhere(play => listener({ ...play, providerId: provider.id }))] : []
+        ));
         return () => stops.forEach(stop => stop());
     },
 

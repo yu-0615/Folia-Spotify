@@ -22,7 +22,7 @@ import { describeSpotifyFailure } from './spotifyFailure';
 import { hasSpotifyWebSession, signInSpotifyWebUntilDone, spotifyClientIdSetting, subscribeSpotifyWebSession } from './web/spotifyWebAuth';
 import { chosenSpotifyWebDevice, spotifyThisDevice, subscribeSpotifyWebDevice } from './web/spotifyWebDevices';
 import { readSpotifyWebMe } from './web/spotifyWebLibrary';
-import { chooseSpotifyWebDevice, listSpotifyWebPlaybackDevices, spotifyWebStandIn, watchSpotifyWebPlayback } from './web/spotifyWebPlayback';
+import { chooseSpotifyWebDevice, listSpotifyWebPlaybackDevices, spotifyWebStandIn, watchSpotifyElsewhere, watchSpotifyWebPlayback } from './web/spotifyWebPlayback';
 
 // src/services/onlineMusic/spotify/spotifyProvider.ts
 // Spotify adapter. Sign-in happens in the browser where the person is already signed in to
@@ -192,6 +192,7 @@ export const spotifyProvider: OnlineMusicProvider = {
             setting: spotifyClientIdSetting,
             start: () => signInSpotifyWebUntilDone(readSpotifyWebMe),
         },
+        watchElsewhere: watchSpotifyElsewhere,
     },
     lyrics: {
         // Spotify's own lyrics are timed by line, or not at all. Untimed ones, and a failure to read

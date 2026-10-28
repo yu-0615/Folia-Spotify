@@ -1454,6 +1454,7 @@ export default {
     "noteRestartApp": "Restart Folia",
     "noteRetryLater": "Try again later",
     "noteSignIn": "Sign in again",
+    "signInRequired": "Sign in to {{provider}} to play",
     "noteUnknown": "Unknown error",
     "accountRefused": "This {{provider}} account cannot play here",
     "noteAccountRefused": "The platform does not let this account play in third-party players; in the player's control panel, choose the Spotify app under Playing on",

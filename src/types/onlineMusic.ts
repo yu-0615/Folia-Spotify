@@ -891,6 +891,17 @@ export interface OnlinePlaybackDevicesProvider {
         setting?: ProviderSetting;
         start(): Promise<void>;
     };
+    /**
+     * Calls `listener` when the chosen device plays a song the app is not playing: one the listener
+     * started or resumed there, in the platform's own app. Answers with the way to stop.
+     */
+    watchElsewhere?(listener: (play: ProviderElsewherePlay) => void): () => void;
+}
+
+/** A song another device of the account plays, and where in it. */
+export interface ProviderElsewherePlay {
+    mediaId: string;
+    positionMs: number;
 }
 
 export interface OnlineMusicProvider {
@@ -954,6 +965,7 @@ export type OmniSongAvailability = ProviderSongAvailability;
 export type OmniSongReplacement = ProviderSongReplacement;
 export type OmniLyricsResult = ProviderLyricsResult;
 export type OmniPlaybackDevice = ProviderPlaybackDevice;
+export type OmniElsewherePlay = ProviderElsewherePlay & { providerId: OmniProviderId };
 export type OmniPlaybackReport = ProviderPlaybackReport;
 export type OmniChorusRange = ChorusRange;
 export type OmniAlbum = ProviderAlbumSummary;

@@ -1454,6 +1454,7 @@ export default {
     "noteRestartApp": "请重启 Folia",
     "noteRetryLater": "请稍后重试",
     "noteSignIn": "请重新登录",
+    "signInRequired": "登录{{provider}}后才能播放",
     "noteUnknown": "未知错误",
     "accountRefused": "此{{provider}}账号无法播放",
     "noteAccountRefused": "平台不给这个账号在第三方播放器中播放；请在播放页控制面板的「播放设备」改选 Spotify App",

@@ -1454,6 +1454,7 @@ export default {
     "noteRestartApp": "Mulai ulang Folia",
     "noteRetryLater": "Coba lagi nanti",
     "noteSignIn": "Masuk lagi",
+    "signInRequired": "Masuk ke {{provider}} untuk memutar",
     "noteUnknown": "Kesalahan tidak diketahui",
     "accountRefused": "Akun {{provider}} ini tidak dapat memutar di sini",
     "noteAccountRefused": "Platform tidak mengizinkan akun ini memutar di pemutar pihak ketiga; pilih aplikasi Spotify di Diputar di pada panel kontrol pemutar",

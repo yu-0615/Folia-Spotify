@@ -17,7 +17,7 @@ import type { SpotifyWebPage, SpotifyWebTrack } from './spotifyWebNormalize';
 import { chosenSpotifyWebDevice, subscribeSpotifyWebDevice } from './spotifyWebDevices';
 import {
     chooseSpotifyWebDevice, disconnectSpotifyWebPlayer, ensureSpotifyWebPlayer, listSpotifyWebPlaybackDevices, spotifyWebStandIn,
-    watchSpotifyWebPlayback,
+    watchSpotifyElsewhere, watchSpotifyWebPlayback,
 } from './spotifyWebPlayback';
 
 // src/services/onlineMusic/spotify/web/spotifyWebProvider.ts
@@ -147,6 +147,7 @@ export const spotifyWebProvider: OnlineMusicProvider = {
         chosen: chosenSpotifyWebDevice,
         choose: chooseSpotifyWebDevice,
         subscribe: subscribeSpotifyWebDevice,
+        watchElsewhere: watchSpotifyElsewhere,
     },
     catalog: spotifyWebCatalog,
     library: spotifyWebLibrary,

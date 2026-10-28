@@ -1454,6 +1454,7 @@ export default {
     "noteRestartApp": "Vui lòng khởi động lại Folia",
     "noteRetryLater": "Vui lòng thử lại sau",
     "noteSignIn": "Vui lòng đăng nhập lại",
+    "signInRequired": "Đăng nhập {{provider}} để phát",
     "noteUnknown": "Lỗi không xác định",
     "accountRefused": "Tài khoản {{provider}} này không thể phát tại đây",
     "noteAccountRefused": "Nền tảng không cho tài khoản này phát trong trình phát bên thứ ba; hãy chọn ứng dụng Spotify ở mục Đang phát trên trong bảng điều khiển của trình phát",
