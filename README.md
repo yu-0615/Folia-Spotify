@@ -62,7 +62,7 @@ Folia-Spotify 的桌面版和網頁版都能用 Spotify，但兩邊接法不同�
 
 在「連線線上平臺」選 Spotify，瀏覽器會打開 Spotify 的授權頁，按「同意」就登入了，不用自己設定任何東西。桌面版沿用原作者的實作，走 Spotify 自家用戶端的服務：可以搜尋、播放、讀取你的歌單和收藏，有 Spotify 自己的逐行歌詞，也有電台頁和探索頁。播放需要 Spotify Premium。
 
-播放時如果出現「平臺限制 2024 年底後註冊的帳號在第三方播放器中播放」：這是 Spotify 不發解密金鑰給較新的帳號，桌面版內建的播放器因此放不了。改成**由 Folia 控制、Spotify App 發聲**：
+播放時如果出現「此 Spotify 帳號無法播放」：這是 Spotify 不發解密金鑰給這個帳號（2024 年底後註冊的大多如此，較早的帳號也可能遇到），桌面版內建的播放器因此放不了。改成**由 Folia 控制、Spotify App 發聲**：
 
 1. 照下面網頁版的第 1、2、4 步建立你自己的 Spotify 應用，Redirect URI 加上 `http://127.0.0.1:5590/spotify-callback.html`。
 2. 打開 Spotify App（或手機、音箱上的 Spotify）。

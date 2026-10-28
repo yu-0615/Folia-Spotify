@@ -40,7 +40,7 @@ const QUIET_LIMIT_MS = 30 * 1000;
 const REFUSED = new Set([401, 403, 404, 410]);
 // Spotify refuses a track's key (the component says `audio key unavailable: ... AesKey`). Before it
 // gave this account any key in this run, it is an account Spotify gives no key to at all (common for
-// accounts made since about the end of 2024); after, it is asking to slow down. A new connection
+// accounts made since about the end of 2024, but older ones too); after, it is asking to slow down. A new connection
 // helps neither. The renderer tells the two apart by these sentences
 // (src/services/onlineMusic/spotify/spotifyFailure.ts).
 const KEY_REFUSED = /audio key unavailable.*AesKey/i;

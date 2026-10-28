@@ -1456,7 +1456,7 @@ export default {
     "noteSignIn": "Vui lòng đăng nhập lại",
     "noteUnknown": "Lỗi không xác định",
     "accountRefused": "Tài khoản {{provider}} này không thể phát tại đây",
-    "noteAccountRefused": "Nền tảng chặn các tài khoản tạo từ cuối năm 2024 trở đi phát nhạc trong trình phát bên thứ ba",
+    "noteAccountRefused": "Nền tảng không cho tài khoản này phát trong trình phát bên thứ ba; hãy chọn ứng dụng Spotify ở mục Đang phát trên trong bảng điều khiển của trình phát",
     "noteMaybeSignIn": "Đăng nhập có thể giúp phát bài hát này",
     "noteMaybeSubscription": "Có thể cần tài khoản VIP/Premium để phát",
     "noteMaybeRegion": "Có thể bị giới hạn theo khu vực địa lý",

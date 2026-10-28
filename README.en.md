@@ -60,7 +60,7 @@ Folia-Spotify plays Spotify in both the desktop app and the web version, each in
 
 Choose Spotify under "Connect a streaming service"; your browser opens Spotify's consent page, and agreeing signs you in. Nothing to set up. The desktop app keeps the original author's implementation through the services of Spotify's own client: search, playback, your playlists and library, Spotify's own line-timed lyrics, and the radio and explore pages. Playback needs Spotify Premium.
 
-If playback says the platform blocks accounts created since late 2024 from third-party players, Spotify gives newer accounts no audio key, so the app's own player cannot play them. Have **Folia control and the Spotify app sound** instead:
+If playback says this Spotify account cannot play here, Spotify gives the account no audio key (most accounts created since late 2024, and some older ones), so the app's own player cannot play them. Have **Folia control and the Spotify app sound** instead:
 
 1. Create your own Spotify app as in steps 1, 2 and 4 of the web version below, with the Redirect URI `http://127.0.0.1:5590/spotify-callback.html`.
 2. Open the Spotify app (or Spotify on a phone or a speaker).

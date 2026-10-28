@@ -171,7 +171,7 @@ export const spotifyProvider: OnlineMusicProvider = {
     // Where the songs sound: this app's own player (through the desktop side, the default), or
     // another Spotify Connect device of the account (the Spotify app, a phone, a speaker) that Folia
     // controls through the listener's own app on developer.spotify.com, a sign-in of its own
-    // (spotify/web/). An account Spotify gives no audio key to (made since about the end of 2024)
+    // (spotify/web/). An account Spotify gives no audio key to (most made since about the end of 2024, some older)
     // plays this way.
     devices: {
         list: async () => (hasSpotifyWebSession() ? listSpotifyWebPlaybackDevices() : [spotifyThisDevice]),

@@ -1456,7 +1456,7 @@ export default {
     "noteSignIn": "Sign in again",
     "noteUnknown": "Unknown error",
     "accountRefused": "This {{provider}} account cannot play here",
-    "noteAccountRefused": "The platform blocks accounts created since late 2024 from playing in third-party players",
+    "noteAccountRefused": "The platform does not let this account play in third-party players; in the player's control panel, choose the Spotify app under Playing on",
     "noteMaybeSignIn": "Signing in may make it playable",
     "noteMaybeSubscription": "May need a membership to play",
     "noteMaybeRegion": "May be restricted in your region",

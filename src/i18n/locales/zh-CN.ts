@@ -1456,7 +1456,7 @@ export default {
     "noteSignIn": "请重新登录",
     "noteUnknown": "未知错误",
     "accountRefused": "此{{provider}}账号无法播放",
-    "noteAccountRefused": "平台限制 2024 年底后注册的账号在第三方播放器中播放",
+    "noteAccountRefused": "平台不给这个账号在第三方播放器中播放；请在播放页控制面板的「播放设备」改选 Spotify App",
     "noteMaybeSignIn": "登录后或许可以播放",
     "noteMaybeSubscription": "可能需要会员才能播放",
     "noteMaybeRegion": "可能受地区限制",
