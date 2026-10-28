@@ -1,5 +1,4 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-// @ts-expect-error The mod is plain ESM without types.
 import activate from '../../../dev/folium/zh-hant-lyrics/client.mjs';
 
 // test/unit/mod-system/zhHantLyricsMod.test.ts

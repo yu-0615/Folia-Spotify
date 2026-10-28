@@ -21,9 +21,9 @@ import { describeSpotifyLoginFailure, spotifyLoginFailure } from './spotifyLogin
 import { describeSpotifyFailure } from './spotifyFailure';
 import { SPOTIFY_LYRIC_OFFSET_MS } from './spotifyLyricOffset';
 import { hasSpotifyWebSession, signInSpotifyWebUntilDone, spotifyClientIdSetting, subscribeSpotifyWebSession } from './web/spotifyWebAuth';
-import { chosenSpotifyWebDevice, spotifyThisDevice, subscribeSpotifyWebDevice } from './web/spotifyWebDevices';
+import { currentSpotifyWebDevice, subscribeSpotifyWebDevice } from './web/spotifyWebDevices';
 import { readSpotifyWebMe } from './web/spotifyWebLibrary';
-import { chooseSpotifyWebDevice, listSpotifyWebPlaybackDevices, spotifyWebStandIn, watchSpotifyElsewhere, watchSpotifyWebPlayback } from './web/spotifyWebPlayback';
+import { spotifyWebStandIn, watchSpotifyElsewhere, watchSpotifyWebPlayback } from './web/spotifyWebPlayback';
 
 // src/services/onlineMusic/spotify/spotifyProvider.ts
 // Spotify adapter. Sign-in happens in the browser where the person is already signed in to
@@ -73,8 +73,9 @@ let activeLogin: SpotifyWireLoginStart | null = null;
 // language changed is named in the previous one.
 i18n.on('languageChanged', clearSpotifyCatalogCache);
 
-// Another device is chosen, and the sign-in that controls it is there; without it, this app plays.
-const playsElsewhere = () => chosenSpotifyWebDevice().id !== null && hasSpotifyWebSession();
+// The songs sound in the listener's own Spotify app once the sign-in that controls it is there;
+// without it, this app plays them itself.
+const playsInSpotify = hasSpotifyWebSession;
 
 export const spotifyProvider: OnlineMusicProvider = {
     id: 'spotify', displayName: 'Spotify', shortName: 'Spotify',
@@ -157,9 +158,9 @@ export const spotifyProvider: OnlineMusicProvider = {
         // its own): a free account is answered `subscription-required`. The URL is the desktop app's own.
         async getAudioSource(song, quality) {
             const id = requireSpotifySong(song);
-            // Played on another Spotify device of the account: the deck is handed silence as long as
-            // the song, which sounds there (spotify/web/spotifyWebPlayback.ts follows the deck).
-            if (playsElsewhere()) {
+            // Played in a Spotify app of the account: the deck is handed silence as long as the
+            // song, which sounds there (spotify/web/spotifyWebPlayback.ts follows the deck).
+            if (playsInSpotify()) {
                 if (!song.durationMs) throw new OnlineProviderError('not-playable', 'Spotify did not say how long the song is', 'spotify');
                 return { url: spotifyWebStandIn(id, song.durationMs), fetchedAt: Date.now(), quality, standIn: true };
             }
@@ -174,15 +175,12 @@ export const spotifyProvider: OnlineMusicProvider = {
         keepAudio: url => (url.startsWith('blob:') ? Promise.resolve(false) : requestSpotify<boolean>('audio_keep', { url, limitBytes: cacheLimitBytes() })),
         hasKeptAudio: url => (url.startsWith('blob:') ? Promise.resolve(false) : requestSpotify<boolean>('audio_kept', { url })),
     },
-    // Where the songs sound: this app's own player (through the desktop side, the default), or
-    // another Spotify Connect device of the account (the Spotify app, a phone, a speaker) that Folia
-    // controls through the listener's own app on developer.spotify.com, a sign-in of its own
-    // (spotify/web/). An account Spotify gives no audio key to (most made since about the end of 2024, some older)
-    // plays this way.
+    // Where the songs sound: the device the listener's own Spotify app plays on (the Spotify app on
+    // this computer, a phone, a speaker), which Folia controls through the listener's own app on
+    // developer.spotify.com, a sign-in of its own (spotify/web/). An account Spotify gives no audio key
+    // to (most made since about the end of 2024, some older) plays this way.
     devices: {
-        list: async () => (hasSpotifyWebSession() ? listSpotifyWebPlaybackDevices() : [spotifyThisDevice]),
-        chosen: chosenSpotifyWebDevice,
-        choose: chooseSpotifyWebDevice,
+        current: currentSpotifyWebDevice,
         subscribe: (listener) => {
             const stopDevice = subscribeSpotifyWebDevice(listener);
             const stopSession = subscribeSpotifyWebSession(listener);

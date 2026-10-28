@@ -151,6 +151,7 @@ exports[`store contract > keeps every localStorage key the stores read or write 
   "show_home_tab_local",
   "show_home_tab_playlist",
   "show_home_tab_radio",
+  "show_home_tab_songs",
   "show_subtitle_translation",
   "sleep_timer_hours",
   "sleep_timer_minutes",

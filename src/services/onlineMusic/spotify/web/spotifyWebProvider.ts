@@ -15,17 +15,14 @@ import { SPOTIFY_LYRIC_OFFSET_MS } from '../spotifyLyricOffset';
 import { spotifyWebMutations } from './spotifyWebMutations';
 import { normalizeSpotifyWebCollection, normalizeSpotifyWebSong, present, spotifyWebSongOf } from './spotifyWebNormalize';
 import type { SpotifyWebPage, SpotifyWebTrack } from './spotifyWebNormalize';
-import { chosenSpotifyWebDevice, subscribeSpotifyWebDevice } from './spotifyWebDevices';
-import {
-    chooseSpotifyWebDevice, disconnectSpotifyWebPlayer, ensureSpotifyWebPlayer, listSpotifyWebPlaybackDevices, spotifyWebStandIn,
-    watchSpotifyElsewhere, watchSpotifyWebPlayback,
-} from './spotifyWebPlayback';
+import { currentSpotifyWebDevice, subscribeSpotifyWebDevice } from './spotifyWebDevices';
+import { spotifyWebStandIn, stopSpotifyWebPlayback, watchSpotifyElsewhere, watchSpotifyWebPlayback } from './spotifyWebPlayback';
 
 // src/services/onlineMusic/spotify/web/spotifyWebProvider.ts
 // Spotify in the web version (the desktop version is spotify/spotifyProvider.ts; which of the two is
 // registered is decided in spotifyRuntimeProvider.ts). It reads through Spotify's public Web API
-// as an app the person registered (VITE_SPOTIFY_CLIENT_ID), and plays through the Web Playback SDK,
-// which needs Premium, or on another Spotify Connect device of the account that Folia controls
+// as an app the person registered (VITE_SPOTIFY_CLIENT_ID), and plays in the person's own Spotify app,
+// on the device Spotify plays on (a phone, a computer), which Folia controls through the Web API
 // (`devices`, spotifyWebDevices.ts). Its songs and collections are the desktop version's, so a song kept by one
 // plays in the other. Spotify's own lyrics, the radio tab and the explore page are not in the
 // public API: lyrics come from the other sources, and the two tabs are left out.
@@ -90,15 +87,13 @@ export const spotifyWebProvider: OnlineMusicProvider = {
     },
     playback: {
         getSongDetail,
-        // The SDK chooses the file itself (256 kbit/s AAC on the web for Premium): one level.
+        // The Spotify app chooses the file itself: one level.
         audioQualityLevels: ['high'],
-        // A stand-in for the deck; the song itself is sounded by the Web Playback SDK, which is
-        // connected first, so that a browser without it or an account without Premium fails here,
-        // or by the other device chosen, which is asked once the deck plays.
+        // A stand-in for the deck; the song itself sounds in a Spotify app of the account, which is
+        // asked once the deck plays.
         async getAudioSource(song, quality) {
             const id = requireSpotifySong(song);
             if (!hasSpotifyWebSession()) throw new OnlineProviderError('auth-required', 'Not signed in to Spotify', 'spotify');
-            if (chosenSpotifyWebDevice().id === null) await ensureSpotifyWebPlayer();
             const durationMs = song.durationMs || (await getSongDetail(id))?.durationMs || 0;
             if (!durationMs) throw new OnlineProviderError('not-playable', 'Spotify did not say how long the song is', 'spotify');
             return { url: spotifyWebStandIn(id, durationMs), fetchedAt: Date.now(), quality, standIn: true };
@@ -133,7 +128,7 @@ export const spotifyWebProvider: OnlineMusicProvider = {
         async logout() {
             forgetSpotifyWebMe();
             clearSpotifyWebSession();
-            disconnectSpotifyWebPlayer();
+            stopSpotifyWebPlayback();
         },
         async startLogin() { return startSpotifyWebLogin(); },
         openLoginPage: openSpotifyWebLogin,
@@ -145,9 +140,7 @@ export const spotifyWebProvider: OnlineMusicProvider = {
         getLoginTtlMs: () => SPOTIFY_WEB_LOGIN_TTL_MS,
     },
     devices: {
-        list: listSpotifyWebPlaybackDevices,
-        chosen: chosenSpotifyWebDevice,
-        choose: chooseSpotifyWebDevice,
+        current: currentSpotifyWebDevice,
         subscribe: subscribeSpotifyWebDevice,
         watchElsewhere: watchSpotifyElsewhere,
     },

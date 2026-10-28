@@ -1073,25 +1073,14 @@ export const omni = {
         return await getOnlineMusicProviderForSong(song)?.lyrics?.getAlternateArtistName?.(song) ?? null;
     },
 
-    // The devices a provider can play on (`OnlineMusicProvider.devices`), for one that can play
-    // elsewhere than in this window: whether it can, the devices on now, the one chosen, choosing one.
+    // The device a provider's songs sound on (`OnlineMusicProvider.devices`), for one whose songs
+    // sound in its own app: whether it has one, and which it is now.
     hasPlaybackDevices(providerId: OmniProviderId): boolean {
         return Boolean(getOnlineMusicProvider(providerId)?.devices);
     },
 
-    async listPlaybackDevices(providerId: OmniProviderId): Promise<OmniPlaybackDevice[]> {
-        const devices = requireOnlineMusicProvider(providerId).devices;
-        return devices ? await devices.list() : [];
-    },
-
-    getChosenPlaybackDevice(providerId: OmniProviderId): OmniPlaybackDevice | null {
-        return getOnlineMusicProvider(providerId)?.devices?.chosen() ?? null;
-    },
-
-    async choosePlaybackDevice(providerId: OmniProviderId, device: OmniPlaybackDevice): Promise<void> {
-        const devices = requireOnlineMusicProvider(providerId).devices;
-        if (!devices) return unsupported(providerId, 'devices');
-        await devices.choose(device);
+    getPlaybackDevice(providerId: OmniProviderId): OmniPlaybackDevice | null {
+        return getOnlineMusicProvider(providerId)?.devices?.current() ?? null;
     },
 
     subscribePlaybackDevice(providerId: OmniProviderId, listener: () => void): () => void {

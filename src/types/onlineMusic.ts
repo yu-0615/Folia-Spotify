@@ -853,14 +853,11 @@ export interface OnlineRawRequestProvider {
     request(endpoint: string, params: Record<string, JsonValue>, signal: AbortSignal): Promise<unknown>;
 }
 
-/**
- * A device a provider can play on (a phone, a computer, a speaker of the account). `id` null is
- * this window's own player; `kind` 'this' is that one, which the interface names itself.
- */
+/** A device of the account a provider's songs sound on (a phone, a computer, a speaker). */
 export interface ProviderPlaybackDevice {
-    id: string | null;
+    id: string;
     name: string;
-    kind: 'this' | 'computer' | 'phone' | 'speaker' | 'tv' | 'other';
+    kind: 'computer' | 'phone' | 'speaker' | 'tv' | 'other';
 }
 
 /**
@@ -877,15 +874,14 @@ export interface ProviderSetting {
     set(value: string): void;
 }
 
-/** Where a provider's songs sound, for a provider that can sound them on another device than this window. */
+/** Where a provider's songs sound, for a provider whose songs sound on a device of the account (its own app). */
 export interface OnlinePlaybackDevicesProvider {
-    /** The devices to choose from: this window's own player first, then the others that are on now. */
-    list(): Promise<ProviderPlaybackDevice[]>;
-    /** The device chosen: this window's own player until another is chosen. */
-    chosen(): ProviderPlaybackDevice;
-    /** The songs play there from now on; a song playing moves there, where it is. */
-    choose(device: ProviderPlaybackDevice): Promise<void>;
-    /** Calls `listener` when the chosen device changes, or the sign-in below; answers with the way to stop. */
+    /**
+     * The device the songs sound on: the one the platform plays on now, as last seen (the listener
+     * moves the playback in the platform's own app); null before one is seen.
+     */
+    current(): ProviderPlaybackDevice | null;
+    /** Calls `listener` when that device changes, or the sign-in below; answers with the way to stop. */
     subscribe(listener: () => void): () => void;
     /**
      * A sign-in of its own the other devices need, apart from the provider's (the desktop app reads
@@ -899,8 +895,8 @@ export interface OnlinePlaybackDevicesProvider {
         start(): Promise<void>;
     };
     /**
-     * Calls `listener` when the chosen device plays a song the app is not playing: one the listener
-     * started or resumed there, in the platform's own app. Answers with the way to stop.
+     * Calls `listener` when the platform plays a song the app is not playing: one the listener
+     * started or resumed in the platform's own app. Answers with the way to stop.
      */
     watchElsewhere?(listener: (play: ProviderElsewherePlay) => void): () => void;
 }

@@ -4,17 +4,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // test/unit/spotify/spotifyWebProvider.test.ts — the web version's Spotify adapter
 // (src/services/onlineMusic/spotify/web/) against stand-ins for the Web API, the token endpoint and
 // the browser: which adapter is registered, the sign-in with PKCE, token renewal, paging under the
-// Development Mode limits, and the silent stand-in a song plays from. Nothing here asks Spotify, and
-// the Web Playback SDK is not loaded (`ensureSpotifyWebPlayer` is replaced).
+// Development Mode limits, the silent stand-in a song plays from, and the Spotify app it sounds in.
+// Nothing here asks Spotify.
 
 vi.mock('@/services/onlineMusic/providerAccountCache', () => ({ saveProviderAccountSnapshot: vi.fn() }));
-const ensurePlayer = vi.hoisted(() => vi.fn(async () => ({ deviceId: 'device' })));
-vi.mock('@/services/onlineMusic/spotify/web/spotifyWebPlayback', async importOriginal => ({
-    ...(await importOriginal<object>()),
-    ensureSpotifyWebPlayer: ensurePlayer,
-}));
 
 import { omni } from '@/services/onlineMusic/omni';
+import { findSpotifyWebDevice } from '@/services/onlineMusic/spotify/web/spotifyWebDevices';
 import { getOnlineMusicProvider } from '@/services/onlineMusic/providerRegistry';
 import { whyPreviewClip } from '@/services/wholeSongCheck';
 import { useOnlineProviderAccountStore } from '@/stores/useOnlineProviderAccountStore';
@@ -61,7 +57,6 @@ beforeEach(() => {
     memory.clear();
     fetchMock.mockReset();
     openMock.mockClear();
-    ensurePlayer.mockClear();
     vi.stubEnv('VITE_SPOTIFY_CLIENT_ID', 'client-test');
     vi.stubGlobal('localStorage', storage);
     vi.stubGlobal('window', { location: { origin: 'https://folia.test' }, open: openMock, localStorage: storage });
@@ -285,7 +280,6 @@ describe('playing', () => {
     it('hands the deck silence as long as the song, which is never taken for the song', async () => {
         signedIn();
         const source = await omni.getAudioSource(song as never, 'high');
-        expect(ensurePlayer).toHaveBeenCalled();
         expect(source).toMatchObject({ standIn: true });
         expect(source!.url.startsWith('blob:')).toBe(true);
         expect(omni.isStandInAudioSource(source!.url)).toBe(true);
@@ -301,9 +295,8 @@ describe('playing', () => {
         expect((await omni.getAudioSource(song as never, 'high'))!.url).toBe(source!.url);
     });
 
-    it('asks for a sign-in before connecting the player', async () => {
+    it('asks for a sign-in before handing out a stand-in', async () => {
         await expect(spotify().playback!.getAudioSource(song as never, 'high')).rejects.toMatchObject({ code: 'auth-required' });
-        expect(ensurePlayer).not.toHaveBeenCalled();
     });
 });
 
@@ -338,64 +331,54 @@ describe('the device it plays on', () => {
         id: id('a'), name: 'Song a', artists: [], album: { id: id('m'), name: 'Album' }, durationMs: 2000,
         sourceRef: { kind: 'online' as const, providerId: 'spotify', mediaId: id('a') },
     };
-    const phone = { id: 'phone-1', name: 'Pixel', kind: 'phone' as const };
     // The deck's media events, caught on the document. The player listens once per run, so the
     // tests that play a deck share where it listens.
     const handlers: Record<string, (event: Event) => void> = {};
     class FakeMedia {}
 
-    afterEach(async () => {
-        await omni.choosePlaybackDevice('spotify', { id: null, name: 'Folia', kind: 'this' });
-    });
-
-    it('lists this window first, then the devices on now that take commands', async () => {
+    it('is the device Spotify plays on, else the one last seen, else a computer that is on, and tells of a new one', async () => {
         signedIn();
+        let playingOn: Record<string, unknown> | undefined = { id: 'phone-1', name: 'iPhone', type: 'Smartphone' };
         answer({
             'GET /me/player/devices': () => reply({
                 devices: [
-                    { id: 'phone-1', name: 'Pixel', type: 'Smartphone', is_restricted: false },
-                    { id: 'tv-1', name: 'Living room', type: 'TV', is_restricted: false },
                     { id: 'locked', name: 'Car', type: 'Automobile', is_restricted: true },
+                    { id: 'tv-1', name: 'Living room', type: 'TV', is_restricted: false },
+                    { id: 'mac-1', name: 'MacBook', type: 'Computer', is_restricted: false },
                 ],
             }),
+            'GET /me/player': () => (playingOn ? reply({ is_playing: true, device: playingOn }) : reply(undefined, 204)),
         });
-        expect(omni.hasPlaybackDevices('spotify')).toBe(true);
-        expect(await omni.listPlaybackDevices('spotify')).toEqual([
-            { id: null, name: 'Folia', kind: 'this' },
-            { id: 'phone-1', name: 'Pixel', kind: 'phone' },
-            { id: 'tv-1', name: 'Living room', kind: 'tv' },
-        ]);
+        const told = vi.fn();
+        const stop = omni.subscribePlaybackDevice('spotify', told);
+        expect(await findSpotifyWebDevice()).toEqual({ id: 'phone-1', name: 'iPhone', kind: 'phone' });
+        expect(omni.getPlaybackDevice('spotify')).toEqual({ id: 'phone-1', name: 'iPhone', kind: 'phone' });
+        expect(JSON.parse(memory.get('folia_spotify_web_device')!)).toEqual({ id: 'phone-1', name: 'iPhone', kind: 'phone' });
+        expect(told).toHaveBeenCalledTimes(1);
+        // Nothing plays, and the iPhone is off: a computer that is on.
+        playingOn = undefined;
+        expect(await findSpotifyWebDevice()).toEqual({ id: 'mac-1', name: 'MacBook', kind: 'computer' });
+        expect(told).toHaveBeenCalledTimes(2);
+        stop();
+        // No Spotify open anywhere.
+        answer({ 'GET /me/player/devices': () => reply({ devices: [] }), 'GET /me/player': () => reply(undefined, 204) });
+        await expect(findSpotifyWebDevice()).rejects.toMatchObject({ code: 'unavailable', cause: 'no-device' });
     });
 
-    it('plays a song of the desktop app on the device chosen as silence for the deck, without the desktop side\'s audio', async () => {
+    it('plays a song of the desktop app in the Spotify app, as silence for the deck, once signed in to control it', async () => {
         const spotifyRequest = vi.fn();
         vi.stubGlobal('window', { location: { origin: 'file://' }, localStorage: storage, electron: { spotifyRequest } });
         signedIn();
-        await omni.choosePlaybackDevice('spotify', phone);
         expect(spotify().capabilities.explore).toBe(true);
         expect(await spotify().playback!.getAudioSource(song as never, 'high')).toMatchObject({ standIn: true });
         expect(spotifyRequest).not.toHaveBeenCalled();
-        // Without the sign-in that controls the device, the app's own player plays it.
+        // Without the sign-in that controls the Spotify app, the app's own player plays it.
         memory.delete(SESSION_KEY);
         spotifyRequest.mockResolvedValue({ ok: true, data: { url: 'folia-spotify://audio/x', format: 'OGG_VORBIS_320' } });
         expect((await spotify().playback!.getAudioSource(song as never, 'high'))?.standIn).toBeUndefined();
         expect(spotifyRequest).toHaveBeenCalledWith('audio', expect.objectContaining({ id: id('a') }));
     });
 
-    it('keeps the device chosen, tells it, and plays a song there without this window\'s player', async () => {
-        signedIn();
-        const told = vi.fn();
-        const stop = omni.subscribePlaybackDevice('spotify', told);
-        await omni.choosePlaybackDevice('spotify', phone);
-        stop();
-        expect(told).toHaveBeenCalledTimes(1);
-        expect(omni.getChosenPlaybackDevice('spotify')).toEqual(phone);
-        expect(JSON.parse(memory.get('folia_spotify_web_device')!)).toEqual(phone);
-
-        const source = await omni.getAudioSource(song as never, 'high');
-        expect(source).toMatchObject({ standIn: true });
-        expect(ensurePlayer).not.toHaveBeenCalled();
-    });
     it('hands the playback to a device that is not the active one, starts the track there and resumes it loaded paused', async () => {
         vi.useFakeTimers();
         // A deck in a document whose media events are caught on the way down.
@@ -406,7 +389,6 @@ describe('the device it plays on', () => {
         });
         try {
             signedIn();
-            await omni.choosePlaybackDevice('spotify', phone);
             const url = (await omni.getAudioSource(song as never, 'high'))!.url;
             const deck = Object.assign(new FakeMedia(), {
                 currentSrc: url, paused: false, currentTime: 0,
@@ -418,9 +400,11 @@ describe('the device it plays on', () => {
             let started = false;
             answer({
                 'GET /me/player/queue': () => reply({ queue: [{ id: id('z') }] }),
+                // Nothing plays anywhere, and Spotify is open on the phone only.
+                'GET /me/player/devices': () => reply({ devices: [{ id: 'phone-1', name: 'iPhone', type: 'Smartphone' }] }),
                 'GET /me/player': () => reply(started
-                    ? { is_playing: false, progress_ms: 0, device: { id: 'phone-1' }, item: { id: id('a') } }
-                    : { is_playing: false, device: { id: 'computer-1' }, item: null }),
+                    ? { is_playing: false, progress_ms: 0, device: { id: 'phone-1', name: 'iPhone', type: 'Smartphone' }, item: { id: id('a') } }
+                    : { is_playing: false, item: null }),
                 'GET /tracks/': () => reply({ album: { uri: `spotify:album:${id('m')}` } }),
                 'PUT /me/player/play': (_url, init) => {
                     // A lone track is not started there: the Spotify app plays nothing for it.
@@ -443,7 +427,7 @@ describe('the device it plays on', () => {
             vi.useRealTimers();
         }
     });
-    it('skips to the track where it is the next on the chosen device, keeping the list it plays from', async () => {
+    it('skips to the track where it is the next on the device, keeping the list it plays from, and follows it to another device', async () => {
         vi.useFakeTimers();
         vi.stubGlobal('HTMLMediaElement', FakeMedia);
         vi.stubGlobal('document', {
@@ -452,7 +436,6 @@ describe('the device it plays on', () => {
         });
         try {
             signedIn();
-            await omni.choosePlaybackDevice('spotify', phone);
             const url = (await omni.getAudioSource({ ...song, id: id('e'), sourceRef: { ...song.sourceRef, mediaId: id('e') } } as never, 'high'))!.url;
             const deck = Object.assign(new FakeMedia(), {
                 currentSrc: url, paused: false, currentTime: 0,
@@ -462,9 +445,10 @@ describe('the device it plays on', () => {
             });
             const asked: string[] = [];
             let skipped = false;
+            let on: Record<string, string> = { id: 'phone-1', name: 'iPhone', type: 'Smartphone' };
             answer({
                 'GET /me/player/queue': () => reply({ queue: [{ id: id('e') }, { id: id('f') }] }),
-                'GET /me/player': () => reply({ is_playing: true, progress_ms: 0, device: { id: 'phone-1' }, item: { id: skipped ? id('e') : id('d') } }),
+                'GET /me/player': () => reply({ is_playing: true, progress_ms: 0, device: on, item: { id: skipped ? id('e') : id('d') } }),
                 'POST /me/player/next': () => { asked.push('next'); skipped = true; return reply(undefined, 204); },
                 'PUT /me/player/play': () => { asked.push('start'); return reply(undefined, 204); },
                 'PUT /me/player/pause': () => { asked.push('pause'); return reply(undefined, 204); },
@@ -472,6 +456,11 @@ describe('the device it plays on', () => {
             handlers.playing({ target: deck } as unknown as Event);
             await vi.advanceTimersByTimeAsync(3000);
             expect(asked).toEqual(['next']);
+            // Moved to the Mac in a Spotify app: the deck plays on, and the Mac is the device shown.
+            on = { id: 'mac-1', name: 'MacBook', type: 'Computer' };
+            await vi.advanceTimersByTimeAsync(3000);
+            expect(deck.paused).toBe(false);
+            expect(omni.getPlaybackDevice('spotify')).toEqual({ id: 'mac-1', name: 'MacBook', kind: 'computer' });
             // The track's end leaves the device going on by itself.
             deck.paused = true;
             handlers.ended({ type: 'ended', target: deck } as unknown as Event);
@@ -482,7 +471,7 @@ describe('the device it plays on', () => {
         }
     });
 
-    it('tells what the chosen device plays that the app does not, once, and starts one of its next in the same list', async () => {
+    it('tells what Spotify plays that the app does not, once, and starts one of its next in the same list', async () => {
         vi.useFakeTimers();
         vi.stubGlobal('HTMLMediaElement', FakeMedia);
         vi.stubGlobal('document', {
@@ -491,14 +480,13 @@ describe('the device it plays on', () => {
         });
         try {
             signedIn();
-            await omni.choosePlaybackDevice('spotify', phone);
-            let where = 'phone-1';
+            let going = true;
             let playing = id('b');
             const started: string[] = [];
             answer({
                 'GET /me/player/queue': () => reply({ queue: [{ id: id('c') }, { id: id('d') }] }),
                 'GET /me/player': () => reply({
-                    is_playing: true, progress_ms: 42_000, device: { id: where }, item: { id: playing }, context: { uri: 'spotify:playlist:mix' },
+                    is_playing: going, progress_ms: 42_000, device: { id: 'phone-1' }, item: { id: playing }, context: { uri: 'spotify:playlist:mix' },
                 }),
                 'PUT /me/player/play': (_url, init) => {
                     const body = JSON.parse(String(init.body));
@@ -528,8 +516,8 @@ describe('the device it plays on', () => {
             expect(told).toHaveBeenLastCalledWith({ providerId: 'spotify', mediaId: id('d'), positionMs: 0, upcoming: [id('c'), id('d')], queueOnly: true });
             deck.paused = true;
             handlers.pause({ type: 'pause', target: deck } as unknown as Event);
-            // Nothing while another device plays.
-            where = 'computer-1';
+            // Nothing while Spotify is paused.
+            going = false;
             await vi.advanceTimersByTimeAsync(12_000);
             expect(told).toHaveBeenCalledTimes(2);
             stop();
