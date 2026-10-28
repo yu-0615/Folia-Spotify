@@ -47,6 +47,7 @@ export const ModManager: React.FC<ModManagerProps> = ({ classes, isDaylight, the
     const refreshFfmpeg = useModsStore((state) => state.refreshFfmpeg);
     const reloadAll = useModsStore((state) => state.reloadAll);
     const toggleMod = useModsStore((state) => state.toggleMod);
+    const setKeepTrust = useModsStore((state) => state.setKeepTrust);
     const bindEvents = useModsStore((state) => state.bindEvents);
     const logs = useModsStore((state) => state.logs);
     const startSkipped = useModsStore((state) => state.startSkipped);
@@ -139,6 +140,15 @@ export const ModManager: React.FC<ModManagerProps> = ({ classes, isDaylight, the
             return;
         }
         setNotice({ kind: 'error', text: translateModError(t, result.error, 'enable-failed') });
+    };
+
+    // Turning it on is confirmed in a main-process dialog, so it can come back declined: silent, as a declined enable.
+    const handleKeepTrust = async (modId: string, keep: boolean) => {
+        const result = await setKeepTrust(modId, keep);
+        if (result.ok || result.error === 'keep-declined') {
+            return;
+        }
+        setNotice({ kind: 'error', text: translateModError(t, result.error, 'keep-failed') });
     };
 
     const toggleSelected = (modId: string) => {
@@ -363,6 +373,7 @@ export const ModManager: React.FC<ModManagerProps> = ({ classes, isDaylight, the
                         classes={classes}
                         onToggleExpand={() => selectMod(selectedModId === mod.id ? null : mod.id)}
                         onToggleEnabled={() => { void handleToggleEnabled(mod.id, !mod.enabled); }}
+                        onToggleKeepTrust={() => { void handleKeepTrust(mod.id, !mod.keepTrust); }}
                         onToggleSelected={() => toggleSelected(mod.id)}
                         onNotice={setNotice}
                     />

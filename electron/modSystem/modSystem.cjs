@@ -49,7 +49,7 @@ const { createModDiscovery } = require('./discovery.cjs');
 const { createZipInstall, INSTALL_LIMITS } = require('./zipInstall.cjs');
 const { createNetFetch } = require('./netFetch.cjs');
 const { createPickedFiles } = require('./pickedFiles.cjs');
-const { createModApproval } = require('./approval.cjs');
+const { createModApproval, grantOf } = require('./approval.cjs');
 const { createNodeEntryRuntime } = require('./nodeEntry.cjs');
 const { createModSecrets } = require('./modSecrets.cjs');
 const { oldNameWarnings, onOldNameWarning } = require('./deprecated.cjs');
@@ -212,7 +212,7 @@ const createModSystem = ({ app, BrowserWindow, getMainWindow, getLocaleKey, isFe
 
     // Whether a mod may run: the stored approval, bound to the mod's files, and the native
     // dialog that asks for it (approval.cjs).
-    const { writeTrust, isDevSourceMod, resolveTrust, confirmEnableMod } = createModApproval({
+    const { writeTrust, isDevSourceMod, resolveTrust, confirmEnableMod, keepsTrust, setKeepTrust, confirmKeepTrust } = createModApproval({
         app, store, enabledKey, getMainWindowSafe, getLocaleKey,
     });
 
@@ -248,6 +248,8 @@ const createModSystem = ({ app, BrowserWindow, getMainWindow, getLocaleKey, isFe
             error: entry.error,
             enabled: entry.enabled,
             trustStale: Boolean(entry.trustStale),
+            // The user chose that this mod's approval follow its file changes (setModKeepTrust).
+            keepTrust: Boolean(entry.enabled && keepsTrust(entry.manifest.id)),
             signature: publicSignatureState(entry.signature),
             devSource: Boolean(entry.devSource),
             // Position in the dependency-resolved load plan; clients activate in this order.
@@ -303,7 +305,7 @@ const createModSystem = ({ app, BrowserWindow, getMainWindow, getLocaleKey, isFe
             const modId = discovery.manifest.id;
             const digest = computeModDigest(discovery.dirPath);
             const devSource = isDevSourceMod(discovery.dirPath);
-            const trust = resolveTrust(modId, digest, { devSource });
+            const trust = resolveTrust(modId, digest, { devSource, grant: grantOf(discovery.manifest) });
             manifestsById.set(modId, discovery.manifest);
             prepared.set(modId, {
                 manifest: discovery.manifest,
@@ -498,6 +500,33 @@ const createModSystem = ({ app, BrowserWindow, getMainWindow, getLocaleKey, isFe
         }
         writeTrust(modId, true, digest);
         return { ok: true, mods: loadAll() };
+    };
+
+    /*
+     * The user's choice that an enabled mod's approval follow its file changes.
+     * Turning it on is confirmed in a native dialog (confirmKeepTrust); turning
+     * it off is not. A mod Folium has signed keeps its signature through no edit
+     * and has nothing to keep, so it is refused.
+     */
+    const setModKeepTrust = async (modId, keep) => {
+        const runtime = mods.get(modId);
+        if (!runtime) {
+            return { ok: false, error: 'mod-not-found', mods: listMods() };
+        }
+        if (!runtime.enabled) {
+            return { ok: false, error: 'mod-not-enabled', mods: listMods() };
+        }
+        if (runtime.signature?.status === 'verified') {
+            return { ok: false, error: 'mod-signed', mods: listMods() };
+        }
+        if (keep && !(await confirmKeepTrust(runtime))) {
+            return { ok: false, error: 'keep-declined', mods: listMods() };
+        }
+        if (!setKeepTrust(modId, Boolean(keep), grantOf(runtime.manifest))) {
+            return { ok: false, error: 'mod-not-enabled', mods: listMods() };
+        }
+        notifyStateChanged();
+        return { ok: true, mods: listMods() };
     };
 
     const requireLoadedMod = (modId) => {
@@ -711,6 +740,7 @@ const createModSystem = ({ app, BrowserWindow, getMainWindow, getLocaleKey, isFe
             { mods: listMods(), ffmpeg: ffmpegStatus, directories: getModsDirectories(), startSkipped: skippedThisRun }
         ));
         handle(IPC.setEnabled, (_event, modId, enabled) => setModEnabled(modId, enabled));
+        handle(IPC.setKeepTrust, (_event, modId, keep) => setModKeepTrust(modId, keep));
         handle(IPC.reload, () => ({ mods: loadAll() }));
         handle(IPC.exportCancel, () => ({ ok: exportService.cancelActiveExport() }));
         handle(IPC.rpc, (_event, modId, name, args) => invokeModRpc(modId, name, args));
@@ -846,6 +876,7 @@ const createModSystem = ({ app, BrowserWindow, getMainWindow, getLocaleKey, isFe
         listMods,
         listClientDescriptors,
         setModEnabled,
+        setModKeepTrust,
         probeFfmpeg,
         registerIpc,
         dispose,

@@ -151,6 +151,8 @@ type ModListItemProps = {
     classes: ModManagerClasses;
     onToggleExpand: () => void;
     onToggleEnabled: () => void;
+    /** Whether the mod's approval follows its file changes (ModRuntimeInfo.keepTrust). */
+    onToggleKeepTrust: () => void;
     onToggleSelected: () => void;
     /** Reports an outcome in the manager's notice line (the storage section's "clear cache"). */
     onNotice: (notice: ModNotice) => void;
@@ -159,7 +161,7 @@ type ModListItemProps = {
 const NO_OLD_NAMES: readonly string[] = [];
 
 export const ModListItem: React.FC<ModListItemProps> = ({
-    mod, cost, expanded, selected, selectionMode, isLast, isDaylight, theme, classes, onToggleExpand, onToggleEnabled, onToggleSelected, onNotice,
+    mod, cost, expanded, selected, selectionMode, isLast, isDaylight, theme, classes, onToggleExpand, onToggleEnabled, onToggleKeepTrust, onToggleSelected, onNotice,
 }) => {
     // Only a running mod has a cost to show.
     const runningCost = mod.status === 'loaded' ? cost : undefined;
@@ -317,6 +319,23 @@ export const ModListItem: React.FC<ModListItemProps> = ({
                                     ariaLabel={t('mods.faultNoticeSwitch')}
                                 />
                             </div>
+
+                            {/* An enabled mod without Folium's signature: its approval may follow its file changes (electron/modSystem/approval.cjs). */}
+                            {mod.enabled && mod.signature.status !== 'verified' ? (
+                                <div className="flex flex-col gap-1">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span className="text-xs opacity-75" style={{ color: 'var(--text-primary)' }}>{t('mods.keepTrustSwitch')}</span>
+                                        <SettingsToggle
+                                            checked={Boolean(mod.keepTrust)}
+                                            onChange={onToggleKeepTrust}
+                                            offClass={classes.toggleOff}
+                                            onColor={theme.secondaryColor}
+                                            ariaLabel={t('mods.keepTrustSwitch')}
+                                        />
+                                    </div>
+                                    <span className="text-xs opacity-50" style={{ color: 'var(--text-secondary)' }}>{t('mods.keepTrustNote')}</span>
+                                </div>
+                            ) : null}
 
                             {runningCost ? <ModCostLines cost={runningCost} isDaylight={isDaylight} /> : null}
 

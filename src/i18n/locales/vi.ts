@@ -1192,6 +1192,8 @@ export default {
     "faultNoticeOpen": "Xem chi tiết",
     "faultNoticeMute": "Không nhắc lỗi hay khởi động chậm nữa",
     "faultNoticeSwitch": "Nhắc tôi khi mod này gặp lỗi hoặc khởi động chậm",
+    "keepTrustSwitch": "Giữ bật khi tệp thay đổi",
+    "keepTrustNote": "Chỉ dành cho mod do chính bạn viết hoặc duy trì: từ đó, các tệp đã thay đổi của mod này (kể cả do chương trình khác thay đổi) sẽ chạy mà không có thông báo. Thay đổi về quyền mà mod yêu cầu, mã Node.js hoặc giao diện thử nghiệm vẫn cần xác nhận lại.",
     "skippedThisRun": "Lần này không khởi động. Mod sẽ khởi động bình thường vào lần mở Folia tiếp theo.",
     "startSkippedBanner": "Lần này không có mod nào khởi động. Các mod sẽ khởi động bình thường vào lần mở Folia tiếp theo.",
     "cost": {
@@ -1246,6 +1248,9 @@ export default {
       "host-version-mismatch": "Mod này dùng API nội bộ và không hỗ trợ phiên bản Folia này",
       "enable-failed": "Không thể bật mod: {{value}}",
       "mod-not-found": "Không tìm thấy mod",
+      "mod-not-enabled": "Mod này chưa được bật",
+      "mod-signed": "Mod này có chữ ký chính thức của Folium nên không cần mục này",
+      "keep-failed": "Không thể thay đổi mục này: {{value}}",
       "mod-content-unverifiable": "Không thể xác minh tệp của mod (quá nhiều hoặc quá lớn), sẽ không kích hoạt",
       "install-failed": "Cài đặt thất bại: {{value}}",
       "export-ffmpeg-not-found": "Không tìm thấy ffmpeg; cài đặt hoặc thiết lập FOLIA_FFMPEG_PATH",

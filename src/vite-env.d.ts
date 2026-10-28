@@ -1063,6 +1063,7 @@ declare global {
       mods?: {
         listMods: () => Promise<{ mods: ModRuntimeInfo[]; ffmpeg: ModFfmpegStatus; directories: string[]; startSkipped?: boolean }>;
         setModEnabled: (modId: string, enabled: boolean) => Promise<{ ok: boolean; error?: string; mods: ModRuntimeInfo[] }>;
+        setModKeepTrust: (modId: string, keep: boolean) => Promise<{ ok: boolean; error?: string; mods: ModRuntimeInfo[] }>;
         reloadMods: () => Promise<{ mods: ModRuntimeInfo[] }>;
         cancelExport: () => Promise<{ ok: boolean }>;
         invokeModRpc: (modId: string, name: string, args: unknown[]) => Promise<{ ok: boolean; result?: unknown; error?: string }>;

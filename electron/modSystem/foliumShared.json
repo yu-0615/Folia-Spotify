@@ -42,6 +42,7 @@
     "channels": {
         "list": "folia-mods:list",
         "setEnabled": "folia-mods:set-enabled",
+        "setKeepTrust": "folia-mods:set-keep-trust",
         "reload": "folia-mods:reload",
         "rpc": "folia-mods:rpc",
         "storage": "folia-mods:storage",

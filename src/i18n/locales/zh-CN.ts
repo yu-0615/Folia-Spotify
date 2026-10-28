@@ -1192,6 +1192,8 @@ export default {
     "faultNoticeOpen": "去看看",
     "faultNoticeMute": "出错和启动慢都不再提示",
     "faultNoticeSwitch": "这个模组出错或启动慢时提示我",
+    "keepTrustSwitch": "文件改了也不用重新确认",
+    "keepTrustNote": "只对你自己写或自己维护的模组打开：之后它的文件被改动（包括被别的程序改动）会直接运行，不再提示。它要求的权限、Node.js 代码或实验接口变了，仍然要重新确认。",
     "skippedThisRun": "这次没有启动。下次打开 Folia 时照常启动。",
     "startSkippedBanner": "这次模组都没有启动。下次打开 Folia 时照常启动。",
     "cost": {
@@ -1246,6 +1248,9 @@ export default {
       "host-version-mismatch": "该模组使用内部接口，不支持当前 Folia 版本",
       "enable-failed": "启用模组失败：{{value}}",
       "mod-not-found": "未找到该模组",
+      "mod-not-enabled": "这个模组还没有启用",
+      "mod-signed": "这个模组有 Folium 的官方签名，不需要这一项",
+      "keep-failed": "没能改这一项：{{value}}",
       "mod-content-unverifiable": "无法校验模组文件（文件过多或过大），出于安全考虑不予启用",
       "install-failed": "安装失败：{{value}}",
       "export-ffmpeg-not-found": "未找到 ffmpeg，请安装或设置 FOLIA_FFMPEG_PATH",

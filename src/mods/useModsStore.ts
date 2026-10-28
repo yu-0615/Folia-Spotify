@@ -10,6 +10,7 @@ import {
     openModsDirectory,
     reloadMods,
     setModEnabled,
+    setModKeepTrust,
     subscribeExportProgress,
     subscribeModLogs,
     subscribeModsState,
@@ -51,6 +52,7 @@ interface ModsStoreState {
     refreshFfmpeg: () => Promise<void>;
     reloadAll: () => Promise<void>;
     toggleMod: (modId: string, enabled: boolean) => Promise<ModSetEnabledResult>;
+    setKeepTrust: (modId: string, keep: boolean) => Promise<ModSetEnabledResult>;
     selectMod: (modId: string | null) => void;
     cancelActiveExport: () => Promise<void>;
     openModsDirectory: () => Promise<{ ok: boolean; directory?: string; error?: string }>;
@@ -103,6 +105,15 @@ export const useModsStore = create<ModsStoreState>((set, get) => ({
     // actually returned one (a declined confirmation returns the current list).
     toggleMod: async (modId, enabled) => {
         const result = await setModEnabled(modId, enabled);
+        if (result.mods.length > 0 || result.ok) {
+            set({ mods: result.mods });
+        }
+        return result;
+    },
+
+    // Turning it on is confirmed in a main-process dialog, as enabling is.
+    setKeepTrust: async (modId, keep) => {
+        const result = await setModKeepTrust(modId, keep);
         if (result.mods.length > 0 || result.ok) {
             set({ mods: result.mods });
         }

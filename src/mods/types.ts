@@ -78,6 +78,11 @@ export interface ModRuntimeInfo {
      * before it runs again.
      */
     trustStale: boolean;
+    /**
+     * The user chose that this enabled mod's approval follow its file changes, as long as it asks
+     * the app for nothing else (resolveTrust in electron/modSystem/approval.cjs). Absent reads as off.
+     */
+    keepTrust?: boolean;
     signature: ModSignatureInfo;
     /**
      * Development build only: the mod lives in the repository's mods/ directory,

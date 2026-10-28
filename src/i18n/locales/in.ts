@@ -1192,6 +1192,8 @@ export default {
     "faultNoticeOpen": "Lihat",
     "faultNoticeMute": "Jangan tampilkan masalah atau lambat dimulai",
     "faultNoticeSwitch": "Beri tahu saya saat mod ini bermasalah atau lambat dimulai",
+    "keepTrustSwitch": "Tetap aktif saat berkasnya berubah",
+    "keepTrustNote": "Hanya untuk mod yang Anda tulis atau rawat sendiri: setelah ini, berkas mod ini yang berubah (termasuk yang diubah program lain) langsung berjalan tanpa pemberitahuan. Perubahan izin yang diminta, kode Node.js, atau antarmuka eksperimentalnya tetap perlu dikonfirmasi ulang.",
     "skippedThisRun": "Tidak dijalankan kali ini. Akan berjalan seperti biasa saat Folia dibuka berikutnya.",
     "startSkippedBanner": "Kali ini tidak ada mod yang berjalan. Mod berjalan seperti biasa saat Folia dibuka berikutnya.",
     "cost": {
@@ -1246,6 +1248,9 @@ export default {
       "host-version-mismatch": "Mod ini memakai API internal dan tidak mendukung versi Folia ini",
       "enable-failed": "Gagal mengaktifkan mod: {{value}}",
       "mod-not-found": "Mod tidak ditemukan",
+      "mod-not-enabled": "Mod ini belum diaktifkan",
+      "mod-signed": "Mod ini memiliki tanda tangan resmi Folium dan tidak memerlukan ini",
+      "keep-failed": "Tidak dapat mengubah ini: {{value}}",
       "mod-content-unverifiable": "Berkas mod tidak dapat diverifikasi (terlalu banyak atau terlalu besar), jadi tidak akan diaktifkan",
       "install-failed": "Pemasangan gagal: {{value}}",
       "export-ffmpeg-not-found": "ffmpeg tidak ditemukan; pasang atau atur FOLIA_FFMPEG_PATH",

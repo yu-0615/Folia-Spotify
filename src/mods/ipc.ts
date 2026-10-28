@@ -95,6 +95,20 @@ export const setModEnabled = async (modId: string, enabled: boolean): Promise<Mo
     };
 };
 
+// Whether an enabled mod's approval is to follow its file changes; turning it on is confirmed in a main-process dialog.
+export const setModKeepTrust = async (modId: string, keep: boolean): Promise<ModSetEnabledResult> => {
+    const api = bridge();
+    if (!api?.setModKeepTrust) {
+        return { ok: false, error: 'no-electron-bridge', mods: [] };
+    }
+    const response = await api.setModKeepTrust(modId, keep);
+    return {
+        ok: Boolean(response?.ok),
+        error: response?.error,
+        mods: Array.isArray(response?.mods) ? response.mods : [],
+    };
+};
+
 export const reloadMods = async (): Promise<ModRuntimeInfo[]> => {
     const api = bridge();
     if (!api) {

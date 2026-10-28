@@ -27,6 +27,7 @@ describe('the copies of what foliumShared.json holds', () => {
     const CHANNEL_KEY_OF_METHOD: Record<string, keyof typeof shared.channels> = {
         listMods: 'list',
         setModEnabled: 'setEnabled',
+        setModKeepTrust: 'setKeepTrust',
         reloadMods: 'reload',
         invokeModRpc: 'rpc',
         invokeModStorage: 'storage',

@@ -208,6 +208,7 @@ describe('mod row storage section', () => {
                 classes,
                 onToggleExpand: () => {},
                 onToggleEnabled: () => {},
+                onToggleKeepTrust: () => {},
                 onToggleSelected: () => {},
                 onNotice: () => {},
             }));

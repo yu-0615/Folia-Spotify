@@ -1192,6 +1192,8 @@ export default {
     "faultNoticeOpen": "View",
     "faultNoticeMute": "Don't show failures or slow starts",
     "faultNoticeSwitch": "Tell me when this mod fails or is slow to start",
+    "keepTrustSwitch": "Keep it enabled when its files change",
+    "keepTrustNote": "Only for a mod you wrote or look after yourself: from then on, changed files of this mod (also files changed by another program) run with no notice. A change to the permissions it asks for, its Node.js code or its experimental surfaces still needs a new confirmation.",
     "skippedThisRun": "Not started this time. It starts as usual the next time Folia opens.",
     "startSkippedBanner": "No mod is running this time. They start as usual the next time Folia opens.",
     "cost": {
@@ -1246,6 +1248,9 @@ export default {
       "host-version-mismatch": "This mod uses internal APIs and does not support this Folia version",
       "enable-failed": "Could not enable the mod: {{value}}",
       "mod-not-found": "Mod not found",
+      "mod-not-enabled": "This mod is not enabled",
+      "mod-signed": "This mod carries Folium's official signature and does not need this",
+      "keep-failed": "Could not change this: {{value}}",
       "mod-content-unverifiable": "The mod's files could not be verified (too many or too large), so it will not be enabled",
       "install-failed": "Install failed: {{value}}",
       "export-ffmpeg-not-found": "ffmpeg was not found; install it or set FOLIA_FFMPEG_PATH",

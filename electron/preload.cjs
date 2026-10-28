@@ -348,6 +348,7 @@ contextBridge.exposeInMainWorld('electron', {
     mods: {
         listMods: () => ipcRenderer.invoke('folia-mods:list'),
         setModEnabled: (modId, enabled) => ipcRenderer.invoke('folia-mods:set-enabled', modId, enabled),
+        setModKeepTrust: (modId, keep) => ipcRenderer.invoke('folia-mods:set-keep-trust', modId, keep),
         reloadMods: () => ipcRenderer.invoke('folia-mods:reload'),
         invokeModRpc: (modId, name, args) => ipcRenderer.invoke('folia-mods:rpc', modId, name, args),
         invokeModStorage: (modId, operation, key, value) => ipcRenderer.invoke('folia-mods:storage', modId, operation, key, value),

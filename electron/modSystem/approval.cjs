@@ -43,6 +43,11 @@ const TRUST_DIALOG_LOCALE = {
         devSource: '开发模式：这个模组位于源码目录的 mods/ 中，确认后修改它的文件不会撤销本次确认。安装版和用户模组目录中的模组没有这项豁免。',
         enable: '仍要启用',
         cancel: '取消',
+        keepTitle: '改了文件也不用重新确认',
+        keepMessage: (name, id) => `模组“${name}”（${id}）的文件改了以后，不用再确认就照常启用？`,
+        keepRisk: '平时模组的文件一改，Folia 就把它停用，等你确认新的代码。打开这一项以后，这个模组的文件被改动（包括被别的程序改动）会直接以应用的完整权限运行，你不会看到任何提示。只对你自己写的、或你自己维护的模组打开。',
+        keepStill: '模组要求的权限、Node.js 代码或实验接口变了，仍然要重新确认。',
+        keepEnable: '打开',
     },
     'zh-TW': {
         title: '啟用模組',
@@ -71,6 +76,11 @@ const TRUST_DIALOG_LOCALE = {
         devSource: '開發模式：這個模組位於原始碼目錄的 mods/ 中，確認後修改它的檔案不會撤銷本次確認。安裝版和使用者模組目錄中的模組沒有這項豁免。',
         enable: '仍要啟用',
         cancel: '取消',
+        keepTitle: '改了檔案也不用重新確認',
+        keepMessage: (name, id) => `模組“${name}”（${id}）的檔案改了以後，不用再確認就照常啟用？`,
+        keepRisk: '平時模組的檔案一改，Folia 就把它停用，等你確認新的程式碼。開啟這一項以後，這個模組的檔案被改動（包括被別的程式改動）會直接以應用的完整權限執行，你不會看到任何提示。只對你自己寫的、或你自己維護的模組開啟。',
+        keepStill: '模組要求的權限、Node.js 程式碼或實驗介面變了，仍然要重新確認。',
+        keepEnable: '開啟',
     },
     en: {
         title: 'Enable mod',
@@ -99,6 +109,11 @@ const TRUST_DIALOG_LOCALE = {
         devSource: 'Development mode: this mod is in the source tree\'s mods/ directory, so editing its files after this confirmation does not revoke it. Installed builds and the user mods directory have no such exemption.',
         enable: 'Enable anyway',
         cancel: 'Cancel',
+        keepTitle: 'Keep the approval when the files change',
+        keepMessage: (name, id) => `Keep "${name}" (${id}) enabled when its files change, without asking again?`,
+        keepRisk: 'Normally Folia turns a mod off as soon as its files change, until you confirm the new code. With this on, changed files of this mod (also files changed by another program) run with the full privileges of the app, and you see nothing. Turn it on only for a mod you wrote or look after yourself.',
+        keepStill: 'A change to the permissions it asks for, to its Node.js code or to its experimental surfaces still needs a new confirmation.',
+        keepEnable: 'Turn on',
     },
     in: {
         title: 'Aktifkan mod',
@@ -127,6 +142,11 @@ const TRUST_DIALOG_LOCALE = {
         devSource: 'Mode pengembangan: mod ini ada di direktori mods/ pada kode sumber, jadi mengubah berkasnya setelah konfirmasi ini tidak membatalkannya. Build terpasang dan direktori mod pengguna tidak mendapat pengecualian ini.',
         enable: 'Tetap aktifkan',
         cancel: 'Batal',
+        keepTitle: 'Tetap disetujui saat berkasnya berubah',
+        keepMessage: (name, id) => `Biarkan "${name}" (${id}) tetap aktif saat berkasnya berubah, tanpa bertanya lagi?`,
+        keepRisk: 'Biasanya Folia menonaktifkan mod begitu berkasnya berubah, sampai Anda mengonfirmasi kode barunya. Jika ini dinyalakan, berkas mod ini yang berubah (termasuk yang diubah oleh program lain) langsung berjalan dengan hak penuh aplikasi tanpa pemberitahuan apa pun. Nyalakan hanya untuk mod yang Anda tulis atau rawat sendiri.',
+        keepStill: 'Perubahan izin yang diminta, kode Node.js, atau antarmuka eksperimentalnya tetap perlu dikonfirmasi ulang.',
+        keepEnable: 'Nyalakan',
     },
     vi: {
         title: 'Bật mod',
@@ -155,6 +175,11 @@ const TRUST_DIALOG_LOCALE = {
         devSource: 'Chế độ phát triển: Mod này nằm trong thư mục mods/ của mã nguồn, do đó chỉnh sửa tệp sau khi xác nhận sẽ không hủy bỏ xác nhận này. Bản cài đặt và thư mục mod người dùng không được miễn trừ.',
         enable: 'Vẫn bật',
         cancel: 'Hủy',
+        keepTitle: 'Giữ phê duyệt khi tệp thay đổi',
+        keepMessage: (name, id) => `Giữ "${name}" (${id}) ở trạng thái bật khi tệp của nó thay đổi, không hỏi lại?`,
+        keepRisk: 'Thông thường Folia tắt mod ngay khi tệp của nó thay đổi, cho đến khi bạn xác nhận mã mới. Khi bật tùy chọn này, các tệp đã thay đổi của mod này (kể cả do chương trình khác thay đổi) sẽ chạy với toàn bộ quyền hạn của ứng dụng mà bạn không thấy bất kỳ thông báo nào. Chỉ bật cho mod do chính bạn viết hoặc duy trì.',
+        keepStill: 'Thay đổi về quyền mà mod yêu cầu, mã Node.js hoặc giao diện thử nghiệm của nó vẫn cần xác nhận lại.',
+        keepEnable: 'Bật',
     },
 };
 
@@ -164,6 +189,19 @@ const TRUST_DIALOG_LOCALE = {
  * `getMainWindowSafe` gives the window the dialog belongs to, and
  * `getLocaleKey` the language to ask in.
  */
+/*
+ * What a mod asks of the app, as one text: the permissions, Node.js code (a
+ * main entry) and the experimental surfaces and embedded origins its manifest
+ * names. An approval kept through file changes holds only while this stays the
+ * same (resolveTrust).
+ */
+const grantOf = (manifest) => JSON.stringify({
+    permissions: [...(Array.isArray(manifest?.permissions) ? manifest.permissions : [])].map(String).sort(),
+    main: Boolean(manifest?.main),
+    experimental: [...(Array.isArray(manifest?.experimental) ? manifest.experimental : [])].map(String).sort(),
+    embedOrigins: [...(Array.isArray(manifest?.embedOrigins) ? manifest.embedOrigins : [])].map(String).sort(),
+});
+
 const createModApproval = ({ app, store, enabledKey, getMainWindowSafe, getLocaleKey }) => {
     const resolveDialogLocale = () => {
         try {
@@ -175,9 +213,11 @@ const createModApproval = ({ app, store, enabledKey, getMainWindowSafe, getLocal
     };
 
     /*
-     * Persisted trust record: `{ enabled, digest }`. Anything that is not an
-     * object (nothing yet, or a value of another shape) reads as no record: the
-     * mod stays off until the user confirms it.
+     * Persisted trust record: `{ enabled, digest }`, and with the user's choice
+     * that the approval follow the mod's file changes, `keep` and the `grant` it
+     * was made for (see resolveTrust). Anything that is not an object (nothing
+     * yet, or a value of another shape) reads as no record: the mod stays off
+     * until the user confirms it.
      */
     const readTrust = (modId) => {
         try {
@@ -188,22 +228,44 @@ const createModApproval = ({ app, store, enabledKey, getMainWindowSafe, getLocal
             return {
                 enabled: Boolean(stored.enabled),
                 digest: typeof stored.digest === 'string' ? stored.digest : null,
+                keep: stored.keep === true && typeof stored.grant === 'string',
+                grant: typeof stored.grant === 'string' ? stored.grant : null,
             };
         } catch {
             return null;
         }
     };
 
-    const writeTrust = (modId, enabled, digest) => {
+    // A record that is not enabled keeps nothing: an approval, and the choice to keep it, start anew.
+    const writeTrust = (modId, enabled, digest, { keep = false, grant = null } = {}) => {
         try {
             store.set(enabledKey(modId), {
                 enabled: Boolean(enabled),
                 digest: enabled ? digest : null,
                 confirmedAt: enabled ? new Date().toISOString() : null,
+                ...(enabled && keep && typeof grant === 'string' ? { keep: true, grant } : {}),
             });
         } catch {
             // Persistence is best-effort; in-memory state still applies.
         }
+    };
+
+    /** Whether the user chose that this mod's approval follow its file changes. */
+    const keepsTrust = (modId) => Boolean(readTrust(modId)?.keep);
+
+    /*
+     * The user's choice that an enabled mod's approval follow its file changes
+     * (or no longer). The approval stays bound to the bytes it was given for
+     * until the files change; what changes then is only that the change does
+     * not revoke it. `grant` is what the mod asks of the app now (grantOf).
+     */
+    const setKeepTrust = (modId, keep, grant) => {
+        const stored = readTrust(modId);
+        if (!stored?.enabled || !stored.digest) {
+            return false;
+        }
+        writeTrust(modId, true, stored.digest, { keep, grant });
+        return true;
     };
 
     /*
@@ -231,16 +293,31 @@ const createModApproval = ({ app, store, enabledKey, getMainWindowSafe, getLocal
      * development source mod (isDevSourceMod) that was already confirmed: its
      * approval follows the edit.
      */
-    const resolveTrust = (modId, digest, { devSource = false } = {}) => {
+    /*
+     * The second exception is the user's own choice for one mod (setKeepTrust,
+     * asked for in confirmKeepTrust): its approval follows the edit too, as long
+     * as the mod asks the app for what it asked for when the choice was made
+     * (`grant`, see grantOf). One that asks for more, or for anything else, is
+     * revoked as any other, and the choice with it.
+     */
+    const resolveTrust = (modId, digest, { devSource = false, grant = null } = {}) => {
         const stored = readTrust(modId);
         if (!stored || !stored.enabled) {
             return { enabled: false, trustStale: false };
         }
         if (!digest || stored.digest !== digest) {
             if (devSource && digest && stored.digest) {
-                writeTrust(modId, true, digest);
+                writeTrust(modId, true, digest, stored);
                 console.info(`[ModSystem] ${modId}: files changed in the development source tree; approval kept`);
                 return { enabled: true, trustStale: false };
+            }
+            if (stored.keep && digest && stored.digest && grant !== null && stored.grant === grant) {
+                writeTrust(modId, true, digest, stored);
+                console.info(`[ModSystem] ${modId}: files changed; approval kept, as the user chose for this mod`);
+                return { enabled: true, trustStale: false };
+            }
+            if (stored.keep) {
+                console.info(`[ModSystem] ${modId}: files changed and the mod asks for ${grant === stored.grant ? 'what it did' : 'other things'}; approval revoked`);
             }
             writeTrust(modId, false, null);
             return { enabled: false, trustStale: true };
@@ -309,7 +386,32 @@ const createModApproval = ({ app, store, enabledKey, getMainWindowSafe, getLocal
         return result.response === 1;
     };
 
-    return { writeTrust, isDevSourceMod, resolveTrust, confirmEnableMod };
+    /*
+     * Asks whether this mod's approval is to follow its file changes. Native and
+     * main-process owned for the reason confirmEnableMod is: mod code shares the
+     * renderer with the switch, and must not be able to answer for the user.
+     */
+    const confirmKeepTrust = async (runtime) => {
+        const locale = resolveDialogLocale();
+        const options = {
+            type: 'warning',
+            title: locale.keepTitle,
+            message: locale.keepMessage(runtime.manifest.name, runtime.manifest.id),
+            detail: [locale.keepRisk, '', locale.keepStill, '', `${locale.location}${runtime.dirPath ?? '-'}`].join('\n'),
+            buttons: [locale.cancel, locale.keepEnable],
+            // Cancel is the default so an accidental Enter never turns it on.
+            defaultId: 0,
+            cancelId: 0,
+            noLink: true,
+        };
+        const win = getMainWindowSafe();
+        const result = win && !win.isDestroyed()
+            ? await dialog.showMessageBox(win, options)
+            : await dialog.showMessageBox(options);
+        return result.response === 1;
+    };
+
+    return { writeTrust, isDevSourceMod, resolveTrust, confirmEnableMod, keepsTrust, setKeepTrust, confirmKeepTrust };
 };
 
-module.exports = { createModApproval, TRUST_DIALOG_LOCALE };
+module.exports = { createModApproval, grantOf, TRUST_DIALOG_LOCALE };
