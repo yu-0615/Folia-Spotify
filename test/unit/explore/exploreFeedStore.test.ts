@@ -54,6 +54,27 @@ describe('explore feed store', () => {
     });
 
     // A provider may make sections out of what the listener played (OnlineExploreProvider).
+    it('reads the songs page as such, and keeps the page it leaves for the other to show again as it was', async () => {
+        omni.getExploreFeed.mockImplementation(async (cursor?: string, _listened?: unknown, kind?: string) => (
+            kind === 'songs'
+                ? (cursor ? { sections: [section('shelf-2')] } : { sections: [section('shelf')], nextCursor: 'songs-2' })
+                : { sections: [section('home')] }
+        ));
+        store().show('spotify:me:en');
+        await vi.waitFor(() => expect(feed().status).toBe('ready'));
+        store().show('spotify:me:en:songs', [], 'songs');
+        await vi.waitFor(() => expect(feed().sections.map(shown => shown.id)).toEqual(['shelf']));
+        expect(omni.getExploreFeed).toHaveBeenLastCalledWith(undefined, [], 'songs');
+        await store().loadMore();
+        expect(omni.getExploreFeed).toHaveBeenLastCalledWith('songs-2', undefined, 'songs');
+        // Back to the explore page: it is shown as it was, not read again; and so the songs page after it.
+        store().show('spotify:me:en');
+        expect(feed().sections.map(shown => shown.id)).toEqual(['home']);
+        store().show('spotify:me:en:songs', [], 'songs');
+        expect(feed().sections.map(shown => shown.id)).toEqual(['shelf', 'shelf-2']);
+        expect(omni.getExploreFeed).toHaveBeenCalledTimes(3);
+    });
+
     it('hands the songs the listener played to every read of the page from its start, and to no further page', async () => {
         const played = [{ id: 's1', name: 'One' }] as UnifiedSong[];
         const playedSince = [{ id: 's2', name: 'Two' }] as UnifiedSong[];

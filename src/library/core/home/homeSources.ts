@@ -21,7 +21,7 @@ import { onlineHiddenScope } from '../directory/directoryVisibility';
 // 不可用原因（原先直接写在 Grid3D 的 JSX 里）；在线列表的加载态；本地导入的「忙」与扫描百分比。
 // 文案只给 i18n key（LibraryHomeMessage），由绑定翻译。
 
-const ONLINE_TABS: readonly LibraryHomeOnlineTab[] = ['playlist', 'radio', 'albums', 'explore'];
+const ONLINE_TABS: readonly LibraryHomeOnlineTab[] = ['songs', 'playlist', 'radio', 'albums', 'explore'];
 
 export const isOnlineHomeTab = (tab: LibraryHomeTabKey): tab is LibraryHomeOnlineTab => (
     (ONLINE_TABS as readonly string[]).includes(tab)
@@ -72,19 +72,21 @@ export const resolveHomeOnlineSource = ({
         canUseAlbums: capabilities.userLibrary && Boolean(capabilities.userAlbums),
         canUseRadio: capabilities.recommendations,
         canUseExplore: Boolean(capabilities.explore),
+        canUseSongs: Boolean(capabilities.explore && capabilities.exploreSongs),
         hasPersonalFmModes: Boolean(capabilities.personalFmModes),
     };
 };
 
 /** 某个在线页签为什么不可用（可用时为 undefined）。 */
 export const resolveOnlineTabUnavailableReason = (
-    source: Pick<LibraryHomeOnlineSource, 'providerLabel' | 'canUsePlaylists' | 'canUseAlbums' | 'canUseRadio' | 'canUseExplore'>,
+    source: Pick<LibraryHomeOnlineSource, 'providerLabel' | 'canUsePlaylists' | 'canUseAlbums' | 'canUseRadio' | 'canUseExplore' | 'canUseSongs'>,
     tab: LibraryHomeOnlineTab,
 ): LibraryHomeMessage | undefined => {
     const values = { provider: source.providerLabel };
     if (tab === 'playlist') return source.canUsePlaylists ? undefined : { key: 'status.providerLibraryUnavailable', values };
     if (tab === 'albums') return source.canUseAlbums ? undefined : { key: 'status.providerUserAlbumsUnavailable', values };
     if (tab === 'explore') return source.canUseExplore ? undefined : { key: 'status.providerRecommendationsUnavailable', values };
+    if (tab === 'songs') return source.canUseSongs ? undefined : { key: 'status.providerRecommendationsUnavailable', values };
     return source.canUseRadio ? undefined : { key: 'status.providerRecommendationsUnavailable', values };
 };
 
@@ -96,6 +98,7 @@ export const resolveLocalUnavailableReason = (availability: LibraryHomeLocalAvai
 
 /** 首页设置里各页签的显示开关（Navidrome 由是否启用决定）。 */
 export type LibraryHomeTabVisibility = {
+    songs: boolean;
     playlist: boolean;
     radio: boolean;
     explore: boolean;
@@ -104,8 +107,8 @@ export type LibraryHomeTabVisibility = {
 };
 
 /**
- * 一级页签：顺序是 歌单、电台、探索、专辑、本地、Navidrome；隐藏的页签不出现，不可用的带原因。
- * 探索只在平台有推荐页时出现（没有时不是「不可用」，是没有这一页）。
+ * 一级页签：顺序是 单曲、歌单、电台、探索、专辑、本地、Navidrome；隐藏的页签不出现，不可用的带原因。
+ * 探索、单曲只在平台有那一页时出现（没有时不是「不可用」，是没有这一页）。
  */
 export const resolveHomeTabs = ({
     visibility,
@@ -115,9 +118,10 @@ export const resolveHomeTabs = ({
 }: {
     visibility: LibraryHomeTabVisibility;
     navidromeEnabled: boolean;
-    online: Pick<LibraryHomeOnlineSource, 'providerLabel' | 'canUsePlaylists' | 'canUseAlbums' | 'canUseRadio' | 'canUseExplore'>;
+    online: Pick<LibraryHomeOnlineSource, 'providerLabel' | 'canUsePlaylists' | 'canUseAlbums' | 'canUseRadio' | 'canUseExplore' | 'canUseSongs'>;
     localAvailability: LibraryHomeLocalAvailability;
 }): LibraryHomeTab[] => [
+    ...(visibility.songs && online.canUseSongs ? [{ key: 'songs' as const, label: { key: 'home.songsTab' } }] : []),
     ...(visibility.playlist ? [{ key: 'playlist' as const, label: { key: 'home.playlists' }, disabledReason: resolveOnlineTabUnavailableReason(online, 'playlist') }] : []),
     ...(visibility.radio ? [{ key: 'radio' as const, label: { key: 'home.radio' }, disabledReason: resolveOnlineTabUnavailableReason(online, 'radio') }] : []),
     ...(visibility.explore && online.canUseExplore ? [{ key: 'explore' as const, label: { key: 'home.explore' } }] : []),
@@ -148,7 +152,7 @@ export const translateHomeTabs = (tabs: readonly LibraryHomeTab[], t: TFunction)
 
 /** 在线页签的标题文案 key。 */
 export const onlineHomeTitleKey = (tab: LibraryHomeOnlineTab): string => (
-    tab === 'playlist' ? 'home.playlists' : tab === 'albums' ? 'home.albums' : tab === 'explore' ? 'home.explore' : 'home.radio'
+    tab === 'playlist' ? 'home.playlists' : tab === 'albums' ? 'home.albums' : tab === 'explore' ? 'home.explore' : tab === 'songs' ? 'home.songsTab' : 'home.radio'
 );
 
 /**

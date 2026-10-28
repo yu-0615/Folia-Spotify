@@ -52,6 +52,7 @@ export const useLibraryHomeSources = ({
         setTab: state.setHomeViewTab,
     })));
     const visibility = useHomeLayoutSettingsStore(useShallow(state => ({
+        songs: state.showHomeTabSongs,
         playlist: state.showHomeTabPlaylist,
         radio: state.showHomeTabRadio,
         explore: state.showHomeTabExplore,
@@ -65,11 +66,11 @@ export const useLibraryHomeSources = ({
     const personalFmSelection = usePersonalFmModeStore(state => selectProviderPersonalFm(state, providerId));
     const provider = useMemo(() => resolveActiveProviderSummary(providers, providerId), [providerId, providers]);
     const capabilities = readOnlineProviderCapabilities(providerId);
-    const { userLibrary, playlists: canListPlaylists, userAlbums, recommendations, personalFmModes, explore } = capabilities;
+    const { userLibrary, playlists: canListPlaylists, userAlbums, recommendations, personalFmModes, explore, exploreSongs } = capabilities;
     const online = useMemo(() => resolveHomeOnlineSource({
         providerId,
         provider,
-        capabilities: { ...capabilities, userLibrary, playlists: canListPlaylists, userAlbums, recommendations, personalFmModes, explore },
+        capabilities: { ...capabilities, userLibrary, playlists: canListPlaylists, userAlbums, recommendations, personalFmModes, explore, exploreSongs },
         fallbackLabel: readOnlineProviderLabel(providerId),
         fallbackUser: user,
         fallbackPlaylists: playlists,
@@ -78,14 +79,14 @@ export const useLibraryHomeSources = ({
     }), [
         // capabilities 每次读都是新对象：按用到的几个开关比较。
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        canListPlaylists, cloudPlaylist, explore, personalFmModes, playlists, provider, providerId, recommendations, user, userAlbums, userLibrary,
+        canListPlaylists, cloudPlaylist, explore, exploreSongs, personalFmModes, playlists, provider, providerId, recommendations, user, userAlbums, userLibrary,
     ]);
 
-    // The explore tab is gone after a switch to a provider without one, and a stored choice of it
-    // may be older than the switch.
+    // The explore and songs tabs are gone after a switch to a provider without them, and a stored
+    // choice of one may be older than the switch.
     useEffect(() => {
-        if (tab === 'explore' && !online.canUseExplore) setTab('playlist');
-    }, [online.canUseExplore, setTab, tab]);
+        if ((tab === 'explore' && !online.canUseExplore) || (tab === 'songs' && !online.canUseSongs)) setTab('playlist');
+    }, [online.canUseExplore, online.canUseSongs, setTab, tab]);
 
     const localAvailability = getLocalLibraryAvailability();
     const tabs = useMemo(() => translateHomeTabs(resolveHomeTabs({

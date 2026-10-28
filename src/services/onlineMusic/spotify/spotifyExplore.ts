@@ -11,12 +11,11 @@ import { querySpotify } from './spotifyTransport';
 import { errorMessage } from '../../../utils/errorText';
 
 // src/services/onlineMusic/spotify/spotifyExplore.ts
-// The explore page is what Spotify itself picks for the account, in four parts, each asked for
-// when the list gets to it (all measured 2026-10-08, a little-used free account). The page opens on
-// the lists made for the account (3), with shelves of songs (4) right after them, so what the
-// listener sees first is the daily mixes and songs; then the home page (1) with the new releases
-// (2), then more shelves. Where the account has no lists of its own (or Spotify refuses the query),
-// the page opens on the home page instead.
+// What Spotify itself picks for the account, in four parts, each asked for when the list gets to it
+// (all measured 2026-10-08, a little-used free account). The explore page opens on the lists made
+// for the account (3), then the home page (1) with the new releases (2); where the account has no
+// lists of its own (or Spotify refuses the query), it opens on the home page instead. The shelves of
+// songs (4) are a page of their own, the songs tab (`getSongsFeed`), and not on the explore page.
 //  1. Spotify's home page: one request, 6 sections of playlists, albums and artists, 10 entries
 //     a section out of 6 to 50. A section's own query gives its first 20 entries whatever offset
 //     is asked for (also under the hash the web player uses today), so a section has one further
@@ -59,8 +58,8 @@ const RELEASE_ROWS = 50;
 // A page of shelves made here is this many of them.
 const RADIOS_A_PAGE = 3;
 // A shelf costs Spotify two requests (which list, and its songs), made when its page is asked
-// for. A read of the page makes at most this many shelves (Folia-Spotify: more songs than Folia's 9).
-const MAX_RADIOS = 15;
+// for. A read of the songs page makes at most this many shelves (Folia-Spotify: a page of its own).
+const MAX_RADIOS = 24;
 // A shelf hands out this many songs at a time, and holds whole batches: the explore page shows
 // other entries by going through a section batch by batch, and reads the page anew (which is
 // when these shelves give way to others) only once no section has a batch left. Batches of the
@@ -70,8 +69,6 @@ const RADIO_BATCH = 12;
 
 // The cursors. A uri of Spotify's and a track id have no space in them.
 const HOME_PAGE = 'home page';
-// The first page of shelves, which the home page follows.
-const FIRST_RADIO_PAGE = 'radios first';
 const RADIO_PAGE = 'radios after ';
 const HOME_SECTION = 'section ';
 const MADE_SECTION = 'made ';
@@ -101,8 +98,10 @@ const newRead = () => ({
     onShelf: new Set<string>(),
 });
 type Read = ReturnType<typeof newRead>;
-// The read whose page is on screen. A read from the start takes its place once its first page has arrived.
+// The read whose page is on screen, of the explore page and of the songs page. A read from the
+// start takes its place once its first page has arrived.
 let page = newRead();
+let shelves = newRead();
 // What the reads before used, in the order it was used (the adapters' shared memory,
 // exploreReads.ts), in two scopes: the songs asked with (`SEEDS`), and
 // the songs the shelves made here handed out (`SONGS`, one scope for all of them). A later read
@@ -231,9 +230,8 @@ const homeSections = async (read: Read): Promise<ProviderExploreSection[]> => {
 // list must go on. Offline or busy, the page fails instead, and is asked for again.
 const firstPage = async (listened: UnifiedSong[]): Promise<ProviderExplorePage> => {
     const read = newRead();
-    const played = listened.map(spotifySeedOf);
-    noteSpotifyListened(played);
-    addSpotifySeeds(read, played);
+    // (The songs played here are the radio tab's to ask with too: spotifyRecommendations.ts.)
+    noteSpotifyListened(listened.map(spotifySeedOf));
     const made = await querySpotify<BrowseAnswer>('browsePage', madeVariables(0, MADE_ROWS)).catch(error => {
         if (error instanceof OnlineProviderError && error.code === 'network') throw error;
         console.warn(`[Spotify] Explore page: the lists made for the account could not be read (${wordsOf(error)}); the page opens on the home page`);
@@ -245,11 +243,11 @@ const firstPage = async (listened: UnifiedSong[]): Promise<ProviderExplorePage> 
     console.log(`[Spotify] Explore page (made for the account): ${lists.length} sections of ${rows.length}, ${countOf(lists)} entries`);
     const sections = lists.length > 0 ? lists : await homeSections(read);
     page = read;
-    return { sections, nextCursor: FIRST_RADIO_PAGE };
+    return { sections, nextCursor: HOME_PAGE };
 };
 
-// The home page, after the first shelves, with the new releases first: there are few of them, and
-// they are the latest thing on the page. They are left out when they cannot be read.
+// The home page, after the lists made for the account, with the new releases first: there are few
+// of them, and they are the latest thing on the page. They are left out when they cannot be read.
 const homePage = async (): Promise<ProviderExplorePage> => {
     const read = page;
     const [sections, releases] = await Promise.all([
@@ -261,11 +259,7 @@ const homePage = async (): Promise<ProviderExplorePage> => {
     ]);
     const albums = (releases?.whatsNewFeedItems?.items ?? []).map(itemOf).filter(present);
     console.log(`[Spotify] Explore page (home): ${albums.length} new releases`);
-    const more = hasSeedsLeft(read) || (!read.hasLiked && read.asked < MAX_RADIOS);
-    return {
-        sections: [...(albums.length > 0 ? [{ id: RELEASES_ID, title: i18n.t('home.spotifyNewReleases'), items: albums }] : []), ...sections],
-        ...(more ? { nextCursor: `${RADIO_PAGE}${read.asked}` } : {}),
-    };
+    return { sections: [...(albums.length > 0 ? [{ id: RELEASES_ID, title: i18n.t('home.spotifyNewReleases'), items: albums }] : []), ...sections] };
 };
 
 /**
@@ -284,36 +278,43 @@ export const spotifyMadeForAccount = async (): Promise<ProviderCollection[]> => 
     return [...lists.values()];
 };
 
-// A page of shelves. The first one goes on to the home page, the others to the next shelves.
-const radioPage = async (first: boolean): Promise<ProviderExplorePage> => {
-    const read = page;
+// A page of shelves of the songs page, and the next one where there are songs left to ask with.
+const radioPage = async (read: Read): Promise<ProviderExplorePage> => {
     if (!read.hasLiked) {
         try {
             addSpotifySeeds(read, await spotifyLikedSeeds());
             read.hasLiked = true;
         } catch (error) {
             // Without them there are the songs played here, where there are any; the next page asks for them again.
-            // The first page of shelves goes on to the home page with none rather than hold it back.
-            if (first && read.seeds.length === 0) {
-                console.warn(`[Spotify] Explore page: the liked songs could not be read (${wordsOf(error)}); the home page comes first`);
-                return { sections: [], nextCursor: HOME_PAGE };
-            }
             if (read.seeds.length === 0) throw error;
-            console.warn(`[Spotify] Explore page: the liked songs could not be read (${wordsOf(error)}); the shelves are of the songs played here`);
+            console.warn(`[Spotify] Songs page: the liked songs could not be read (${wordsOf(error)}); the shelves are of the songs played here`);
         }
     }
-    const shelves = (await Promise.all(takeSeeds(read, RADIOS_A_PAGE).map(seed => radioShelf(read, seed)))).filter(present);
-    console.log(`[Spotify] Explore page (shelves made here): ${shelves.length} shelves; ${read.asked} of ${MAX_RADIOS} songs asked with, ${read.seeds.length} more to ask with`);
-    if (first) return { sections: shelves, nextCursor: HOME_PAGE };
-    return { sections: shelves, ...(hasSeedsLeft(read) || (!read.hasLiked && read.asked < MAX_RADIOS) ? { nextCursor: `${RADIO_PAGE}${read.asked}` } : {}) };
+    const made = (await Promise.all(takeSeeds(read, RADIOS_A_PAGE).map(seed => radioShelf(read, seed)))).filter(present);
+    console.log(`[Spotify] Songs page: ${made.length} shelves; ${read.asked} of ${MAX_RADIOS} songs asked with, ${read.seeds.length} more to ask with`);
+    return { sections: made, ...(hasSeedsLeft(read) || (!read.hasLiked && read.asked < MAX_RADIOS) ? { nextCursor: `${RADIO_PAGE}${read.asked}` } : {}) };
+};
+
+// The songs page from its start: shelves of the songs like the ones played here, then the liked ones.
+const songsFirstPage = async (listened: UnifiedSong[]): Promise<ProviderExplorePage> => {
+    const read = newRead();
+    const played = listened.map(spotifySeedOf);
+    noteSpotifyListened(played);
+    addSpotifySeeds(read, played);
+    const first = await radioPage(read);
+    shelves = read;
+    return first;
 };
 
 export const spotifyExplore: OnlineExploreProvider = {
     async getFeed(cursor, listened = []) {
         if (!cursor) return firstPage(listened);
-        if (cursor === FIRST_RADIO_PAGE) return radioPage(true);
         if (cursor === HOME_PAGE) return homePage();
-        if (cursor.startsWith(RADIO_PAGE)) return radioPage(false);
+        return { sections: [] };
+    },
+    async getSongsFeed(cursor, listened = []) {
+        if (!cursor) return songsFirstPage(listened);
+        if (cursor.startsWith(RADIO_PAGE)) return radioPage(shelves);
         return { sections: [] };
     },
     async getSectionItems(cursor) {
@@ -338,7 +339,7 @@ export const spotifyExplore: OnlineExploreProvider = {
         // A shelf made here hands out what it holds: Spotify is not asked.
         if (cursor.startsWith(RADIO)) {
             const [id, from] = cursor.slice(RADIO.length).split(' ');
-            const songs = page.songs.get(id) ?? [];
+            const songs = shelves.songs.get(id) ?? [];
             const end = Number(from) + RADIO_BATCH;
             console.log(`[Spotify] Explore shelf ${id}: ${songs.slice(Number(from), end).length} further songs from place ${from}, ${Math.max(0, songs.length - end)} after them`);
             return { items: noted(songs.slice(Number(from), end)), ...(end < songs.length ? { moreCursor: `${RADIO}${id} ${end}` } : {}) };

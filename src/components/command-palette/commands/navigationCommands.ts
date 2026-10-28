@@ -40,6 +40,11 @@ export const navigationCommands: CommandPaletteCommand[] = [
         isAvailable: (context) => !context?.navigation.isWallpaperMode,
         execute: (_input, context) => context.navigation.toggleBrowserFullscreen(),
     },
+    {
+        ...createHomeTabCommand('songs', 'Open songs', 'Open songs tab', ['songs', 'tracks', 'singles', '单曲', '歌曲']),
+        // Only a provider with a page of songs of its own has the tab.
+        isAvailable: () => omni.getActiveCapabilities().exploreSongs === true,
+    },
     createHomeTabCommand('playlist', 'Open playlists', 'Open playlist home tab', ['playlist', 'playlists', '歌单']),
     createHomeTabCommand('local', 'Open local music', 'Open local music tab', ['local music', 'local', '本地', '本地音乐']),
     createHomeTabCommand('albums', 'Open albums', 'Open albums tab', ['albums', 'album', '专辑']),

@@ -12,8 +12,11 @@ import type { LibraryDirectoryNode, LibraryDirectorySelectionType, LibraryHidden
 
 /** 首页一级页签（与应用的 HomeViewTab 同一套）。 */
 export type LibraryHomeTabKey = HomeViewTab;
-/** 在线来源的页签。探索（explore）是平台自己的推荐页：没有卡片列表，由 suite 自己画（网格挂 ExploreSurface）。 */
-export type LibraryHomeOnlineTab = 'playlist' | 'radio' | 'albums' | 'explore';
+/**
+ * 在线来源的页签。探索（explore）是平台自己的推荐页，单曲（songs）是平台只放歌曲的那一页：都没有卡片列表，
+ * 由 suite 自己画（网格挂 ExploreSurface）。
+ */
+export type LibraryHomeOnlineTab = 'songs' | 'playlist' | 'radio' | 'albums' | 'explore';
 
 /** 待翻译的文案：core 只给 i18n key 与插值，翻译在绑定 / 端口里做（fallback 是翻译为空时的兜底）。 */
 export type LibraryHomeMessage = {
@@ -55,6 +58,8 @@ export type LibraryHomeOnlineSource = {
     canUseRadio: boolean;
     /** provider 有自己的推荐页（capabilities.explore）：没有时探索页签不出现。 */
     canUseExplore: boolean;
+    /** provider 有只放歌曲的一页（capabilities.exploreSongs）：没有时单曲页签不出现。 */
+    canUseSongs: boolean;
     /** provider 支持私人 FM 模式（FM 卡的描述显示当前模式）。 */
     hasPersonalFmModes: boolean;
 };

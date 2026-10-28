@@ -72,6 +72,8 @@ export interface ProviderCapabilities {
     playbackReports?: boolean;
     /** The provider has a recommendation page of its own, read through `explore`. */
     explore?: boolean;
+    /** And a page of songs only, the songs tab (`explore.getSongsFeed`). */
+    exploreSongs?: boolean;
     /**
      * The provider can look a song up by id with `playback.getSongDetail`; absent reads as true
      * wherever `playback` is there.
@@ -772,6 +774,11 @@ export interface ProviderExploreItemsPage {
  */
 export interface OnlineExploreProvider {
     getFeed(cursor?: string, listened?: UnifiedSong[]): Promise<ProviderExplorePage>;
+    /**
+     * A page of songs only, the songs tab, read as the explore page is (its sections' further items
+     * through `getSectionItems`); without it the app has no songs tab for the provider.
+     */
+    getSongsFeed?(cursor?: string, listened?: UnifiedSong[]): Promise<ProviderExplorePage>;
     getSectionItems?(cursor: string): Promise<ProviderExploreItemsPage>;
     /**
      * Of the songs played here, as the app recorded them, which song the platform shows each as, by
@@ -969,6 +976,8 @@ export type OmniSongAvailability = ProviderSongAvailability;
 export type OmniSongReplacement = ProviderSongReplacement;
 export type OmniLyricsResult = ProviderLyricsResult;
 export type OmniPlaybackDevice = ProviderPlaybackDevice;
+/** Which page of a provider's picks: its explore page, or its page of songs only (the songs tab). */
+export type OmniExploreKind = 'page' | 'songs';
 export type OmniElsewherePlay = ProviderElsewherePlay & { providerId: OmniProviderId };
 export type OmniPlaybackReport = ProviderPlaybackReport;
 export type OmniChorusRange = ChorusRange;

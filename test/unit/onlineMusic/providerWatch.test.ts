@@ -46,8 +46,9 @@ describe('what a provider watches while the app is open', () => {
         vi.restoreAllMocks();
     });
 
-    it('is declared only by the provider that has something to watch', () => {
-        expect(listOnlineMusicProviders().filter(provider => provider.watch).map(provider => provider.id)).toEqual(['netease']);
+    it('is declared only by the providers that have something to watch', () => {
+        // NetEase its local service; Spotify what playing on another device of the account has to tell.
+        expect(listOnlineMusicProviders().filter(provider => provider.watch).map(provider => provider.id)).toEqual(['netease', 'spotify']);
     });
 
     it('does nothing where there is no desktop bridge', async () => {

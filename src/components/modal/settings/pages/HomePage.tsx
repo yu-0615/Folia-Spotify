@@ -36,6 +36,7 @@ const GRID_ONLY = { available: isGridLibraryActive };
 const O = {
     suite: option(SUITE, 'librarySuiteChoice', 'options.librarySuite'),
     tabs: option(HOME, 'homeTabsVisibility', 'options.homeTabsVisibility'),
+    tabSongs: option(HOME, 'showHomeTabSongs', 'options.showHomeTabSongs'),
     tabPlaylist: option(HOME, 'showHomeTabPlaylist', 'options.showHomeTabPlaylist'),
     tabRadio: option(HOME, 'showHomeTabRadio', 'options.showHomeTabRadio'),
     tabExplore: option(HOME, 'showHomeTabExplore', 'options.showHomeTabExplore'),
@@ -63,6 +64,7 @@ const HomePage: React.FC = () => {
         tabAlbums: state.showHomeTabAlbums,
         tabLocal: state.showHomeTabLocal,
         tabExplore: state.showHomeTabExplore,
+        tabSongs: state.showHomeTabSongs,
         cardStyle: state.grid3dCardStyle,
         rememberPosition: state.rememberHomeCardPosition,
         setTabPlaylist: state.handleToggleHomeTabPlaylist,
@@ -70,6 +72,7 @@ const HomePage: React.FC = () => {
         setTabAlbums: state.handleToggleHomeTabAlbums,
         setTabLocal: state.handleToggleHomeTabLocal,
         setTabExplore: state.handleToggleHomeTabExplore,
+        setTabSongs: state.handleToggleHomeTabSongs,
         setCardStyle: state.handleSetGrid3dCardStyle,
         setRememberPosition: state.handleToggleRememberHomeCardPosition,
     })));
@@ -84,8 +87,9 @@ const HomePage: React.FC = () => {
         setMinCardOpacity: state.handleSetGridViewMinCardOpacity,
         resetFalloff: state.resetGridViewCardFalloff,
     })));
-    // The capsule has an explore tab only where the platform in use has an explore page.
+    // The capsule has an explore tab only where the platform in use has an explore page, and a songs tab only where it has a page of songs.
     const hasExplore = useOnlineProviderAccountStore(() => omni.getActiveCapabilities().explore === true);
+    const hasSongs = useOnlineProviderAccountStore(() => omni.getActiveCapabilities().exploreSongs === true);
     const isDefaultFalloff = grid.minCardScale === HEX_CARD_MIN_SCALE_DEFAULT && grid.minCardOpacity === HEX_CARD_MIN_OPACITY_DEFAULT;
 
     return (
@@ -108,6 +112,7 @@ const HomePage: React.FC = () => {
                 <Row option={O.tabs}>
                     <Chips
                         items={[
+                            { id: O.tabSongs.id, label: t('home.songsTab'), checked: home.tabSongs, onChange: home.setTabSongs, disabled: !hasSongs },
                             { id: O.tabPlaylist.id, label: t('home.playlists'), checked: home.tabPlaylist, onChange: home.setTabPlaylist },
                             { id: O.tabRadio.id, label: t('home.radio'), checked: home.tabRadio, onChange: home.setTabRadio },
                             { id: O.tabExplore.id, label: t('home.explore'), checked: home.tabExplore, onChange: home.setTabExplore, disabled: !hasExplore },

@@ -102,7 +102,7 @@ describe('home tabs', () => {
 
     it('lists playlist, radio, albums, local and navidrome in that order', () => {
         const tabs = resolveHomeTabs({
-            visibility: { playlist: true, radio: true, explore: false, albums: true, local: true },
+            visibility: { songs: true, playlist: true, radio: true, explore: false, albums: true, local: true },
             navidromeEnabled: true,
             online,
             localAvailability: supported,
@@ -114,7 +114,7 @@ describe('home tabs', () => {
 
     it('hides the tabs the layout settings turn off and Navidrome when it is disabled', () => {
         const tabs = resolveHomeTabs({
-            visibility: { playlist: true, radio: false, explore: false, albums: true, local: false },
+            visibility: { songs: false, playlist: true, radio: false, explore: false, albums: true, local: false },
             navidromeEnabled: false,
             online,
             localAvailability: supported,
@@ -123,7 +123,7 @@ describe('home tabs', () => {
     });
 
     it('shows explore after radio only when the provider has a page of its own and the setting is on', () => {
-        const visibility = { playlist: true, radio: true, explore: true, albums: true, local: false };
+        const visibility = { songs: true, playlist: true, radio: true, explore: true, albums: true, local: false };
         const withPage = source({ capabilities: { ...ALL, explore: true } });
         const keysOf = (online: ReturnType<typeof source>, shown = visibility) => resolveHomeTabs({
             visibility: shown,
@@ -136,9 +136,23 @@ describe('home tabs', () => {
         expect(keysOf(withPage, { ...visibility, explore: false })).toEqual(['playlist', 'radio', 'albums']);
     });
 
+    it('puts songs first only when the provider has a page of songs and the setting is on', () => {
+        const visibility = { songs: true, playlist: true, radio: true, explore: true, albums: true, local: true };
+        const withSongs = source({ capabilities: { ...ALL, explore: true, exploreSongs: true } });
+        const keysOf = (online: ReturnType<typeof source>, shown = visibility) => resolveHomeTabs({
+            visibility: shown,
+            navidromeEnabled: false,
+            online,
+            localAvailability: supported,
+        }).map(tab => tab.key);
+        expect(keysOf(withSongs)).toEqual(['songs', 'playlist', 'radio', 'explore', 'albums', 'local']);
+        expect(keysOf(source({ capabilities: { ...ALL, explore: true } }))).toEqual(['playlist', 'radio', 'explore', 'albums', 'local']);
+        expect(keysOf(withSongs, { ...visibility, songs: false })).toEqual(['playlist', 'radio', 'explore', 'albums', 'local']);
+    });
+
     it('gives each unavailable tab its reason, naming the provider', () => {
         const tabs = translateHomeTabs(resolveHomeTabs({
-            visibility: { playlist: true, radio: true, explore: false, albums: true, local: true },
+            visibility: { songs: true, playlist: true, radio: true, explore: false, albums: true, local: true },
             navidromeEnabled: false,
             online: source({ capabilities: NONE }),
             localAvailability: { supported: false, reason: 'insecure-http' },

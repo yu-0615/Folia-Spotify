@@ -84,8 +84,11 @@ const BravaisHome: React.FC<LibraryHomeSurfaceProps> = (props) => {
             aria-hidden
             className="pointer-events-none absolute inset-0"
         >
-            {tab === 'explore' ? (
+            {tab === 'explore' || tab === 'songs' ? (
                 <BravaisHomeExplore
+                    // Each page its own: what one page laid out is not carried over to the other.
+                    key={tab}
+                    kind={tab === 'songs' ? 'songs' : 'page'}
                     chrome={chrome}
                     online={online}
                     account={account}

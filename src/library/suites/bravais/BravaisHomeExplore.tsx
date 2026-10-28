@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SongResult } from '../../../types';
-import type { OmniExploreSection, OnlineProviderId } from '../../../types/onlineMusic';
+import type { OmniExploreKind, OmniExploreSection, OnlineProviderId } from '../../../types/onlineMusic';
 import type { LibraryCollectionDescriptor } from '../../core/collection/collection.contract';
 import type { LibraryHomeOnlineSource } from '../../core/home/homeModel.contract';
 import type { LibraryAccountController } from '../../core/account/account.contract';
@@ -30,6 +30,7 @@ import { availableLocalTabLabel, onlineWallHint } from './bravaisEmptyWallHint';
 // - 缝：标题与面包屑是「探索」，元数据行是平台；读取中 / 读不到 / 空页的说明进状态行（墙上有本机的两组时照样说）；
 //   「⋯」里有「换一批」。
 // - 账户：与另外几个在线页签同一套（未登录、解析中时墙空着，缝里说原因；未登录时墙面上有背景说明，bravaisEmptyWallHint）。
+// - 单曲页签（kind 'songs'）是同一个组件读平台只放歌曲的那一页；平台有这一页时，本机的两组放在单曲页签，探索页签不再放。
 // 这个组件只渲染 null。
 
 const NO_KEYS: ReadonlySet<string> = new Set();
@@ -49,28 +50,30 @@ const snapshotOwnSections = (key: string | null, providerId: OnlineProviderId, a
 });
 
 const BravaisHomeExplore: React.FC<{
+    kind?: OmniExploreKind;
     chrome: BravaisHomeChrome;
     online: LibraryHomeOnlineSource;
     account: LibraryAccountController;
     isInteractive: boolean;
     onPlaySong: (song: SongResult, queue: SongResult[], isFmCall?: boolean) => void;
     onOpenGridView: (collection: LibraryCollectionDescriptor) => void;
-}> = ({ chrome, online, account: accountController, isInteractive, onPlaySong, onOpenGridView }) => {
+}> = ({ kind = 'page', chrome, online, account: accountController, isInteractive, onPlaySong, onOpenGridView }) => {
     const { t, i18n } = useTranslation();
-    const isOn = online.accountView === 'authenticated' && online.canUseExplore;
+    const isOn = online.accountView === 'authenticated' && (kind === 'songs' ? online.canUseSongs : online.canUseExplore);
+    const withOwnSections = kind === 'songs' || !online.canUseSongs;
     const providerId = online.providerId as OnlineProviderId;
     const accountId = String(online.user?.id ?? '');
-    // 与网格的探索页（ExploreSurface）同一个页键：换平台、账户或语言就是另一页。
-    const key = explorePageKey(providerId, accountId, i18n.language);
+    // 与网格的探索页（ExploreSurface）同一个页键：换平台、账户、语言或页签就是另一页。
+    const key = explorePageKey(providerId, accountId, i18n.language, kind);
     const keptKey = useExploreFeedStore(state => state.key);
     useEffect(() => {
-        if (isOn) useExploreFeedStore.getState().show(key, listenedSongsOf(providerId, accountId));
-    }, [accountId, isOn, keptKey, key, providerId]);
+        if (isOn) useExploreFeedStore.getState().show(key, listenedSongsOf(providerId, accountId), kind);
+    }, [accountId, isOn, keptKey, key, kind, providerId]);
     const feed = useExploreFeedStore(state => (isOn && state.key === key ? state.feed : null));
     // 换了一页（或页签刚开）就重读快照；在渲染里换，不让墙先按上一页的快照铺一次。播放记录被纠正（旧的 MV 记录换成正式版，
     // 见 ownSections 的 setRightOnce）也重读：纠正要问平台，在页签打开之后才到。
     const setRightTimes = useSyncExternalStore(watchRecentPlays, recordSetRightTimes);
-    const ownKey = isOn ? `${key}#${setRightTimes}` : null;
+    const ownKey = isOn && withOwnSections ? `${key}#${setRightTimes}` : null;
     const [own, setOwn] = useState(() => snapshotOwnSections(ownKey, providerId, accountId, t));
     if (own.key !== ownKey) setOwn(snapshotOwnSections(ownKey, providerId, accountId, t));
     const wall = useExploreWall({
@@ -160,7 +163,7 @@ const BravaisHomeExplore: React.FC<{
     const home = useMemo(() => ({ cycleTab: chrome.cycleTab }), [chrome.cycleTab]);
 
     const layer = useMemo<BravaisLayer>(() => ({
-        key: 'home:explore',
+        key: kind === 'songs' ? 'home:songs' : 'home:explore',
         sessionKey: 'home',
         surface: 'home',
         mode: 'infinite',

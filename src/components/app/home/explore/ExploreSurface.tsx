@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Loader2, RefreshCw } from 'lucide-react';
 import type { SongResult } from '../../../../types';
-import type { OmniCollection, OmniProviderId } from '../../../../types/onlineMusic';
+import type { OmniCollection, OmniExploreKind, OmniProviderId } from '../../../../types/onlineMusic';
 import { exploreScroll, useExploreFeedStore } from '../../../../stores/useExploreFeedStore';
 import { ExploreLight } from './ExploreLight';
 import { EXPLORE_PILL, EXPLORE_TOKENS, ExploreSections } from './ExploreSections';
@@ -39,13 +39,18 @@ interface ExploreSurfaceProps {
     accountId: string;
     /** The account and the language the page is read for; another scope is another page. */
     scope: string;
+    /** The provider's explore page, or its page of songs only (the songs tab). */
+    kind?: OmniExploreKind;
+    /** Whether the app's own sections stand first (where the provider has a songs page, they stand on that one). */
+    withOwnSections?: boolean;
     onPlaySong: (song: SongResult, queue: SongResult[]) => void;
     onOpenCollection: (collection: OmniCollection) => void;
 }
 
-export const ExploreSurface: React.FC<ExploreSurfaceProps> = ({ providerId, accountId, scope, onPlaySong, onOpenCollection }) => {
+export const ExploreSurface: React.FC<ExploreSurfaceProps> = ({ providerId, accountId, scope, kind = 'page', withOwnSections = true, onPlaySong, onOpenCollection }) => {
     const { t } = useTranslation();
-    const key = `${providerId}:${scope}`;
+    // (explorePageKey's form: the scope is the account and the language.)
+    const key = `${providerId}:${scope}${kind === 'songs' ? ':songs' : ''}`;
     const keptKey = useExploreFeedStore(state => state.key);
     const feed = useExploreFeedStore(state => (state.key === key ? state.feed : null));
     const show = useExploreFeedStore(state => state.show);
@@ -82,11 +87,12 @@ export const ExploreSurface: React.FC<ExploreSurfaceProps> = ({ providerId, acco
     const listened = useCallback(() => listenedSongsOf(providerId, accountId), [providerId, accountId]);
     const readAgain = useCallback(() => refresh(listened()), [refresh, listened]);
     // Also when the store let go of this key: a read overtaken by a provider switch leaves nothing kept.
-    useEffect(() => { show(key, listened()); }, [key, keptKey, show, listened]);
+    useEffect(() => { show(key, listened(), kind); }, [key, keptKey, kind, show, listened]);
 
     // A section that holds nothing is not shown; a page of such sections is an empty page.
     const provided = (feed?.sections ?? []).filter(section => section.items.length > 0);
-    const own = useOwnExploreSections(providerId, accountId);
+    const ownRead = useOwnExploreSections(providerId, accountId);
+    const own = withOwnSections ? ownRead : [];
     const sections = own.length > 0 ? [...own, ...provided] : provided;
     const hasMore = Boolean(feed?.nextCursor);
     const hasSections = sections.length > 0;

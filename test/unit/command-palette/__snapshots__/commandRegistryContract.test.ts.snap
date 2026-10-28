@@ -218,6 +218,7 @@ exports[`command palette registry contract > keeps the registered command order 
   "navigate-player",
   "navigate-lattice",
   "browser-fullscreen",
+  "home-songs",
   "home-playlist",
   "home-local",
   "home-albums",

@@ -8,6 +8,7 @@ import type {
     OmniChorusRange,
     OmniCollection,
     OmniExploreItemsPage,
+    OmniExploreKind,
     OmniExplorePage,
     OmniHistoryEntry,
     OmniLyricsResult,
@@ -865,8 +866,11 @@ export const omni = {
 
     // The active provider's own recommendation page; `cursor` asks for its further sections, and
     // `listened` (see `OnlineExploreProvider`) goes with a read from the start.
-    async getExploreFeed(cursor?: string, listened?: UnifiedSong[]): Promise<OmniExplorePage> {
-        return withActiveProvider(async provider => provider.explore?.getFeed(cursor, listened) ?? { sections: [] });
+    // `kind` 'songs': the provider's page of songs only (`explore.getSongsFeed`), the songs tab.
+    async getExploreFeed(cursor?: string, listened?: UnifiedSong[], kind: OmniExploreKind = 'page'): Promise<OmniExplorePage> {
+        return withActiveProvider(async provider => (kind === 'songs'
+            ? provider.explore?.getSongsFeed?.(cursor, listened)
+            : provider.explore?.getFeed(cursor, listened)) ?? { sections: [] });
     },
 
     async getExploreSectionItems(cursor: string): Promise<OmniExploreItemsPage> {

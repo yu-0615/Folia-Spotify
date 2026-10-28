@@ -86,12 +86,13 @@ export const spotifyProvider: OnlineMusicProvider = {
     watch: watchSpotifyWebPlayback,
     // `recommendations` is the radio tab: a personal FM, daily songs and playlists, each made of
     // what Spotify has for the account (spotifyRecommendations.ts). `personalFmModes` stays off:
-    // the FM here has no modes. Spotify's recommendation page is the explore tab.
+    // the FM here has no modes. Spotify's recommendation page is the explore tab, and its shelves of
+    // songs the songs tab (`exploreSongs`).
     capabilities: {
         search: true, playback: true, lyrics: true, wordByWordLyrics: false, auth: true,
         userLibrary: true, playlists: true, albums: true, artists: true, userAlbums: true,
         // `playlistSubscription` is albums and other people's playlists (`mutations.canSubscribe`).
-        recommendations: true, explore: true, mutations: true, likes: true, playlistTrackMutations: true,
+        recommendations: true, explore: true, exploreSongs: true, mutations: true, likes: true, playlistTrackMutations: true,
         playlistSubscription: true,
     },
     normalizeSong: normalizeSpotifySong, normalizeUser: normalizeSpotifyUser, normalizeCollection: normalizeSpotifyCollection,

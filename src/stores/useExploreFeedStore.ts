@@ -2,12 +2,13 @@ import { create } from 'zustand';
 import { omni } from '../services/onlineMusic/omni';
 import { inKeptOrder, noteCollectionSaved, withoutTakenOut } from '../components/app/home/explore/exploreFeedMemory';
 import type { UnifiedSong } from '../types';
-import type { OmniCollection, OmniExploreItem, OmniExploreSection } from '../types/onlineMusic';
+import type { OmniCollection, OmniExploreItem, OmniExploreKind, OmniExploreSection } from '../types/onlineMusic';
 import { errorMessage } from '../utils/errorText';
 
 // src/stores/useExploreFeedStore.ts
-// The active provider's recommendation page behind the explore tab: its sections, the further
-// sections of the page, and the further items of one section.
+// The active provider's recommendation page behind the explore tab, or its page of songs behind the
+// songs tab (`OmniExploreKind`): its sections, the further sections of the page, and the further
+// items of one section. The page left for the other one is kept, and shown again as it was.
 // "Refresh" shows other entries under the headings that stand. A section's further items are
 // read through the section's own cursor, and a cursor stands for its section only until the page
 // is next read from its start (see OnlineExploreProvider): once such a read has arrived, the
@@ -68,8 +69,10 @@ export interface ExploreFeed {
     loadingSectionIds: string[];
 }
 
-/** The store's `key` of the explore page read for this provider, account ('' for none) and language. */
-export const explorePageKey = (providerId: string, accountId: string, language: string): string => `${providerId}:${accountId}:${language}`;
+/** The store's `key` of the explore page (or the songs page) read for this provider, account ('' for none) and language. */
+export const explorePageKey = (providerId: string, accountId: string, language: string, kind: OmniExploreKind = 'page'): string => (
+    `${providerId}:${accountId}:${language}${kind === 'songs' ? ':songs' : ''}`
+);
 
 interface ExploreFeedStore {
     // One page is kept: the one of `key`, which names the provider, the account and the language.
@@ -79,7 +82,7 @@ interface ExploreFeedStore {
     feed: ExploreFeed | null;
     // `listened`: the songs the listener played here, handed to the provider with a read of the
     // page from its start (see OnlineExploreProvider).
-    show: (key: string, listened?: UnifiedSong[]) => void;
+    show: (key: string, listened?: UnifiedSong[], kind?: OmniExploreKind) => void;
     refresh: (listened?: UnifiedSong[]) => void;
     loadMore: () => Promise<void>;
     loadMoreOf: (sectionId: string) => Promise<void>;
@@ -98,11 +101,15 @@ const MAX_EMPTY_PAGES = 3;
 // listener took out of their library are left out where a section is kept (`taken`).
 // `listened` goes with a read from the start (see OnlineExploreProvider). `refreshReadsAnew` is
 // there where the provider said it of its page (`ProviderExplorePage.refreshReadsAnew`).
+// Which of the provider's pages the kept one is (`OmniExploreKind`).
+let kindShown: OmniExploreKind = 'page';
 const readPageWithSections = async (cursor?: string, listened?: UnifiedSong[]): Promise<{ sections: OmniExploreSection[]; nextCursor?: string; refreshReadsAnew?: boolean }> => {
     let sections: OmniExploreSection[] = [];
     let readsAnew = false;
     for (let pages = 0; pages < MAX_EMPTY_PAGES; pages += 1) {
-        const page = await (cursor ? omni.getExploreFeed(cursor) : omni.getExploreFeed(undefined, listened));
+        const page = await (kindShown === 'songs'
+            ? omni.getExploreFeed(cursor, cursor ? undefined : listened, 'songs')
+            : cursor ? omni.getExploreFeed(cursor) : omni.getExploreFeed(undefined, listened));
         sections = page.sections;
         readsAnew ||= page.refreshReadsAnew === true;
         cursor = page.nextCursor === cursor ? undefined : page.nextCursor;
@@ -339,8 +346,24 @@ export const useExploreFeedStore = create<ExploreFeedStore>((set, get) => {
     // An answer is for the page that asked; it is dropped when another key, or a newer read of
     // the same key, has taken its place.
     let reads = 0;
+    // Which page each key is, and the pages left for another (with where the list stood), by key.
+    const kinds = new Map<string, OmniExploreKind>();
+    const parked = new Map<string, { feed: ExploreFeed; top: number; rows: Map<string, number> }>();
     const load = async (key: string, listened?: UnifiedSong[]) => {
         const { key: keptKey, feed } = get();
+        kindShown = kinds.get(key) ?? 'page';
+        if (keptKey !== key) {
+            if (keptKey && feed?.status === 'ready') parked.set(keptKey, { feed, top: exploreScroll.top, rows: new Map(exploreScroll.rows) });
+            const left = parked.get(key);
+            if (left) {
+                parked.delete(key);
+                reads += 1;
+                exploreScroll.top = left.top;
+                exploreScroll.rows = left.rows;
+                set({ key, feed: { ...left.feed, read: reads } });
+                return;
+            }
+        }
         // A page with something on it stays while other entries are read. Its own further reads
         // are overtaken by this one, so it no longer waits for them.
         const shown = keptKey === key && feed?.status === 'ready' && feed.sections.length > 0
@@ -388,7 +411,8 @@ export const useExploreFeedStore = create<ExploreFeedStore>((set, get) => {
     return {
         key: null,
         feed: null,
-        show(key, listened) {
+        show(key, listened, kind = 'page') {
+            kinds.set(key, kind);
             if (get().key !== key) void load(key, listened);
         },
         refresh(listened) {
@@ -463,6 +487,7 @@ export const useExploreFeedStore = create<ExploreFeedStore>((set, get) => {
         },
         clear() {
             reads += 1;
+            parked.clear();
             forgetScroll();
             set({ key: null, feed: null });
         },

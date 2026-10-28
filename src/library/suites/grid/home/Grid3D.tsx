@@ -176,12 +176,13 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
     // 在线列表只在账户已就绪时显示（无账户 / 解析中 / 未登录各有面板）。探索页签没有卡片列表：它是平台自己的推荐页。
     const showOnlineList = isOnlineTab
         && homeViewTab !== 'explore'
+        && homeViewTab !== 'songs'
         && activeAccountView !== 'accountless'
         && activeAccountView !== 'resolving'
         && activeAccountView !== 'guest';
-    // On the explore tab the wall (队列拼贴) shows the page's entries, not the play queue: it is
-    // offered there once the page has an entry to show, with or without a song on the player.
-    const opensExploreWall = homeViewTab === 'explore' && online.canUseExplore;
+    // On the explore and songs tabs the wall (队列拼贴) shows the page's entries, not the play queue: it
+    // is offered there once the page has an entry to show, with or without a song on the player.
+    const opensExploreWall = (homeViewTab === 'explore' && online.canUseExplore) || (homeViewTab === 'songs' && online.canUseSongs);
     const hasExploreWall = useExploreFeedStore(state => opensExploreWall && hasExploreWallEntries(state.feed));
 
     const [focusedIndex, setFocusedIndex] = useState(0);
@@ -497,14 +498,17 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                 ) : isOnlineTab && activeAccountView === 'guest' ? (
                     // One button: it opens the sign-in window, where the platform is chosen.
                     <HomeLoginPanel account={account} />
-                ) : homeViewTab === 'explore' ? (
-                    online.canUseExplore && (
+                ) : homeViewTab === 'explore' || homeViewTab === 'songs' ? (
+                    (homeViewTab === 'songs' ? online.canUseSongs : online.canUseExplore) && (
                         <ExploreSurface
-                            // Another platform or account starts from its own: how far a section was opened is not carried over.
-                            key={`${activeProviderId}:${activeUser?.id ?? ''}`}
+                            // Another platform, account or page starts from its own: how far a section was opened is not carried over.
+                            key={`${activeProviderId}:${activeUser?.id ?? ''}:${homeViewTab}`}
                             providerId={activeProviderId}
                             accountId={String(activeUser?.id ?? '')}
                             scope={`${activeUser?.id ?? ''}:${i18n.language}`}
+                            kind={homeViewTab === 'songs' ? 'songs' : 'page'}
+                            // The songs played here stand on the songs page, where the provider has one.
+                            withOwnSections={homeViewTab === 'songs' || !online.canUseSongs}
                             onPlaySong={(song, queue) => onPlaySong(song, queue, false)}
                             onOpenCollection={collection => onOpenGridView?.(createOnlineGridViewCollection(collection, activeProviderId))}
                         />
