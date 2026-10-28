@@ -19,6 +19,7 @@ import { spotifyMutations } from './spotifyMutations';
 import { resetSpotifyRecommendations, spotifyRecommendations } from './spotifyRecommendations';
 import { describeSpotifyLoginFailure, spotifyLoginFailure } from './spotifyLoginFailure';
 import { describeSpotifyFailure } from './spotifyFailure';
+import { SPOTIFY_LYRIC_OFFSET_MS } from './spotifyLyricOffset';
 import { hasSpotifyWebSession, signInSpotifyWebUntilDone, spotifyClientIdSetting, subscribeSpotifyWebSession } from './web/spotifyWebAuth';
 import { chosenSpotifyWebDevice, spotifyThisDevice, subscribeSpotifyWebDevice } from './web/spotifyWebDevices';
 import { readSpotifyWebMe } from './web/spotifyWebLibrary';
@@ -81,6 +82,8 @@ export const spotifyProvider: OnlineMusicProvider = {
     getAvailability: getSpotifyTransportAvailability,
     // Where a listener who has not chosen a platform starts.
     startsHere: true,
+    // Spotify's sound comes late (its player, or another device it plays on): its lyrics come earlier.
+    lyricOffsetMs: SPOTIFY_LYRIC_OFFSET_MS,
     describeFailure: describeSpotifyFailure,
     // What playing on another device has to tell (it stopped, the device is gone).
     watch: watchSpotifyWebPlayback,

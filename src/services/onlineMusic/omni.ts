@@ -859,6 +859,11 @@ export const omni = {
         return withActiveProvider(async provider => provider.recommendations?.getHistorySongs?.(entry) ?? []);
     },
 
+    /** The lyric offset the provider of `providerId` declares for its songs (`OnlineMusicProvider.lyricOffsetMs`); 0 for none. */
+    getLyricOffsetMs(providerId: OmniProviderId | null): number {
+        return providerId ? getOnlineMusicProvider(providerId)?.lyricOffsetMs ?? 0 : 0;
+    },
+
     supportsExplore(providerId: OmniProviderId): boolean {
         const provider = getOnlineMusicProvider(providerId);
         return providerSupports(provider, 'explore') && Boolean(provider?.explore);

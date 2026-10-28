@@ -490,6 +490,10 @@ export default function App() {
         handleSetLyricStaffAbsorbMode,
         handleSetLyricStaffPattern,
     } = useLyricSettingsStore(useShallow(selectLyricSettingsSnapshot));
+    // The device-wide offset, and the one the playing song's platform declares for its songs (not a
+    // setting, and not shown with it: omni.getLyricOffsetMs).
+    const providerLyricOffsetMs = usePlaybackStore(state => omni.getLyricOffsetMs(getOnlineProviderIdForSong(state.currentSong)));
+    const deviceLyricOffsetMs = globalLyricTimelineOffsetMs + providerLyricOffsetMs;
     const {
         visualizerMode,
         randomVisualizerModePerSong,
@@ -558,7 +562,7 @@ export default function App() {
     // What every lyric consumer (visualizers, OBS source, Stage/Remote mirrors, lyric API) actually
     // uses: the per-song manual correction plus the device-wide audio latency compensation. The panel
     // control below keeps editing the per-song value alone.
-    const effectiveLyricTimelineOffsetMs = lyricTimelineOffsetMs + globalLyricTimelineOffsetMs;
+    const effectiveLyricTimelineOffsetMs = lyricTimelineOffsetMs + deviceLyricOffsetMs;
 
     const effectiveLoopMode: StageLoopMode = loopMode;
 
@@ -1213,7 +1217,7 @@ export default function App() {
     }, [audioRef, currentTime, getDisplayElement, isShowingTail]);
 
     // Restores the displayed song's offset and resets its read-head, unless a blend handed it over.
-    const incomingLyricTimelineOffsetMs = useLyricReadHead(globalLyricTimelineOffsetMs);
+    const incomingLyricTimelineOffsetMs = useLyricReadHead(deviceLyricOffsetMs);
 
     /**
      * The now playing card is allowed on screen right now.

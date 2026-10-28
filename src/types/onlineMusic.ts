@@ -916,6 +916,12 @@ export interface ProviderElsewherePlay {
 }
 
 export interface OnlineMusicProvider {
+    /**
+     * Milliseconds the lyrics of its songs are shifted by, on top of the device-wide offset, in the
+     * same sense (negative: the lyrics come earlier). Not a setting: where the platform's own sound
+     * reaches the listener that much later. None is 0.
+     */
+    lyricOffsetMs?: number;
     id: OnlineProviderId;
     displayName: string;
     shortName?: string;

@@ -11,6 +11,7 @@ import {
 import { callSpotifyWeb, isSpotifyWebNotFound } from './spotifyWebApi';
 import { isSpotifyWebPlaylistClosed, spotifyWebCatalog } from './spotifyWebCatalog';
 import { forgetSpotifyWebMe, readSpotifyWebMe, spotifyWebLibrary } from './spotifyWebLibrary';
+import { SPOTIFY_LYRIC_OFFSET_MS } from '../spotifyLyricOffset';
 import { spotifyWebMutations } from './spotifyWebMutations';
 import { normalizeSpotifyWebCollection, normalizeSpotifyWebSong, present, spotifyWebSongOf } from './spotifyWebNormalize';
 import type { SpotifyWebPage, SpotifyWebTrack } from './spotifyWebNormalize';
@@ -54,6 +55,7 @@ export const spotifyWebProvider: OnlineMusicProvider = {
     getAvailability: getSpotifyWebAvailability,
     // Where a listener who has not chosen a platform starts.
     startsHere: true,
+    lyricOffsetMs: SPOTIFY_LYRIC_OFFSET_MS,
     describeFailure,
     watch: watchSpotifyWebPlayback,
     capabilities: {
