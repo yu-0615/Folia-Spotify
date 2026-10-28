@@ -100,6 +100,10 @@ let turn: Promise<void> = Promise.resolve();
 const elsewhereListeners = new Set<(play: ProviderElsewherePlay) => void>();
 let elsewhereTold: { trackId: string; at: number } | null = null;
 let elsewhereTimer: ReturnType<typeof setInterval> | null = null;
+// The list the device played from when the app last followed it, and the tracks told with it (the
+// app's queue): one of them the app plays is started in that list, so that the device's queue stays
+// the app's.
+let followed: { context: string; tracks: Set<string> } | null = null;
 // Stand-in URL → Spotify track id, oldest first.
 const standIns = new Map<string, string>();
 
@@ -265,7 +269,8 @@ const trackOnDeck = (element: HTMLMediaElement): string | null => (
 );
 
 // What a device answers it is playing.
-interface PlayState { paused: boolean; position: number; trackIds: (string | null | undefined)[] }
+// `context`: the list or album it plays from, where another device says.
+interface PlayState { paused: boolean; position: number; trackIds: (string | null | undefined)[]; context?: string | null }
 // Where the song sounds: what it is told, what it answers, and how closely the deck follows it.
 interface Sound {
     deviceId: () => Promise<string>;
@@ -297,6 +302,7 @@ interface WirePlayer {
     progress_ms?: number | null;
     device?: { id?: string | null };
     item?: { id?: string | null; linked_from?: { id?: string | null } } | null;
+    context?: { uri?: string | null } | null;
 }
 
 // A command a device does not take in the state it is in (pausing one that is paused) is answered
@@ -312,7 +318,9 @@ const deviceSound = (id: string): Sound => ({
         const answer = await callSpotifyWeb<WirePlayer | undefined>('/me/player', { query: { additional_types: 'track' } });
         // Nothing plays, or it plays on another device.
         if (!answer?.item || answer.device?.id !== id) return null;
-        return { paused: !answer.is_playing, position: answer.progress_ms ?? 0, trackIds: [answer.item.id, answer.item.linked_from?.id] };
+        return {
+            paused: !answer.is_playing, position: answer.progress_ms ?? 0, trackIds: [answer.item.id, answer.item.linked_from?.id], context: answer.context?.uri,
+        };
     },
     pause: () => callSpotifyWeb('/me/player/pause', { method: 'PUT', query: { device_id: id } }).catch(unlessRestricted),
     resume: () => callSpotifyWeb('/me/player/play', { method: 'PUT', query: { device_id: id } }).catch(unlessRestricted),
@@ -372,7 +380,8 @@ const upcomingTracks = async (): Promise<string[]> => {
 
 // The Spotify app takes a start of a lone track (`uris`) and plays nothing, emptying what it played.
 // So a track is started as the next of what plays there (that keeps the list it plays from, and its
-// queue), or else in its album, at it (`offset`); only a track without an album is started alone.
+// queue), or in the list the app followed it from, or else in its album, at it (`offset`); only a
+// track without an album is started alone.
 const startTrackThere = async (deviceId: string, trackId: string, positionMs: number): Promise<void> => {
     lastCommandAt = Date.now();
     const [next] = await upcomingTracks();
@@ -382,15 +391,16 @@ const startTrackThere = async (deviceId: string, trackId: string, positionMs: nu
         console.log(`[Spotify] The chosen device skips to ${trackId}, the next of its own`);
         return;
     }
-    const track = await callSpotifyWeb<{ album?: { uri?: string | null } } | undefined>(`/tracks/${trackId}`);
+    const list = followed?.tracks.has(trackId) ? followed.context : null;
+    const album = list ? null : (await callSpotifyWeb<{ album?: { uri?: string | null } } | undefined>(`/tracks/${trackId}`))?.album?.uri;
+    const context = list ?? album;
     const uri = `spotify:track:${trackId}`;
-    const album = track?.album?.uri;
     lastCommandAt = Date.now();
     await callSpotifyWeb('/me/player/play', {
         method: 'PUT', query: { device_id: deviceId },
-        body: album ? { context_uri: album, offset: { uri }, position_ms: positionMs } : { uris: [uri], position_ms: positionMs },
+        body: context ? { context_uri: context, offset: { uri }, position_ms: positionMs } : { uris: [uri], position_ms: positionMs },
     });
-    console.log(`[Spotify] The chosen device starts ${trackId} at ${Math.round(positionMs / 1000)}s${album ? ' in its album' : ''}`);
+    console.log(`[Spotify] The chosen device starts ${trackId} at ${Math.round(positionMs / 1000)}s${list ? ' in the list followed' : album ? ' in its album' : ''}`);
 };
 
 // A Spotify app that is open but is not the account's active device may take a start and play
@@ -484,7 +494,7 @@ const enqueue = (work: () => Promise<void>): void => {
 // the song it holds, so that its pause or its next song is not sent there, and the track is taken as
 // the one played, so that the deck playing it follows the device.
 // The songs next there are told too, for the app's queue.
-const tellElsewhere = async (trackId: string, positionMs: number): Promise<void> => {
+const tellElsewhere = async (trackId: string, positionMs: number, context?: string | null): Promise<void> => {
     if (elsewhereListeners.size === 0) return;
     if (elsewhereTold?.trackId === trackId && Date.now() - elsewhereTold.at < ELSEWHERE_AGAIN_MS) return;
     elsewhereTold = { trackId, at: Date.now() };
@@ -492,6 +502,7 @@ const tellElsewhere = async (trackId: string, positionMs: number): Promise<void>
     playingTrack = trackId;
     stopDriftCheck();
     const upcoming = await upcomingTracks().catch(() => []);
+    followed = context ? { context, tracks: new Set([trackId, ...upcoming]) } : null;
     console.log(`[Spotify] The chosen device plays a track of its own: the app follows it, and the ${upcoming.length} next there`);
     elsewhereListeners.forEach(listener => listener({ mediaId: trackId, positionMs, upcoming }));
 };
@@ -504,7 +515,7 @@ const checkElsewhere = async (): Promise<void> => {
     const state = await deviceSound(chosen).state();
     const trackId = state?.trackIds[0];
     if (!state || state.paused || !trackId || (deck && !deck.paused)) return;
-    await tellElsewhere(trackId, state.position);
+    await tellElsewhere(trackId, state.position, state.context);
 };
 
 const checkDrift = async (): Promise<void> => {
@@ -536,7 +547,7 @@ const checkDrift = async (): Promise<void> => {
         stopDriftCheck();
         element.pause();
         const other = answered?.trackIds[0];
-        if (sound !== windowSound && answered && !answered.paused && other) await tellElsewhere(other, answered.position);
+        if (sound !== windowSound && answered && !answered.paused && other) await tellElsewhere(other, answered.position, answered.context);
         return;
     }
     // Paused from a Spotify app that controls this player: the deck pauses with it.
