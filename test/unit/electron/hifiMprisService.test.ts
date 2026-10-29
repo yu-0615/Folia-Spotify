@@ -239,7 +239,7 @@ describe('createMprisService', () => {
             CanRaise: true,
             HasTrackList: false,
             Identity: 'Folia',
-            DesktopEntry: 'folia-major',
+            DesktopEntry: 'folia-spotify',
             SupportedUriSchemes: [],
             SupportedMimeTypes: [],
         });
