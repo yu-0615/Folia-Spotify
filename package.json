@@ -1,7 +1,7 @@
 {
   "name": "folia-major",
   "productName": "Folia-Spotify",
-  "desktopName": "folia-major.desktop",
+  "desktopName": "folia-spotify.desktop",
   "description": "Lyrics Reimagine",
   "author": {
     "name": "chthollyphile",
@@ -227,8 +227,13 @@
     "rpm": {
       "fpm": [
         "--rpm-rpmbuild-define",
-        "_build_id_links none"
+        "_build_id_links none",
+        "--name",
+        "folia-spotify"
       ]
+    },
+    "deb": {
+      "fpm": ["--name", "folia-spotify"]
     },
     "linux": {
       "artifactName": "${productName}-${version}-linux-${arch}.${ext}",
@@ -243,11 +248,11 @@
       },
       "icon": "build/icon.png",
       "category": "AudioVideo",
-      "executableName": "folia-major",
+      "executableName": "folia-spotify",
       "syncDesktopName": true,
       "desktop": {
         "entry": {
-          "StartupWMClass": "folia-major"
+          "StartupWMClass": "folia-spotify"
         }
       }
     }
