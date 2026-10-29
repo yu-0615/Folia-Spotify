@@ -185,6 +185,7 @@ jobs:
             VERSION: process.env.RELEASE_VERSION,
             TAG: process.env.RELEASE_TAG,
             MACOS_UNSIGNED_HELP_URL: process.env.MACOS_UNSIGNED_HELP_URL,
+            UPSTREAM_VERSION: process.env.RELEASE_VERSION.replace(/\d\d$/, ''),
           };
           const notes = Object.entries(replacements).reduce((text, [key, value]) => text.split(`{{${key}}}`).join(value || ''), template);
           fs.mkdirSync('build', { recursive: true });
