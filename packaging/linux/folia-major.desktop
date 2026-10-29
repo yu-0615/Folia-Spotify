@@ -1,9 +1,9 @@
 [Desktop Entry]
-Name=Folia
+Name=Folia-Spotify
 Comment=Lyrics Reimagine
 Exec=__APP_PATH__
 Icon=__ICON_PATH__
 Terminal=false
 Type=Application
 Categories=AudioVideo;Player;
-StartupWMClass=folia-major
+StartupWMClass=folia-spotify
