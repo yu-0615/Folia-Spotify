@@ -208,6 +208,9 @@ export default async function viteConfig(_config: ConfigEnv): Promise<UserConfig
       format: 'es'
     },
     optimizeDeps: {
+      // The app's own pages only. Left to its default (every **/*.html under the root) the startup
+      // dep scan also crawls each git worktree under .claude/worktrees, a whole copy of the app apiece.
+      entries: ['*.html'],
       // Only metadataParser.worker.ts imports music-metadata, and the startup dep scan does not
       // follow worker entries. Left out, the first local import discovers it at runtime, Vite
       // re-optimizes, and every open page is force-reloaded ("optimized dependencies changed").
@@ -261,7 +264,10 @@ export default async function viteConfig(_config: ConfigEnv): Promise<UserConfig
         // extracting Electron into release/win-unpacked.tmp and renaming it to release/win-unpacked.
         // On Windows that rename fails with EPERM while anything holds the directory - so a dev
         // server left running in another terminal kills every `npm run build:electron`.
-        ignored: ['**/release/**', '**/models/**'],
+        // .claude holds the git worktrees of parallel sessions, each a full checkout of the repo:
+        // watched, they cost one handle per file (hundreds of thousands on Windows), and setting
+        // those up starves the dev server for minutes before it answers the first page.
+        ignored: ['**/release/**', '**/models/**', '**/.claude/**'],
       },
     },
     plugins: [

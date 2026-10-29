@@ -82,6 +82,7 @@ import { useNeteaseLibrary } from './hooks/useNeteaseLibrary';
 import { useLibraryAccountController } from './library/app/useLibraryAccountController';
 import { createLibraryAccountSwitchCleanupPort } from './library/app/createLibraryAccountPort';
 import { useAppWallToolsHost } from './components/app/wall-tools/useAppWallToolsHost';
+import { useRemoteQueueCommands } from './components/app/playback/bridges/useRemoteQueueCommands';
 import { useLibraryAccountProviders } from './library/core/account/useLibraryAccount';
 import { resolveActiveProviderSummary } from './library/core/account/accountRules';
 import { useAppPreferences } from './hooks/useAppPreferences';
@@ -2181,6 +2182,8 @@ export default function App() {
         clearQueue,
         saveCurrentQueueAsLocalPlaylist,
     });
+    // 遥控窗口展开的队列：点歌、下一首播放、移到末尾、移除，走浮岛的同一组队列动作。
+    useRemoteQueueCommands(wallToolsHost, playQueue, isNowPlayingControlDisabledRef);
     const homeModel = useHomeModel({
         account: accountController,
         activeProvider,

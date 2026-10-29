@@ -51,6 +51,7 @@ describe('Visual Settings Import and Export', () => {
         hidePlayerTranslationSubtitle: true,
         showSubtitleTranslation: false,
         subtitleContentMode: 'romanization' as const,
+        subtitleOverlayLayout: 'current+next+translation' as const,
         subtitleOverlayBackground: true,
         subtitleUpcomingLyricsBlur: false,
         showHarmonySubtitle: false,
@@ -205,6 +206,7 @@ describe('Visual Settings Import and Export', () => {
         expect(decoded.hidePlayerTranslationSubtitle).toBe(true);
         expect(decoded.showSubtitleTranslation).toBe(false);
         expect(decoded.subtitleContentMode).toBe('romanization');
+        expect(decoded.subtitleOverlayLayout).toBe('current+next+translation');
         expect(decoded.subtitleOverlayBackground).toBe(true);
         expect(decoded.subtitleUpcomingLyricsBlur).toBe(false);
         expect(decoded.showHarmonySubtitle).toBe(false);
@@ -263,6 +265,7 @@ describe('Visual Settings Import and Export', () => {
         expect(decoded.hidePlayerTranslationSubtitle).toBe(true);
         expect(decoded.showSubtitleTranslation).toBe(false);
         expect(decoded.subtitleContentMode).toBe('romanization');
+        expect(decoded.subtitleOverlayLayout).toBe('current+next+translation');
         expect(decoded.subtitleOverlayBackground).toBe(true);
         expect(decoded.subtitleUpcomingLyricsBlur).toBe(false);
         expect(decoded.showHarmonySubtitle).toBe(false);

@@ -285,6 +285,7 @@ contextBridge.exposeInMainWorld('electron', {
         return () => ipcRenderer.removeListener('remote-control-window-settings-changed', listener);
     },
     getRemoteControlPointerInside: () => ipcRenderer.invoke('remote-control-get-pointer-inside'),
+    setRemoteControlQueueExpansion: (wantedHeight, options) => ipcRenderer.invoke('remote-control-set-queue-expansion', wantedHeight, options),
     onRemoteControlPointerInside: (callback) => {
         const listener = (_event, inside) => callback(Boolean(inside));
         ipcRenderer.on('remote-control-pointer-inside', listener);
