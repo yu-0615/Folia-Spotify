@@ -1,6 +1,13 @@
 > [!NOTE]
-> Folia-Spotify 是 [Folia](https://github.com/chthollyphile/folia-major)（作者 [chthollyphile](https://github.com/chthollyphile)）的 fork，沿用 AGPL-3.0。原有功能的問題請到原專案回報。
-> 這一版以原版 v{{UPSTREAM_VERSION}} 為基礎。
+> **Folia-Spotify** 是 [Folia](https://github.com/chthollyphile/folia-major)（作者 [chthollyphile](https://github.com/chthollyphile)）的 fork，依原專案的 [AGPL-3.0](LICENSE) 授權條款釋出。Folia 的設計與絕大部分程式碼都出自原作者和[貢獻者們](CONTRIBUTORS.md)，原有功能的問題請到原專案回報，也歡迎幫原專案按星星。
+>
+> 本 fork 主要的修改：
+> - **Spotify**：桌面版和網頁版都能用。歌在你自己的 Spotify App 裡播放，Folia 顯示歌詞、控制播放，並同步 Spotify 的播放佇列；歌單頁有 Daily Mix 1–6。
+> - **YouTube Music**：繁中介面、探索頁的「心情與曲風」、登入可以重新開啟瀏覽器。
+> - **繁中優先**：介面以繁體中文為主，新增「簡轉繁」歌詞模組。
+> - 網易雲、QQ 音樂、酷狗、波點、汽水音樂預設只作為歌詞來源。
+>
+> 版本號是「原版版本 + 兩位序號」，例如 `0.7.2301` 代表以原版 v0.7.23 為基礎的第 1 版。逐項修改見[提交紀錄](https://github.com/yu-0615/Folia-Spotify/commits/main)。
 
 ## 這一版的內容
 
