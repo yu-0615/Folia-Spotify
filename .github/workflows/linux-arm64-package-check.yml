@@ -74,9 +74,9 @@ jobs:
           ls -la release
           version="$(node -p "require('./package.json').version")"
           for artifact in \
-            "release/folia-major-${version}-linux-arm64.tar.gz" \
-            "release/folia-major-${version}-linux-arm64.deb" \
-            "release/folia-major-${version}-linux-aarch64.rpm"; do
+            "release/Folia-Spotify-${version}-linux-arm64.tar.gz" \
+            "release/Folia-Spotify-${version}-linux-arm64.deb" \
+            "release/Folia-Spotify-${version}-linux-aarch64.rpm"; do
             test -s "${artifact}" || { echo "missing ${artifact}"; exit 1; }
           done
 
