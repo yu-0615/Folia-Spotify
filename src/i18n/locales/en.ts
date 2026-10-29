@@ -3292,18 +3292,26 @@ export default {
     "tabOriginal": "Original features",
     "originalLabel": "New in the original Folia v{{version}}",
     "changesIntro": "What each version of Folia-Spotify changed. The features the original author added are under “Original features”.",
-    "v0_1_1": {
-      "releaseNotes": "“What's new” has three pages: the changes, a guide to signing in, and the features the original author added.",
-      "signInGuide": "A guide to signing in: step by step, how to make your own Spotify app, get its Client ID and sign in, and how to sign in to YouTube Music."
+    "v0_7_2304": {
+      "macUpdateTest": "A test of the macOS update: with v0.7.2303 installed, choose “Download Update” under Settings → General, then “Restart to Install”; the app closes, becomes this version and opens again.",
+      "releaseNotes": "The changes in “What's new” use the new version numbers, listing each version from v0.7.2301 on."
     },
-    "v0_1_0": {
-      "renumber": "Version numbers start again from 0.1.0. With 0.7.x installed, download this version once yourself; later ones update on their own as before.",
+    "v0_7_2303": {
+      "macSelfUpdate": "macOS updates on its own: a new version found is downloaded and put in place by a restart. The app needs to be in the Applications folder; when macOS asks after an update whether it may use the keychain, choose “Always Allow”."
+    },
+    "v0_7_2302": {
+      "linuxPackage": "On Linux the package is named folia-spotify and installs beside the original Folia; with the deb or rpm of v0.7.2301 installed, remove it first.",
+      "upstream": "From the original: the bottom subtitles can take one, two or three lines, Lattice shows backing vocals too, and the remote window can open the play queue."
+    },
+    "v0_7_2301": {
+      "versioning": "Version numbers are the original's version plus a two-digit number: v0.7.2301 is the first one on top of the original v0.7.23.",
       "playsInApp": "Spotify's songs always play in your own Spotify app (an iPhone, a Mac…), with no device to choose; Folia follows it for the lyrics and the controls.",
-      "follow": "Changing songs or skipping in the Spotify app, or a crossfade starting the next song early, is followed within a second; dragging the progress bar no longer pauses Spotify.",
+      "follow": "Changing songs or skipping in the Spotify app, or a crossfade starting the next song early, is followed within a second; dragging the progress bar no longer loses Spotify.",
       "dailyMix": "The playlists page shows Spotify's Daily Mix 1–6.",
-      "lyrics": "Lyrics for Spotify songs are matched from NetEase, QQ Music, Kugou and AMLL; NetEase, QQ Music, Kugou, Bodian and Qishui serve as lyric sources only by default.",
       "videoPlatform": "The YouTube Music sign-in can open the browser again; with the interface in Traditional Chinese its pages are read in Traditional Chinese, and Explore gains Moods & genres.",
-      "mods": "An unsigned mod can be set to “No new approval when its files change”; a change of permissions or entry is still asked about."
+      "mods": "The Traditional Chinese lyrics mod converts a Chinese song with a Japanese line in it all the same; an unsigned mod can be set to “No new approval when its files change”.",
+      "releaseNotes": "“What's new” has three pages: the changes, a guide to signing in, and the features the original author added.",
+      "webSignIn": "The web version opened from the iPhone Home Screen can sign in to Spotify; when iOS shows the sign-in page in another browser, the sign-in completes back in the app."
     }
   },
   "signInGuide": {

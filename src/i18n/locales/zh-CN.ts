@@ -3292,18 +3292,26 @@ export default {
     "tabOriginal": "原版新功能",
     "originalLabel": "原版 Folia v{{version}} 的新功能",
     "changesIntro": "Folia-Spotify 每一版改了什么。原作者加入的功能在「原版新功能」。",
-    "v0_1_1": {
-      "releaseNotes": "「版本更新」分成三页：更新记录、授权登录导览，以及原作者加入的新功能。",
-      "signInGuide": "新增授权登录导览：一步步说明怎么建立自己的 Spotify 应用、取得 Client ID 并登录，也说明 YouTube Music 怎么登录。"
+    "v0_7_2304": {
+      "macUpdateTest": "测试 macOS 自动更新：装着 v0.7.2303 的话，在「设置 → 通用」按「下载更新」，下载完按「重启安装」，App 会关掉、换成这一版再自己打开。",
+      "releaseNotes": "「版本更新」的更新记录改用新的版本号，从 v0.7.2301 起列出每一版的更动。"
     },
-    "v0_1_0": {
-      "renumber": "版本号从 0.1.0 重新开始。装着 0.7.x 的话要手动下载一次这一版，之后会照常自动更新。",
+    "v0_7_2303": {
+      "macSelfUpdate": "macOS 可以自己更新：找到新版时下载、重启就换成新版。App 要放在「应用程序」文件夹里；更新后 macOS 问能不能使用钥匙串里的数据时，按「始终允许」。"
+    },
+    "v0_7_2302": {
+      "linuxPackage": "Linux 的套件名称改为 folia-spotify，可以和原版 Folia 同时安装；装过 v0.7.2301 的 deb、rpm 版要先移除旧版。",
+      "upstream": "同步原版：底部字幕可以选单行、双行或三行排版，Lattice 也支持和声字幕；遥控窗口可以展开播放队列。"
+    },
+    "v0_7_2301": {
+      "versioning": "版本号改为「原版版本 + 两位序号」：v0.7.2301 是以原版 v0.7.23 为基础的第 1 版。",
       "playsInApp": "Spotify 的歌一律在你自己的 Spotify App 里播放（iPhone、Mac……），不用选设备；Folia 跟着显示歌词、控制播放。",
-      "follow": "在 Spotify App 里换歌、跳到下一首，或淡入淡出提早换歌时，Folia 一秒内跟上；拖动进度条不再让 Spotify 暂停。",
+      "follow": "在 Spotify App 里换歌、跳到下一首，或淡入淡出提早换歌时，Folia 一秒内跟上；拖动进度条不再让 Folia 跟丢 Spotify。",
       "dailyMix": "歌单页放上 Spotify 的 Daily Mix 1–6。",
-      "lyrics": "Spotify 的歌词从网易云、QQ 音乐、酷狗、AMLL 自动匹配；网易云、QQ 音乐、酷狗、波点、汽水音乐默认只作为歌词来源。",
       "videoPlatform": "YouTube Music 登录可以重新打开浏览器；繁体中文界面下页面用繁中读取，探索页多了「心情与曲风」。",
-      "mods": "未签名的模组可以打开「文件改了也不用重新确认」，权限或入口变了时仍会再问。"
+      "mods": "繁中歌词模组在中文歌夹一句日文时整首仍转成繁体；未签名的模组可以打开「文件改了也不用重新确认」。",
+      "releaseNotes": "「版本更新」分成三页：更新记录、授权登录导览，以及原作者加入的新功能。",
+      "webSignIn": "从 iPhone 主画面打开的网页版也能登录 Spotify；iOS 另开浏览器显示登录页时，回到 App 也能完成登录。"
     }
   },
   "signInGuide": {

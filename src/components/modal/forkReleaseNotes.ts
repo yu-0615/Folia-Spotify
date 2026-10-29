@@ -10,8 +10,10 @@ export type ForkRelease = {
 };
 
 export const FORK_RELEASES: ForkRelease[] = [
-    { version: '0.1.1', changes: ['releaseNotes', 'signInGuide'] },
-    { version: '0.1.0', changes: ['renumber', 'playsInApp', 'follow', 'dailyMix', 'lyrics', 'videoPlatform', 'mods'] },
+    { version: '0.7.2304', changes: ['macUpdateTest', 'releaseNotes'] },
+    { version: '0.7.2303', changes: ['macSelfUpdate'] },
+    { version: '0.7.2302', changes: ['linuxPackage', 'upstream'] },
+    { version: '0.7.2301', changes: ['versioning', 'playsInApp', 'follow', 'dailyMix', 'videoPlatform', 'mods', 'releaseNotes', 'webSignIn'] },
 ];
 
 export const forkReleaseKey = (version: string): string => `forkReleaseNotes.v${version.replace(/\./g, '_')}`;

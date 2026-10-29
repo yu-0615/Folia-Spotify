@@ -3292,18 +3292,26 @@ export default {
     "tabOriginal": "Fitur versi asli",
     "originalLabel": "Baru di Folia asli v{{version}}",
     "changesIntro": "Apa yang diubah setiap versi Folia-Spotify. Fitur yang ditambahkan pembuat aslinya ada di “Fitur versi asli”.",
-    "v0_1_1": {
-      "releaseNotes": "“Pembaruan versi” kini punya tiga halaman: perubahan, panduan masuk, dan fitur yang ditambahkan pembuat aslinya.",
-      "signInGuide": "Panduan masuk: langkah demi langkah membuat aplikasi Spotify sendiri, mengambil Client ID-nya lalu masuk, juga cara masuk ke YouTube Music."
+    "v0_7_2304": {
+      "macUpdateTest": "Uji pembaruan macOS: dengan v0.7.2303 terpasang, pilih “Unduh Pembaruan” di Pengaturan → Umum, lalu “Restart untuk Menginstal”; aplikasi tertutup, berganti ke versi ini, lalu terbuka lagi.",
+      "releaseNotes": "Perubahan di “Pembaruan versi” memakai nomor versi baru, mencantumkan setiap versi sejak v0.7.2301."
     },
-    "v0_1_0": {
-      "renumber": "Nomor versi dimulai lagi dari 0.1.0. Jika 0.7.x terpasang, unduh versi ini sekali secara manual; versi berikutnya diperbarui otomatis seperti biasa.",
+    "v0_7_2303": {
+      "macSelfUpdate": "macOS memperbarui sendiri: versi baru yang ditemukan diunduh dan dipasang saat restart. Aplikasi harus ada di folder Applications; saat macOS bertanya setelah pembaruan apakah boleh memakai keychain, pilih “Selalu Izinkan”."
+    },
+    "v0_7_2302": {
+      "linuxPackage": "Di Linux paketnya bernama folia-spotify dan bisa dipasang berdampingan dengan Folia asli; jika deb atau rpm v0.7.2301 terpasang, hapus dulu.",
+      "upstream": "Dari versi asli: subtitle bawah bisa satu, dua, atau tiga baris, Lattice juga menampilkan vokal latar, dan jendela remote bisa membuka antrean putar."
+    },
+    "v0_7_2301": {
+      "versioning": "Nomor versi adalah versi asli ditambah dua digit: v0.7.2301 adalah versi pertama di atas Folia asli v0.7.23.",
       "playsInApp": "Lagu Spotify selalu diputar di aplikasi Spotify milikmu sendiri (iPhone, Mac…), tanpa memilih perangkat; Folia mengikutinya untuk lirik dan kontrol.",
-      "follow": "Mengganti lagu atau melompat di aplikasi Spotify, atau crossfade yang memulai lagu berikutnya lebih awal, diikuti dalam satu detik; menggeser bilah progres tidak lagi menjeda Spotify.",
+      "follow": "Mengganti lagu atau melompat di aplikasi Spotify, atau crossfade yang memulai lagu berikutnya lebih awal, diikuti dalam satu detik; menggeser bilah progres tidak lagi membuat Folia kehilangan Spotify.",
       "dailyMix": "Halaman playlist menampilkan Daily Mix 1–6 dari Spotify.",
-      "lyrics": "Lirik lagu Spotify dicocokkan dari NetEase, QQ Music, Kugou, dan AMLL; NetEase, QQ Music, Kugou, Bodian, dan Qishui secara bawaan hanya menjadi sumber lirik.",
       "videoPlatform": "Proses masuk YouTube Music bisa membuka browser lagi; dengan antarmuka Tionghoa Tradisional halamannya dibaca dalam Tionghoa Tradisional, dan Jelajahi kini punya Suasana & genre.",
-      "mods": "Mod tanpa tanda tangan bisa diatur agar “Tidak perlu disetujui lagi saat berkas berubah”; perubahan izin atau entri tetap ditanyakan."
+      "mods": "Mod lirik Tionghoa Tradisional tetap mengonversi lagu Tionghoa yang berisi satu baris Jepang; mod tanpa tanda tangan bisa diatur agar “Tidak perlu disetujui lagi saat berkas berubah”.",
+      "releaseNotes": "“Pembaruan versi” punya tiga halaman: perubahan, panduan masuk, dan fitur yang ditambahkan pembuat aslinya.",
+      "webSignIn": "Versi web yang dibuka dari Layar Utama iPhone bisa masuk ke Spotify; saat iOS menampilkan halaman masuk di browser lain, proses masuk selesai setelah kembali ke aplikasi."
     }
   },
   "signInGuide": {

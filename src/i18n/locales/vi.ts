@@ -3292,18 +3292,26 @@ export default {
     "tabOriginal": "Tính năng bản gốc",
     "originalLabel": "Mới trong Folia gốc v{{version}}",
     "changesIntro": "Mỗi phiên bản Folia-Spotify đã thay đổi gì. Các tính năng tác giả gốc thêm vào nằm ở “Tính năng bản gốc”.",
-    "v0_1_1": {
-      "releaseNotes": "“Cập nhật phiên bản” có ba trang: các thay đổi, hướng dẫn đăng nhập và các tính năng tác giả gốc thêm vào.",
-      "signInGuide": "Hướng dẫn đăng nhập: từng bước tạo ứng dụng Spotify của riêng bạn, lấy Client ID và đăng nhập, cùng cách đăng nhập YouTube Music."
+    "v0_7_2304": {
+      "macUpdateTest": "Thử cập nhật trên macOS: khi đang cài v0.7.2303, chọn “Tải bản cập nhật” trong Cài đặt → Chung, rồi “Khởi động lại để cài”; ứng dụng đóng lại, đổi sang phiên bản này rồi tự mở lại.",
+      "releaseNotes": "Các thay đổi trong “Cập nhật phiên bản” dùng số phiên bản mới, liệt kê từng phiên bản từ v0.7.2301."
     },
-    "v0_1_0": {
-      "renumber": "Số phiên bản bắt đầu lại từ 0.1.0. Nếu đang cài 0.7.x, hãy tự tải phiên bản này một lần; các bản sau sẽ tự cập nhật như trước.",
+    "v0_7_2303": {
+      "macSelfUpdate": "macOS tự cập nhật: phiên bản mới tìm thấy được tải về và thay vào khi khởi động lại. Ứng dụng cần nằm trong thư mục Applications; khi macOS hỏi sau cập nhật có cho dùng keychain không, chọn “Luôn cho phép”."
+    },
+    "v0_7_2302": {
+      "linuxPackage": "Trên Linux gói được đặt tên folia-spotify và cài được cạnh Folia gốc; nếu đang cài bản deb hoặc rpm v0.7.2301, hãy gỡ nó trước.",
+      "upstream": "Từ bản gốc: phụ đề dưới cùng có thể một, hai hoặc ba dòng, Lattice cũng hiện bè phụ, và cửa sổ điều khiển từ xa có thể mở hàng đợi phát."
+    },
+    "v0_7_2301": {
+      "versioning": "Số phiên bản là phiên bản gốc cộng hai chữ số: v0.7.2301 là bản đầu tiên dựa trên Folia gốc v0.7.23.",
       "playsInApp": "Bài hát Spotify luôn phát trong ứng dụng Spotify của chính bạn (iPhone, Mac…), không cần chọn thiết bị; Folia theo nó để hiện lời bài hát và điều khiển.",
-      "follow": "Đổi bài hoặc chuyển bài trong ứng dụng Spotify, hay crossfade bắt đầu bài sau sớm hơn, đều được theo kịp trong một giây; kéo thanh tiến trình không còn làm Spotify tạm dừng.",
+      "follow": "Đổi bài hoặc chuyển bài trong ứng dụng Spotify, hay crossfade bắt đầu bài sau sớm hơn, đều được theo kịp trong một giây; kéo thanh tiến trình không còn làm Folia mất dấu Spotify.",
       "dailyMix": "Trang danh sách phát có Daily Mix 1–6 của Spotify.",
-      "lyrics": "Lời bài hát Spotify được ghép từ NetEase, QQ Music, Kugou và AMLL; NetEase, QQ Music, Kugou, Bodian và Qishui mặc định chỉ làm nguồn lời bài hát.",
       "videoPlatform": "Đăng nhập YouTube Music có thể mở lại trình duyệt; khi giao diện là tiếng Trung phồn thể, các trang được đọc bằng tiếng Trung phồn thể, và Khám phá có thêm Tâm trạng & thể loại.",
-      "mods": "Mod chưa ký có thể bật “Không cần duyệt lại khi tệp thay đổi”; thay đổi quyền hoặc điểm vào vẫn sẽ được hỏi."
+      "mods": "Mod lời bài hát tiếng Trung phồn thể vẫn chuyển cả bài tiếng Trung có một dòng tiếng Nhật; mod chưa ký có thể bật “Không cần duyệt lại khi tệp thay đổi”.",
+      "releaseNotes": "“Cập nhật phiên bản” có ba trang: các thay đổi, hướng dẫn đăng nhập và các tính năng tác giả gốc thêm vào.",
+      "webSignIn": "Bản web mở từ Màn hình chính iPhone có thể đăng nhập Spotify; khi iOS hiện trang đăng nhập trong trình duyệt khác, việc đăng nhập hoàn tất khi quay lại ứng dụng."
     }
   },
   "signInGuide": {
