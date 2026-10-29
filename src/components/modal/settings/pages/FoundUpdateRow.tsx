@@ -38,11 +38,11 @@ export const FoundUpdateRow: React.FC<FoundUpdateRowProps> = ({ sub }) => {
     const isLinuxBuild = updateStatus?.platform === 'linux';
     const isStableChannel = electronSettings.UPDATE_CHANNEL === 'realeco';
     // What a found version needs from the listener where the app cannot update itself.
-    const manualNotice = updateStatus?.platform === 'darwin'
-        ? t('options.macManualUpdateNotice')
-        : isLinuxBuild
-            ? t('options.linuxManualUpdateNotice')
-            : autoUpdateSupported ? null : t('options.manualUpdateNotice');
+    const manualNotice = autoUpdateSupported
+        ? null
+        : updateStatus?.platform === 'darwin'
+            ? t('options.macManualUpdateNotice')
+            : isLinuxBuild ? t('options.linuxManualUpdateNotice') : t('options.manualUpdateNotice');
 
     const sources = [
         {

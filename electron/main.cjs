@@ -94,6 +94,7 @@ const {
   parseUpdateMetadataVersion,
   resolveReleaseChannel,
 } = require('./updateChannels.cjs');
+const { createMacSelfUpdater } = require('./macSelfUpdater.cjs');
 const { resolveCacheLimit, selectEvictions } = require('./audioCachePrune.cjs');
 const { removeAudioCacheFileOfSize } = require('./audioCacheRemove.cjs');
 const { createAnalysisHost } = require('./analysis/host.cjs');
@@ -3966,9 +3967,31 @@ function getDevUpdatePreviewVersion() {
   return `${match[1]}.${match[2]}.${Number(match[3]) + 1}`;
 }
 
+// macOS: electron-updater's Squirrel.Mac installs only an app signed with a Developer ID, which
+// these builds are not, so the Mac updates through macSelfUpdater.cjs instead. It swaps the bundle
+// only where the listener may write it (not from the disk image); elsewhere the update stays manual.
+let macSelfUpdater = null;
+function getMacSelfUpdater() {
+  if (!macSelfUpdater) {
+    macSelfUpdater = createMacSelfUpdater({
+      app,
+      getSession: async () => {
+        const ses = session.fromPartition('folia-update-check');
+        await ses.setProxy({ mode: 'system' });
+        return ses;
+      },
+    });
+  }
+  return macSelfUpdater;
+}
+
+function canPlatformInstallUpdates() {
+  return process.platform === 'win32' || (process.platform === 'darwin' && getMacSelfUpdater().canInstall());
+}
+
 function isAutoUpdaterSupported() {
   return (
-    process.platform === 'win32' &&
+    canPlatformInstallUpdates() &&
     isUpdateCheckSupported() &&
     app.isPackaged &&
     process.env.ELECTRON_DEV !== 'true' &&
@@ -3980,7 +4003,7 @@ function getAutoUpdateSupportReason() {
   if (!getCurrentReleaseChannel().updateEnabled) {
     return 'channel';
   }
-  return process.platform === 'win32' ? null : 'system';
+  return canPlatformInstallUpdates() ? null : 'system';
 }
 
 function isPackagedUpdateRuntime() {
@@ -4039,7 +4062,7 @@ function ensureAutoUpdater() {
   }
 
   try {
-    ({ autoUpdater } = require('electron-updater'));
+    autoUpdater = process.platform === 'darwin' ? getMacSelfUpdater() : require('electron-updater').autoUpdater;
   } catch (error) {
     console.error('[Updater] Failed to load electron-updater', error);
     autoUpdater = false;
