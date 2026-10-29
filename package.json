@@ -231,7 +231,7 @@
       ]
     },
     "linux": {
-      "artifactName": "${name}-${version}-linux-${arch}.${ext}",
+      "artifactName": "${productName}-${version}-linux-${arch}.${ext}",
       "target": [
         "tar.gz",
         "deb",
