@@ -18,7 +18,7 @@ const BUS_NAME_BASE = 'org.mpris.MediaPlayer2.folia';
 const NO_TRACK_PATH = '/org/mpris/MediaPlayer2/TrackList/NoTrack';
 const IDENTITY = 'Folia';
 // package.json 的 desktopName 去掉 .desktop。
-const DESKTOP_ENTRY = 'folia-major';
+const DESKTOP_ENTRY = 'folia-spotify';
 const REQUEST_NAME_DO_NOT_QUEUE = 4;
 const REQUEST_NAME_PRIMARY_OWNER = 1;
 const REQUEST_NAME_ALREADY_OWNER = 4;
