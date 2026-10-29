@@ -20,6 +20,8 @@
 - Windows：`Folia-Spotify-Setup-{{VERSION}}.exe`
 - macOS：Apple Silicon 用 `Folia-Spotify-{{VERSION}}-arm64.dmg`，Intel 用 `Folia-Spotify-{{VERSION}}-x64.dmg`
   - 開啟時提示「應用已損壞」，是因為安裝檔沒有簽名，不是檔案壞了。解決方法見[這份說明]({{MACOS_UNSIGNED_HELP_URL}})
+  - 裝過 0.7.2303 以後的版本，App 會自己更新（「設定 → 通用」）。App 要放在「應用程式」資料夾裡，直接從 dmg 開啟只會提醒、不會自己更新。
+  - 更新後如果 macOS 問「Folia-Spotify 想使用鑰匙圈裡的資料」，按「永遠允許」。這是因為安裝檔沒有簽名，每一版在系統看來都像新的 App。
 - Linux：
   - Debian / Ubuntu：`Folia-Spotify-{{VERSION}}-linux-amd64.deb`
   - Fedora / openSUSE：`Folia-Spotify-{{VERSION}}-linux-x86_64.rpm`
