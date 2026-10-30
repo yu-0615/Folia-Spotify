@@ -1,0 +1,39 @@
+name: Upstream Watch
+
+# 每天看原作者 chthollyphile/folia-major 的 main 有沒有還沒合併進來的提交，有的話開一個 issue 提醒。
+# 這個倉庫不是 fork，GitHub 的跨倉庫 compare API 會回 404，所以直接用 git 比對。
+
+on:
+  schedule:
+    - cron: '0 1 * * *'   # 每天 UTC 01:00 = 台灣 09:00
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Compare with chthollyphile/folia-major
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git fetch --quiet https://github.com/chthollyphile/folia-major.git main:refs/remotes/upstream/main
+          AHEAD=$(git rev-list --count HEAD..upstream/main)
+          [ "$AHEAD" -eq 0 ] && { echo "已同步"; exit 0; }
+          SHA=$(git rev-parse --short=7 upstream/main)
+          if gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "上游 $SHA in:title" --json number --jq '.[0].number' | grep -q .; then
+            echo "已經提醒過 $SHA"; exit 0
+          fi
+          LIST=$(git log --format='- %h %s' --abbrev=7 HEAD..upstream/main)
+          gh issue create --repo "$GITHUB_REPOSITORY" \
+            --title "上游有 ${AHEAD} 個新提交（最新 ${SHA}）" \
+            --body "$(printf '原作者 main 有 %s 個提交還沒合併：\n\n%s\n\n[原版提交記錄](https://github.com/chthollyphile/folia-major/commits/main)' "$AHEAD" "$LIST")"
