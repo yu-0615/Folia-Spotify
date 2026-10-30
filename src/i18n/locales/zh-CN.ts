@@ -362,7 +362,7 @@ export default {
     "noSongPlaying": "当前没有正在播放的歌曲",
     "neteaseApiStartupFailed": "网易云接口启动失败，部分在线功能不可用",
     "neteaseApiStartupFailedDetail": "网易云接口启动失败，部分在线功能不可用：{{reason}}",
-    "generatingTheme": "少女祈祷中...",
+    "generatingTheme": "主题构想中...",
     "themeApplied": "已应用主题: {{themeName}}",
     "aiThemeUpdated": "AI 主题已更新: {{themeName}}",
     "themeGenerationFailed": "主题生成失败。",
